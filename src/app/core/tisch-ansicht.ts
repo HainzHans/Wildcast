@@ -1,8 +1,7 @@
-import { computed, effect, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 
-import { lesen, schreiben } from './speicher';
+import { Einstellungen } from './einstellungen';
 
-const SCHLUESSEL = 'wildcast.tischmodus';
 /** Ab dieser Breite (Laptop, Tablet quer) schauen alle von einer Seite drauf. */
 const SCHMAL = '(max-width: 899px)';
 
@@ -16,12 +15,11 @@ export class TischAnsicht {
   private readonly schmal = signal(this.abfrage?.matches ?? true);
 
   /** Vom Spieler abschaltbar, z. B. wenn alle auf einer Seite sitzen. */
-  readonly tischmodus = signal(lesen<boolean>(SCHLUESSEL) ?? true);
+  readonly tischmodus = inject(Einstellungen).tischmodus;
   readonly drehen = computed(() => this.schmal() && this.tischmodus());
 
   constructor() {
     this.abfrage?.addEventListener('change', (e) => this.schmal.set(e.matches));
-    effect(() => schreiben(SCHLUESSEL, this.tischmodus()));
   }
 
   /**

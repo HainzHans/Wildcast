@@ -1,186 +1,189 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { Einstellungen } from '../../core/einstellungen';
 import { SpielStore } from '../../core/spiel/spiel-store';
-import { BestaetigenKnopf } from '../../shared/ui/bestaetigen-knopf';
-import { varianteMitId, VARIANTEN } from '../../varianten/varianten';
+import { varianteMitId } from '../../varianten/varianten';
 
+/** Hauptmenü im Stil eines Spiel-Titelbildschirms. */
 @Component({
   selector: 'app-start',
-  imports: [RouterLink, BestaetigenKnopf],
+  imports: [RouterLink],
   template: `
-    <div class="seite">
+    <div class="titelbild">
       <header class="kopf">
         <h1>Wildcast</h1>
         <p>Chaos-Effekte &amp; Bosskämpfe für deinen Kartenspielabend</p>
       </header>
 
-      @if (laufend(); as l) {
-        <section class="laufend" aria-labelledby="laufend-titel">
-          <h2 id="laufend-titel">Laufende Partie</h2>
-          <p class="laufend-variante">{{ l.variante }}</p>
-          <ul class="laufend-spieler">
-            @for (s of l.spieler; track s.id) {
-              <li>
-                {{ s.name }} <strong>{{ s.leben }}</strong>
-              </li>
-            }
-          </ul>
-          <div class="laufend-knoepfe">
-            <a class="knopf knopf--haupt" routerLink="/spiel">Weiterspielen</a>
-            <app-bestaetigen-knopf
-              label="Beenden"
-              frage="Partie löschen?"
-              (bestaetigt)="store.beenden()"
-            />
-          </div>
-        </section>
-      }
-
-      <section aria-labelledby="varianten-titel">
-        <h2 id="varianten-titel" class="abschnitt">
-          {{ laufend() ? 'Neue Partie' : 'Variante wählen' }}
-        </h2>
-        <ul class="varianten">
-          @for (v of varianten; track v.id) {
-            <li>
-              @if (v.verfuegbar) {
-                <a class="variante" [routerLink]="['/neu', v.id]">
-                  <span class="variante-name">{{ v.name }}</span>
-                  <span class="variante-text">{{ v.untertitel }}</span>
-                  <span class="variante-spieler">{{
-                    spielerText(v.spieler.min, v.spieler.max)
-                  }}</span>
-                </a>
-              } @else {
-                <div class="variante variante--bald" aria-disabled="true">
-                  <span class="variante-name">{{ v.name }}</span>
-                  <span class="variante-text">{{ v.untertitel }}</span>
-                  <span class="variante-spieler">Kommt bald</span>
-                </div>
-              }
-            </li>
-          }
-        </ul>
-      </section>
+      <nav class="menue" aria-label="Hauptmenü" (keydown)="pfeiltasten($event)">
+        <a class="punkt" [routerLink]="jetztSpielen().ziel">
+          <span class="punkt-text">Jetzt spielen</span>
+          <span class="punkt-hinweis">{{ jetztSpielen().hinweis }}</span>
+        </a>
+        <a class="punkt" routerLink="/varianten">
+          <span class="punkt-text">Spielvarianten</span>
+        </a>
+        <a class="punkt" routerLink="/einstellungen">
+          <span class="punkt-text">Einstellungen</span>
+        </a>
+      </nav>
     </div>
   `,
   styles: `
-    .seite {
-      max-width: 36rem;
-      margin-inline: auto;
-      padding: 2.5rem 1rem 3rem;
+    .titelbild {
+      min-height: 100dvh;
       display: grid;
-      gap: 2rem;
+      grid-template-rows: 1fr auto 1.3fr;
+      justify-items: center;
+      padding: 2rem 1rem;
+      text-align: center;
+      /* Lichtkegel über dem Spieltisch */
+      background: radial-gradient(
+        ellipse 70% 55% at 50% 38%,
+        light-dark(#f1f5ef, #1d4a40) 0%,
+        var(--filz) 60%,
+        var(--filz-tief) 100%
+      );
     }
-    .kopf h1 {
-      font-size: clamp(2.8rem, 12vw, 4.2rem);
-      font-weight: 800;
-      letter-spacing: -0.02em;
+    .kopf {
+      align-self: end;
+      margin-bottom: clamp(2.5rem, 9vh, 5rem);
+    }
+    h1 {
+      font-size: clamp(3.5rem, min(19vw, 15vh), 8rem);
+      font-weight: 900;
+      font-variation-settings:
+        'SOFT' 100,
+        'WONK' 1;
+      letter-spacing: -0.03em;
+      line-height: 0.95;
+      text-shadow: 0 0.06em 0 var(--filz-tief);
+      animation: herabfallen 600ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
     }
     .kopf p {
-      margin: 0.4rem 0 0;
+      margin: 0.8rem 0 0;
       color: var(--text-leise);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      animation: einblenden 500ms 250ms both;
     }
-    .abschnitt {
-      font-size: 1.15rem;
-      margin-bottom: 0.75rem;
-    }
-    .laufend {
-      background: var(--feld);
-      border: 2px solid var(--messing);
-      border-radius: var(--radius);
-      padding: 1.1rem 1.2rem;
-      box-shadow: var(--schatten);
-    }
-    .laufend h2 {
-      font-size: 1.15rem;
-    }
-    .laufend-variante {
-      margin: 0.2rem 0 0.6rem;
-      color: var(--text-leise);
-    }
-    .laufend-spieler {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 1rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem 1.2rem;
-    }
-    .laufend-spieler strong {
-      font-family: var(--schrift-anzeige);
-      font-size: 1.2rem;
-    }
-    .laufend-knoepfe {
-      display: flex;
-      gap: 0.6rem;
-      flex-wrap: wrap;
-    }
-    .laufend-knoepfe a {
-      display: inline-flex;
-      align-items: center;
-      text-decoration: none;
-    }
-    .varianten {
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    .menue {
       display: grid;
-      gap: 0.75rem;
+      gap: 0.4rem;
+      min-width: min(100%, 20rem);
     }
-    .variante {
+    .punkt {
+      position: relative;
       display: grid;
-      gap: 0.25rem;
-      padding: 1rem 1.2rem;
+      justify-items: center;
+      padding: 0.7rem 2.5rem;
       border-radius: var(--radius);
-      background: var(--feld);
-      border: 1px solid var(--feld-rand);
-      color: inherit;
+      color: var(--text);
       text-decoration: none;
-      box-shadow: var(--schatten);
-      transition: transform 120ms ease;
+      outline: none;
+      animation: einblenden 400ms both;
     }
-    a.variante:active {
-      transform: scale(0.98);
+    .punkt:nth-child(1) {
+      animation-delay: 350ms;
     }
-    .variante-name {
+    .punkt:nth-child(2) {
+      animation-delay: 430ms;
+    }
+    .punkt:nth-child(3) {
+      animation-delay: 510ms;
+    }
+    .punkt-text {
       font-family: var(--schrift-anzeige);
       font-variation-settings:
         'SOFT' 100,
         'WONK' 1;
-      font-size: 1.5rem;
+      font-size: clamp(1.6rem, 7vw, 2.1rem);
       font-weight: 700;
+      transition:
+        color 150ms,
+        transform 150ms;
     }
-    .variante-text {
+    .punkt-hinweis {
+      font-size: 0.8rem;
       color: var(--text-leise);
     }
-    .variante-spieler {
-      margin-top: 0.3rem;
-      font-size: 0.85rem;
-      font-weight: 600;
+    /* Auswahlmarken links und rechts wie in einem Spielmenü */
+    .punkt::before,
+    .punkt::after {
+      content: '◆';
+      position: absolute;
+      top: 50%;
       color: var(--messing);
+      font-size: 0.9rem;
+      opacity: 0;
+      transition:
+        opacity 150ms,
+        translate 150ms;
     }
-    .variante--bald {
-      opacity: 0.55;
-      box-shadow: none;
-      border-style: dashed;
+    .punkt::before {
+      left: 0.6rem;
+      translate: -0.5rem -50%;
+    }
+    .punkt::after {
+      right: 0.6rem;
+      translate: 0.5rem -50%;
+    }
+    .punkt:hover .punkt-text,
+    .punkt:focus-visible .punkt-text {
+      color: var(--messing);
+      transform: scale(1.06);
+    }
+    .punkt:hover::before,
+    .punkt:hover::after,
+    .punkt:focus-visible::before,
+    .punkt:focus-visible::after {
+      opacity: 1;
+      translate: 0 -50%;
+    }
+    .punkt:active .punkt-text {
+      transform: scale(0.97);
+    }
+    @keyframes herabfallen {
+      from {
+        opacity: 0;
+        transform: translateY(-0.4em) scale(1.08);
+      }
+    }
+    @keyframes einblenden {
+      from {
+        opacity: 0;
+        transform: translateY(0.5rem);
+      }
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Start {
-  protected readonly store = inject(SpielStore);
-  protected readonly varianten = VARIANTEN;
+  private readonly store = inject(SpielStore);
+  private readonly einstellungen = inject(Einstellungen);
+  private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  protected readonly laufend = computed(() => {
+  /** Läuft eine Partie, geht es dort weiter – sonst direkt zur zuletzt gespielten Variante. */
+  protected readonly jetztSpielen = computed(() => {
     const s = this.store.stand();
-    return s
-      ? { variante: varianteMitId(s.variante)?.name ?? s.variante, spieler: s.spieler }
-      : null;
+    if (s) {
+      return { ziel: '/spiel', hinweis: `Weiter: ${varianteMitId(s.variante)?.name ?? ''}` };
+    }
+    const v = varianteMitId(this.einstellungen.letzteVariante());
+    const variante = v?.verfuegbar ? v : varianteMitId('mana-wuerfel')!;
+    return { ziel: `/neu/${variante.id}`, hinweis: variante.name };
   });
 
-  protected spielerText(min: number, max: number): string {
-    return min === max ? `${min} Spieler` : `${min}–${max} Spieler`;
+  /** Pfeil hoch/runter wandert durchs Menü, wie man es von Spielen kennt. */
+  protected pfeiltasten(ereignis: KeyboardEvent): void {
+    if (ereignis.key !== 'ArrowDown' && ereignis.key !== 'ArrowUp') return;
+    ereignis.preventDefault();
+    const punkte = [...this.element.nativeElement.querySelectorAll<HTMLElement>('.punkt')];
+    const jetzt = punkte.indexOf(document.activeElement as HTMLElement);
+    const schritt = ereignis.key === 'ArrowDown' ? 1 : -1;
+    punkte[(jetzt + schritt + punkte.length) % punkte.length]?.focus();
   }
 }

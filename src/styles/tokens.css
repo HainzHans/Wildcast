@@ -27,3 +27,11 @@
   --schatten: 0 0.5rem 1.5rem light-dark(rgb(23 39 31 / 0.12), rgb(0 0 0 / 0.35));
   --tippflaeche: 3rem;
 }
+
+/* Farbschema aus den Einstellungen; ohne Angabe folgt die App dem System */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}

@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+
+import { Einstellungen } from './einstellungen';
 
 /**
  * Hält den Bildschirm während der Partie an. Der Browser gibt die Sperre frei,
@@ -6,6 +8,7 @@ import { Injectable } from '@angular/core';
  */
 @Injectable({ providedIn: 'root' })
 export class WachHalten {
+  private readonly einstellungen = inject(Einstellungen);
   private sperre: WakeLockSentinel | null = null;
   private aktiv = false;
   private readonly sichtbar = () => {
@@ -13,7 +16,7 @@ export class WachHalten {
   };
 
   an(): void {
-    if (this.aktiv || !('wakeLock' in navigator)) return;
+    if (this.aktiv || !this.einstellungen.wachHalten() || !('wakeLock' in navigator)) return;
     this.aktiv = true;
     document.addEventListener('visibilitychange', this.sichtbar);
     void this.anfordern();

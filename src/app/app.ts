@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+
+import { Einstellungen } from './core/einstellungen';
 
 @Component({
   selector: 'app-root',
@@ -20,4 +22,7 @@ import { RouterOutlet } from '@angular/router';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class App {}
+export class App {
+  // Früh laden, damit das gewählte Farbschema schon beim Start greift.
+  private readonly einstellungen = inject(Einstellungen);
+}

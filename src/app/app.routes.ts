@@ -10,13 +10,24 @@ export const routes: Routes = [
     title: 'Wildcast',
   },
   {
+    path: 'varianten',
+    loadComponent: () => import('./pages/varianten/varianten-seite').then((m) => m.VariantenSeite),
+    title: 'Spielvarianten · Wildcast',
+  },
+  {
+    path: 'einstellungen',
+    loadComponent: () =>
+      import('./pages/einstellungen/einstellungen-seite').then((m) => m.EinstellungenSeite),
+    title: 'Einstellungen · Wildcast',
+  },
+  {
     path: 'neu/:variante',
     loadComponent: () => import('./pages/einrichten/einrichten').then((m) => m.Einrichten),
     title: 'Neues Spiel · Wildcast',
   },
   {
     path: 'spiel',
-    // Ohne laufende Partie gibt es keinen Tisch – zurück zur Auswahl.
+    // Ohne laufende Partie gibt es keinen Tisch – zurück ins Menü.
     canMatch: [() => !!inject(SpielStore).stand() || inject(Router).createUrlTree(['/'])],
     loadComponent: () => import('./pages/spiel/spiel').then((m) => m.Spiel),
     title: 'Spieltisch · Wildcast',
