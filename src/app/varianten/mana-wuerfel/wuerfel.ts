@@ -1,5 +1,13 @@
 import { Art, Form } from '../../core/spiel/modell';
 import { Zufall } from '../../core/zufall';
+import {
+  ARTEN,
+  FORMEN,
+  Gewicht,
+  STANDARD_WUERFEL,
+  summe,
+  WuerfelEinstellungen,
+} from './wuerfel-einstellungen';
 
 /**
  * Vorlage aus dem kuratierten Pool. Platzhalter im Text skalieren mit dem bezahlten Mana:
@@ -30,19 +38,29 @@ export interface Wurf {
 /** „Per Anhalter durch die Galaxis“: Bei 42 Mana gibt es nur noch die Antwort. */
 export const ANTWORT = 42;
 
-/** Positiv 65 %, Negativ 31,5 %, Chaos 3,5 % (= 10 % der negativen Würfe). */
-export function wuerfleArt(z: number): Art {
-  if (z < 0.65) return 'positiv';
-  if (z < 0.965) return 'negativ';
-  return 'chaos';
+/**
+ * Zieht einen Eintrag nach Gewicht. Abgeschaltete Einträge kommen nie;
+ * stimmt die Summe nicht genau, wird anteilig verrechnet.
+ */
+function ziehe<T extends string>(z: number, reihenfolge: T[], gruppe: Record<T, Gewicht>): T {
+  const ziel = z * summe(gruppe);
+  let bisher = 0;
+  const moeglich = reihenfolge.filter((s) => gruppe[s].aktiv && gruppe[s].prozent > 0);
+  for (const s of moeglich) {
+    bisher += gruppe[s].prozent;
+    if (ziel < bisher) return s;
+  }
+  return moeglich[moeglich.length - 1];
 }
 
-/** Normal 55 %, Verrückt 20 %, Verzauberung 15 %, Emblem 10 %. */
-export function wuerfleForm(z: number): Form {
-  if (z < 0.55) return 'normal';
-  if (z < 0.75) return 'verrueckt';
-  if (z < 0.9) return 'verzauberung';
-  return 'emblem';
+/** Standard: Positiv 65 %, Negativ 31,5 %, Chaos 3,5 % (= 10 % der negativen Würfe). */
+export function wuerfleArt(z: number, e: WuerfelEinstellungen = STANDARD_WUERFEL): Art {
+  return ziehe(z, ARTEN, e.arten);
+}
+
+/** Standard: Normal 55 %, Verrückt 20 %, Verzauberung 15 %, Emblem 10 %. */
+export function wuerfleForm(z: number, e: WuerfelEinstellungen = STANDARD_WUERFEL): Form {
+  return ziehe(z, FORMEN, e.formen);
 }
 
 const PLATZHALTER = /\{(\d*)m(?:\/(\d+))?(?:([+-])(\d+))?\}/g;
@@ -94,12 +112,13 @@ export function wuerfleEffekt(
   mana: number,
   zufall: Zufall,
   zuletzt: string[] = [],
+  einstellungen: WuerfelEinstellungen = STANDARD_WUERFEL,
 ): Wurf {
   const vorlage = waehleVorlage(
     pool,
     mana,
-    wuerfleArt(zufall()),
-    wuerfleForm(zufall()),
+    wuerfleArt(zufall(), einstellungen),
+    wuerfleForm(zufall(), einstellungen),
     zufall,
     zuletzt,
   );

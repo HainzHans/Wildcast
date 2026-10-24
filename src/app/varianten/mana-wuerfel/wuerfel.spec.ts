@@ -9,6 +9,18 @@ import {
   wuerfleEffekt,
   wuerfleForm,
 } from './wuerfel';
+import {
+  anteil,
+  istWuerfelbar,
+  STANDARD_WUERFEL,
+  WuerfelEinstellungen,
+} from './wuerfel-einstellungen';
+
+function mit(aenderung: (e: WuerfelEinstellungen) => void): WuerfelEinstellungen {
+  const e: WuerfelEinstellungen = structuredClone(STANDARD_WUERFEL);
+  aenderung(e);
+  return e;
+}
 
 const ARTEN: Art[] = ['positiv', 'negativ', 'chaos'];
 const FORMEN: Form[] = ['normal', 'verrueckt', 'verzauberung', 'emblem'];
@@ -94,5 +106,52 @@ describe('Würfel', () => {
     const folge = [0.1, 0.95, 0];
     const wurf = wuerfleEffekt(EFFEKT_POOL, ANTWORT, () => folge.shift() ?? 0);
     expect(wurf.text).toBe('Du gewinnst das Spiel.');
+  });
+
+  describe('mit Hausregeln', () => {
+    it('würfelt abgeschaltete Formen nie', () => {
+      const ohneEmblem = mit((e) => (e.formen.emblem.aktiv = false));
+      const zufall = zufallMitStartwert(11);
+      for (let i = 0; i < 5000; i++) {
+        expect(wuerfleEffekt(EFFEKT_POOL, 6, zufall, [], ohneEmblem).form).not.toBe('emblem');
+      }
+      // Der oberste Wurf landet jetzt bei der letzten verbliebenen Form.
+      expect(wuerfleForm(0.999, ohneEmblem)).toBe('verzauberung');
+    });
+
+    it('rechnet Summen ungleich 100 anteilig hoch', () => {
+      const nurZwei = mit((e) => {
+        e.arten.positiv.prozent = 30;
+        e.arten.negativ.prozent = 10;
+        e.arten.chaos.aktiv = false;
+      });
+      expect(anteil(nurZwei.arten, 'positiv')).toBeCloseTo(0.75);
+      expect(wuerfleArt(0.74, nurZwei)).toBe('positiv');
+      expect(wuerfleArt(0.76, nurZwei)).toBe('negativ');
+    });
+
+    it('trifft eigene Wahrscheinlichkeiten über viele Würfe', () => {
+      const viertel = mit((e) => {
+        for (const f of Object.values(e.formen)) f.prozent = 25;
+      });
+      const zufall = zufallMitStartwert(5);
+      let verrueckt = 0;
+      for (let i = 0; i < 40_000; i++)
+        if (wuerfleForm(zufall(), viertel) === 'verrueckt') verrueckt++;
+      expect(verrueckt / 40_000).toBeCloseTo(0.25, 2);
+    });
+
+    it('ist nicht würfelbar, wenn eine Gruppe nichts mehr übrig hat', () => {
+      expect(istWuerfelbar(STANDARD_WUERFEL)).toBe(true);
+      expect(
+        istWuerfelbar(
+          mit((e) => {
+            e.arten.positiv.prozent = 0;
+            e.arten.negativ.prozent = 0;
+            e.arten.chaos.prozent = 0;
+          }),
+        ),
+      ).toBe(false);
+    });
   });
 });

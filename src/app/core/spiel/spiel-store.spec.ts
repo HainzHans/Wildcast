@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
+import { STANDARD_WUERFEL } from '../../varianten/mana-wuerfel/wuerfel-einstellungen';
 import { ZUFALL, zufallMitStartwert } from '../zufall';
 import { SpielStore } from './spiel-store';
 
@@ -56,5 +57,13 @@ describe('SpielStore', () => {
     TestBed.tick();
     const gespeichert = JSON.parse(localStorage.getItem('wildcast.spiel.v1')!);
     expect(gespeichert.spieler[0].leben).toBe(43);
+  });
+
+  it('würfelt mit den Hausregeln der Partie', () => {
+    const nurChaos = structuredClone(STANDARD_WUERFEL);
+    nurChaos.arten.positiv.aktiv = false;
+    nurChaos.arten.negativ.aktiv = false;
+    store.starten(['mana-wuerfel'], ['Jo', 'Flo'], 40, { manaWuerfel: nurChaos });
+    for (let i = 0; i < 20; i++) expect(store.wirken(1, 5)?.art).toBe('chaos');
   });
 });

@@ -4,7 +4,7 @@ import { EFFEKT_POOL } from '../../varianten/mana-wuerfel/effekt-pool';
 import { wuerfleEffekt } from '../../varianten/mana-wuerfel/wuerfel';
 import { lesen, schreiben } from '../speicher';
 import { ZUFALL } from '../zufall';
-import { Effekt, Spielstand, VarianteId } from './modell';
+import { Effekt, SpielOptionen, Spielstand, VarianteId } from './modell';
 
 const SCHLUESSEL = 'wildcast.spiel.v1';
 const MAX_VERLAUF = 100;
@@ -37,13 +37,19 @@ export class SpielStore {
     effect(() => schreiben(SCHLUESSEL, this._stand()));
   }
 
-  starten(varianten: VarianteId[], namen: string[], startLeben: number): void {
+  starten(
+    varianten: VarianteId[],
+    namen: string[],
+    startLeben: number,
+    optionen: SpielOptionen = {},
+  ): void {
     this.verlauf.set([]);
     this._stand.set({
       varianten,
       gestartet: new Date().toISOString(),
       spieler: namen.map((name, i) => ({ id: i + 1, name, leben: startLeben })),
       effekte: [],
+      optionen,
     });
   }
 
@@ -65,7 +71,7 @@ export class SpielStore {
     if (!s) return null;
     const zuletzt = s.effekte.slice(-KEINE_WIEDERHOLUNG).map((e) => e.vorlage);
     const effekt: Effekt = {
-      ...wuerfleEffekt(EFFEKT_POOL, mana, this.zufall, zuletzt),
+      ...wuerfleEffekt(EFFEKT_POOL, mana, this.zufall, zuletzt, s.optionen?.manaWuerfel),
       nr: s.effekte.length + 1,
       spielerId,
       zeit: new Date().toISOString(),

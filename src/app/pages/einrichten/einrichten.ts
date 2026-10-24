@@ -11,13 +11,21 @@ import { Router } from '@angular/router';
 
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { ZurueckLink } from '../../shared/ui/zurueck-link';
+import {
+  istWuerfelbar,
+  letzteWuerfelEinstellungen,
+  merkeWuerfelEinstellungen,
+  STANDARD_WUERFEL,
+} from '../../varianten/mana-wuerfel/wuerfel-einstellungen';
+import { WuerfelRegeln } from '../../varianten/mana-wuerfel/wuerfel-regeln';
 import { kombinieren } from '../../varianten/varianten';
 
-const LEBEN_AUSWAHL = [20, 30, 40];
+const LEBEN_AUSWAHL = [20, 40];
+const LEBEN_MAX = 999;
 
 @Component({
   selector: 'app-einrichten',
-  imports: [ZurueckLink],
+  imports: [ZurueckLink, WuerfelRegeln],
   template: `
     <div class="seite">
       <app-zurueck-link />
@@ -68,21 +76,43 @@ const LEBEN_AUSWAHL = [20, 30, 40];
           </fieldset>
 
           <fieldset>
-            <legend>Startleben</legend>
+            <legend>Lebenspunkte</legend>
             <div class="auswahl">
               @for (l of lebenAuswahl; track l) {
                 <button
                   type="button"
                   class="knopf"
-                  [class.knopf--haupt]="startLeben() === l"
-                  [attr.aria-pressed]="startLeben() === l"
-                  (click)="startLeben.set(l)"
+                  [class.knopf--haupt]="startLeben() === l && !eigeneLeben()"
+                  [attr.aria-pressed]="startLeben() === l && !eigeneLeben()"
+                  (click)="lebenWaehlen(l)"
                 >
                   {{ l }}
                 </button>
               }
+              <label class="eigene" [class.aktiv]="eigeneLeben()">
+                <span class="sr-only">Eigene Lebenspunkte</span>
+                <input
+                  type="number"
+                  inputmode="numeric"
+                  min="1"
+                  [max]="lebenMax"
+                  placeholder="Eigene"
+                  [value]="eigeneLeben() ? startLeben() : ''"
+                  (input)="lebenEingeben($any($event.target).value)"
+                />
+              </label>
             </div>
           </fieldset>
+
+          @if (mitWuerfel()) {
+            <details class="hausregeln">
+              <summary>
+                Würfel-Hausregeln
+                <span class="stand">{{ wuerfelAngepasst() ? 'Angepasst' : 'Standard' }}</span>
+              </summary>
+              <app-wuerfel-regeln [(einstellungen)]="wuerfel" />
+            </details>
+          }
 
           @for (teil of v.varianten; track teil.id) {
             @if (teil.regeln.length) {
@@ -97,7 +127,9 @@ const LEBEN_AUSWAHL = [20, 30, 40];
             }
           }
 
-          <button type="submit" class="knopf knopf--haupt los">Spiel starten</button>
+          <button type="submit" class="knopf knopf--haupt los" [disabled]="!startbereit()">
+            Spiel starten
+          </button>
         </form>
       } @else {
         <p>Diese Auswahl lässt sich (noch) nicht spielen.</p>
@@ -171,6 +203,43 @@ const LEBEN_AUSWAHL = [20, 30, 40];
       display: grid;
       gap: 0.4rem;
     }
+    .eigene input {
+      width: 6.5rem;
+      min-height: var(--tippflaeche);
+      padding: 0.6rem 0.8rem;
+      border-radius: var(--radius-klein);
+      border: 1px solid var(--feld-rand);
+      background: var(--feld);
+      color: var(--text);
+      font: inherit;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .eigene.aktiv input {
+      border: 2px solid var(--messing);
+    }
+    .hausregeln {
+      background: var(--feld);
+      border-radius: var(--radius);
+      padding: 0.8rem 1rem;
+    }
+    .hausregeln[open] {
+      padding-bottom: 1rem;
+    }
+    .hausregeln summary {
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 2rem;
+    }
+    .hausregeln[open] summary {
+      margin-bottom: 0.9rem;
+    }
+    .stand {
+      margin-left: 0.4rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--messing);
+    }
     .los {
       font-size: 1.15rem;
       min-height: 3.5rem;
@@ -188,6 +257,22 @@ export class Einrichten {
   protected readonly eintrag = computed(() => kombinieren(this.varianten().split(',')));
 
   protected readonly lebenAuswahl = LEBEN_AUSWAHL;
+  protected readonly lebenMax = LEBEN_MAX;
+  /** true, sobald jemand eine eigene Zahl eintippt statt 20 oder 40 zu wählen. */
+  protected readonly eigeneLeben = signal(false);
+  protected readonly wuerfel = signal(letzteWuerfelEinstellungen());
+  protected readonly mitWuerfel = computed(
+    () => this.eintrag()?.ids.includes('mana-wuerfel') ?? false,
+  );
+  protected readonly wuerfelAngepasst = computed(
+    () => JSON.stringify(this.wuerfel()) !== JSON.stringify(STANDARD_WUERFEL),
+  );
+  protected readonly startbereit = computed(
+    () =>
+      this.startLeben() >= 1 &&
+      this.startLeben() <= LEBEN_MAX &&
+      (!this.mitWuerfel() || istWuerfelbar(this.wuerfel())),
+  );
   protected readonly anzahl = linkedSignal(() => this.eintrag()?.spieler.standard ?? 2);
   protected readonly startLeben = linkedSignal(() => this.eintrag()?.startLeben ?? 40);
   protected readonly namen = signal(['', '', '', '']);
@@ -199,6 +284,18 @@ export class Einrichten {
   });
   protected readonly plaetze = computed(() => Array.from({ length: this.anzahl() }, (_, i) => i));
 
+  protected lebenWaehlen(leben: number): void {
+    this.eigeneLeben.set(false);
+    this.startLeben.set(leben);
+  }
+
+  protected lebenEingeben(wert: string): void {
+    const leben = Number.parseInt(wert, 10);
+    if (!Number.isFinite(leben)) return;
+    this.eigeneLeben.set(true);
+    this.startLeben.set(leben);
+  }
+
   protected nameSetzen(i: number, name: string): void {
     this.namen.update((n) => n.map((alt, j) => (j === i ? name : alt)));
   }
@@ -206,9 +303,11 @@ export class Einrichten {
   protected starten(ereignis: Event): void {
     ereignis.preventDefault();
     const v = this.eintrag();
-    if (!v) return;
+    if (!v || !this.startbereit()) return;
     const namen = this.plaetze().map((i) => this.namen()[i].trim() || `Spieler ${i + 1}`);
-    this.store.starten(v.ids, namen, this.startLeben());
+    const optionen = this.mitWuerfel() ? { manaWuerfel: this.wuerfel() } : {};
+    if (optionen.manaWuerfel) merkeWuerfelEinstellungen(optionen.manaWuerfel);
+    this.store.starten(v.ids, namen, this.startLeben(), optionen);
     this.router.navigateByUrl('/spiel');
   }
 }

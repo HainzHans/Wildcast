@@ -1,3 +1,5 @@
+import type { WuerfelEinstellungen } from '../../varianten/mana-wuerfel/wuerfel-einstellungen';
+
 /** Kennung einer Spielvariante. Neue Varianten kommen hier dazu. */
 export type VarianteId = 'mana-wuerfel' | 'boss';
 
@@ -51,4 +53,10 @@ export interface Spielstand {
   gestartet: string;
   spieler: Spieler[];
   effekte: Effekt[];
+  /** Hausregeln der einzelnen Varianten, beim Einrichten festgelegt. */
+  optionen?: SpielOptionen;
+}
+
+export interface SpielOptionen {
+  manaWuerfel?: WuerfelEinstellungen;
 }
