@@ -1,15 +1,6 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html {
-  color-scheme: light dark;
-}
-
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
-}
+/*
+ * Globale Schichten: Tokens und Basis.
+ * Alles Seiten- und Bausteinspezifische liegt als CSS neben der jeweiligen Komponente.
+ */
+@import './styles/tokens.css';
+@import './styles/base.css';

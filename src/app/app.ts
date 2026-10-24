@@ -9,7 +9,15 @@ import { RouterOutlet } from '@angular/router';
       <router-outlet />
     </main>
   `,
-  styles: ':host { display: contents; }',
+  styles: `
+    :host {
+      display: contents;
+    }
+    main {
+      min-height: 100dvh;
+      outline: none;
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {}

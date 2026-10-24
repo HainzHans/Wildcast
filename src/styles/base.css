@@ -1,0 +1,81 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--filz);
+  color: var(--text);
+  font-family: var(--schrift-text);
+  line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--schrift-anzeige);
+  font-variation-settings:
+    'SOFT' 100,
+    'WONK' 1;
+  line-height: 1.1;
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 3px solid var(--messing);
+  outline-offset: 2px;
+}
+
+/* Gemeinsame Knopfstile, damit jede Seite gleich anfasst */
+.knopf {
+  min-height: var(--tippflaeche);
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--feld-rand);
+  border-radius: var(--radius-klein);
+  background: var(--feld);
+  font-weight: 600;
+}
+
+.knopf--haupt {
+  background: var(--messing);
+  border-color: transparent;
+  color: var(--messing-text);
+}
+
+.knopf:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

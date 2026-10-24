@@ -1,0 +1,29 @@
+/*
+ * Spieltisch: Filzgrün als Fläche, Messing wie Würfel und Münzen als Akzent.
+ * Die drei Effekt-Arten haben je eine eigene Farbe, die überall gleich bleibt.
+ */
+:root {
+  color-scheme: light dark;
+
+  --filz: light-dark(#dfe7e0, #12302a);
+  --filz-tief: light-dark(#cfd9d1, #0c2420);
+  --feld: light-dark(#f6f8f4, #1b3d36);
+  --feld-rand: light-dark(#c3cfc6, #2b5149);
+  --text: light-dark(#17271f, #ecf2ea);
+  --text-leise: light-dark(#52645a, #a3b8ad);
+
+  --messing: light-dark(#a8781f, #d8a945);
+  --messing-text: light-dark(#fffaf0, #1d1606);
+
+  --positiv: light-dark(#2f7d4a, #6cc287);
+  --negativ: light-dark(#b8322b, #f0675d);
+  --chaos: light-dark(#9a2f8f, #e07ad5);
+
+  --schrift-anzeige: 'Fraunces Variable', Georgia, serif;
+  --schrift-text: system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --radius: 0.9rem;
+  --radius-klein: 0.55rem;
+  --schatten: 0 0.5rem 1.5rem light-dark(rgb(23 39 31 / 0.12), rgb(0 0 0 / 0.35));
+  --tippflaeche: 3rem;
+}

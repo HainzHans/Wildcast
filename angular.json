@@ -8,7 +8,15 @@
   "projects": {
     "wildcast": {
       "projectType": "application",
-      "schematics": {},
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "css",
+          "inlineTemplate": true,
+          "inlineStyle": true,
+          "changeDetection": "OnPush",
+          "skipTests": true
+        }
+      },
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
@@ -25,16 +33,10 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource-variable/fraunces/index.css",
               "src/styles.css"
             ],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
-            "security": {
-              "allowedHosts": []
-            },
-            "ssr": {
-              "entry": "src/server.ts"
-            }
+            "outputMode": "static"
           },
           "configurations": {
             "production": {
