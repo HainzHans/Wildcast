@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { ZurueckLink } from '../../shared/ui/zurueck-link';
-import { varianteMitId } from '../../varianten/varianten';
+import { kombinieren } from '../../varianten/varianten';
 
 const LEBEN_AUSWAHL = [20, 30, 40];
 
@@ -84,21 +84,23 @@ const LEBEN_AUSWAHL = [20, 30, 40];
             </div>
           </fieldset>
 
-          @if (v.regeln.length) {
-            <details class="regeln">
-              <summary>Regeln</summary>
-              <ul>
-                @for (r of v.regeln; track $index) {
-                  <li>{{ r }}</li>
-                }
-              </ul>
-            </details>
+          @for (teil of v.varianten; track teil.id) {
+            @if (teil.regeln.length) {
+              <details class="regeln">
+                <summary>Regeln{{ v.varianten.length > 1 ? ': ' + teil.name : '' }}</summary>
+                <ul>
+                  @for (r of teil.regeln; track $index) {
+                    <li>{{ r }}</li>
+                  }
+                </ul>
+              </details>
+            }
           }
 
           <button type="submit" class="knopf knopf--haupt los">Spiel starten</button>
         </form>
       } @else {
-        <p>Diese Variante gibt es (noch) nicht.</p>
+        <p>Diese Auswahl lässt sich (noch) nicht spielen.</p>
       }
     </div>
   `,
@@ -180,13 +182,10 @@ export class Einrichten {
   private readonly store = inject(SpielStore);
   private readonly router = inject(Router);
 
-  /** Kommt über die Route `neu/:variante`. */
-  readonly variante = input<string>('');
+  /** Kommt über die Route `neu/:varianten`, mehrere durch Komma getrennt. */
+  readonly varianten = input<string>('');
 
-  protected readonly eintrag = computed(() => {
-    const v = varianteMitId(this.variante());
-    return v?.verfuegbar ? v : undefined;
-  });
+  protected readonly eintrag = computed(() => kombinieren(this.varianten().split(',')));
 
   protected readonly lebenAuswahl = LEBEN_AUSWAHL;
   protected readonly anzahl = linkedSignal(() => this.eintrag()?.spieler.standard ?? 2);
@@ -209,7 +208,7 @@ export class Einrichten {
     const v = this.eintrag();
     if (!v) return;
     const namen = this.plaetze().map((i) => this.namen()[i].trim() || `Spieler ${i + 1}`);
-    this.store.starten(v.id, namen, this.startLeben());
+    this.store.starten(v.ids, namen, this.startLeben());
     this.router.navigateByUrl('/spiel');
   }
 }

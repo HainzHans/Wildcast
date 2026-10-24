@@ -11,6 +11,14 @@ const MAX_VERLAUF = 100;
 /** So viele zuletzt gewürfelte Vorlagen werden möglichst nicht wiederholt. */
 const KEINE_WIEDERHOLUNG = 8;
 
+/** Liest den gespeicherten Stand; ältere Stände kannten nur eine einzelne Variante. */
+function ladeStand(): Spielstand | null {
+  const stand = lesen<Spielstand & { variante?: VarianteId }>(SCHLUESSEL);
+  if (!stand) return null;
+  const { variante, ...rest } = stand;
+  return variante && !rest.varianten ? { ...rest, varianten: [variante] } : rest;
+}
+
 /**
  * Hält die laufende Partie auf diesem einen Gerät. Jede Änderung legt den vorherigen Stand
  * im Verlauf ab, damit am geteilten Tisch ein Danebentippen rückgängig gemacht werden kann.
@@ -19,7 +27,7 @@ const KEINE_WIEDERHOLUNG = 8;
 export class SpielStore {
   private readonly zufall = inject(ZUFALL);
 
-  private readonly _stand = signal<Spielstand | null>(lesen<Spielstand>(SCHLUESSEL));
+  private readonly _stand = signal<Spielstand | null>(ladeStand());
   private readonly verlauf = signal<Spielstand[]>([]);
 
   readonly stand = this._stand.asReadonly();
@@ -29,10 +37,10 @@ export class SpielStore {
     effect(() => schreiben(SCHLUESSEL, this._stand()));
   }
 
-  starten(variante: VarianteId, namen: string[], startLeben: number): void {
+  starten(varianten: VarianteId[], namen: string[], startLeben: number): void {
     this.verlauf.set([]);
     this._stand.set({
-      variante,
+      varianten,
       gestartet: new Date().toISOString(),
       spieler: namen.map((name, i) => ({ id: i + 1, name, leben: startLeben })),
       effekte: [],

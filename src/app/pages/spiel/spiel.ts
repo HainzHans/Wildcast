@@ -17,7 +17,7 @@ import { Ueberlagerung } from '../../shared/ui/ueberlagerung';
 import { EffektKarte } from '../../varianten/mana-wuerfel/effekt-karte';
 import { EffektListe } from '../../varianten/mana-wuerfel/effekt-liste';
 import { WirkenDialog } from '../../varianten/mana-wuerfel/wirken-dialog';
-import { varianteMitId } from '../../varianten/varianten';
+import { kombinieren } from '../../varianten/varianten';
 import { SpielerFeld } from './spieler-feld';
 
 type Dialog =
@@ -250,9 +250,9 @@ export class Spiel implements OnDestroy {
 
   protected readonly dialog = signal<Dialog | null>(null);
 
-  private readonly variante = computed(() => varianteMitId(this.store.stand()?.variante));
+  private readonly kombination = computed(() => kombinieren(this.store.stand()?.varianten ?? []));
   protected readonly effektWuerfel = computed(
-    () => this.variante()?.werkzeuge.includes('effekt-wuerfel') ?? false,
+    () => this.kombination()?.werkzeuge.includes('effekt-wuerfel') ?? false,
   );
 
   /** Eigene Verzauberungen und Embleme plus alles aus Chaos-Würfen, das alle trifft. */

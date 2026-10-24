@@ -1,4 +1,4 @@
-import { Variante, VarianteId } from '../core/spiel/modell';
+import { Variante, VarianteId, Werkzeug } from '../core/spiel/modell';
 
 /**
  * Alle Spielvarianten. Eine neue Variante beschreibt hier, für wie viele Spieler sie gedacht ist
@@ -35,4 +35,46 @@ export const VARIANTEN: Variante[] = [
 
 export function varianteMitId(id: string | undefined): Variante | undefined {
   return VARIANTEN.find((v) => v.id === id);
+}
+
+/** Eine oder mehrere Varianten, die gemeinsam in einer Partie laufen. */
+export interface Kombination {
+  ids: VarianteId[];
+  varianten: Variante[];
+  name: string;
+  untertitel: string;
+  spieler: Variante['spieler'];
+  startLeben: number;
+  werkzeuge: Werkzeug[];
+}
+
+/**
+ * Legt Varianten zusammen: Die Spielerzahl muss für alle passen, Werkzeuge werden vereint.
+ * Liefert `null`, wenn eine Variante fehlt, noch nicht spielbar ist oder die Spielerzahlen
+ * sich nicht überschneiden.
+ */
+export function kombinieren(ids: readonly string[]): Kombination | null {
+  const varianten = [...new Set(ids)].map(varianteMitId);
+  if (!varianten.length || varianten.some((v) => !v?.verfuegbar)) return null;
+  const liste = varianten as Variante[];
+
+  const min = Math.max(...liste.map((v) => v.spieler.min));
+  const max = Math.min(...liste.map((v) => v.spieler.max));
+  if (min > max) return null;
+  const standard = Math.min(Math.max(liste[0].spieler.standard, min), max);
+
+  return {
+    ids: liste.map((v) => v.id),
+    varianten: liste,
+    name: liste.map((v) => v.name).join(' + '),
+    untertitel: liste.length === 1 ? liste[0].untertitel : 'Mehrere Varianten in einer Partie.',
+    spieler: { min, max, standard },
+    startLeben: Math.max(...liste.map((v) => v.startLeben)),
+    werkzeuge: [...new Set(liste.flatMap((v) => v.werkzeuge))],
+  };
+}
+
+/** Anzeigename für eine laufende Partie, z. B. „Mana-Würfel + Bosskampf“. */
+export function variantenName(ids: readonly VarianteId[]): string {
+  return ids.map((id) => varianteMitId(id)?.name ?? id).join(' + ');
 }

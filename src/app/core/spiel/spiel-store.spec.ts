@@ -12,7 +12,7 @@ describe('SpielStore', () => {
       providers: [{ provide: ZUFALL, useValue: zufallMitStartwert(3) }],
     });
     store = TestBed.inject(SpielStore);
-    store.starten('mana-wuerfel', ['Jo', 'Flo'], 40);
+    store.starten(['mana-wuerfel'], ['Jo', 'Flo'], 40);
   });
 
   it('legt die Spieler mit Startleben an', () => {

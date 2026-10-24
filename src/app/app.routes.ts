@@ -26,7 +26,7 @@ export const routes: Routes = [
     title: 'Einstellungen · Wildcast',
   },
   {
-    path: 'neu/:variante',
+    path: 'neu/:varianten',
     loadComponent: () => import('./pages/einrichten/einrichten').then((m) => m.Einrichten),
     title: 'Neues Spiel · Wildcast',
   },

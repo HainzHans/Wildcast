@@ -4,7 +4,7 @@ import { Einstellungen, Farbschema } from '../../core/einstellungen';
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { BestaetigenKnopf } from '../../shared/ui/bestaetigen-knopf';
 import { ZurueckLink } from '../../shared/ui/zurueck-link';
-import { varianteMitId } from '../../varianten/varianten';
+import { variantenName } from '../../varianten/varianten';
 
 @Component({
   selector: 'app-einstellungen-seite',
@@ -187,6 +187,6 @@ export class EinstellungenSeite {
     const s = this.store.stand();
     if (!s) return null;
     const leben = s.spieler.map((p) => `${p.name} ${p.leben}`).join(' · ');
-    return `${varianteMitId(s.variante)?.name ?? s.variante}: ${leben}`;
+    return `${variantenName(s.varianten)}: ${leben}`;
   });
 }

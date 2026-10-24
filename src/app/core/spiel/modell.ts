@@ -46,7 +46,8 @@ export interface Effekt {
 }
 
 export interface Spielstand {
-  variante: VarianteId;
+  /** Eine Partie kann mehrere Varianten gleichzeitig spielen. */
+  varianten: VarianteId[];
   gestartet: string;
   spieler: Spieler[];
   effekte: Effekt[];
