@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
 
 import { ZurueckLink } from '../../shared/ui/zurueck-link';
 import { VARIANTEN } from '../../varianten/varianten';
 
 @Component({
   selector: 'app-varianten-seite',
-  imports: [RouterLink, ZurueckLink],
+  imports: [ZurueckLink],
   template: `
     <div class="seite">
       <app-zurueck-link />
@@ -23,19 +22,15 @@ import { VARIANTEN } from '../../varianten/varianten';
             </div>
             <p class="text">{{ v.untertitel }}</p>
 
+            <h3>Regeln</h3>
             @if (v.regeln.length) {
-              <details>
-                <summary>Regeln</summary>
-                <ul>
-                  @for (r of v.regeln; track $index) {
-                    <li>{{ r }}</li>
-                  }
-                </ul>
-              </details>
-            }
-
-            @if (v.verfuegbar) {
-              <a class="knopf knopf--haupt" [routerLink]="['/neu', v.id]">Spielen</a>
+              <ol class="regeln">
+                @for (r of v.regeln; track $index) {
+                  <li>{{ r }}</li>
+                }
+              </ol>
+            } @else {
+              <p class="text">Die Regeln folgen, sobald die Variante spielbar ist.</p>
             }
           </li>
         }
@@ -95,22 +90,24 @@ import { VARIANTEN } from '../../varianten/varianten';
       margin: 0;
       color: var(--text-leise);
     }
-    summary {
+    h3 {
+      font-family: var(--schrift-text);
+      font-size: 0.75rem;
       font-weight: 700;
-      cursor: pointer;
-      padding: 0.4rem 0;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-leise);
+      margin-top: 0.3rem;
     }
-    details ul {
-      margin: 0.3rem 0 0;
-      padding-left: 1.2rem;
+    .regeln {
+      margin: 0;
+      padding-left: 1.3rem;
       display: grid;
-      gap: 0.4rem;
+      gap: 0.45rem;
     }
-    .knopf {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
+    .regeln li::marker {
+      color: var(--messing);
+      font-weight: 700;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

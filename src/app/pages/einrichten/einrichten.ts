@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { Einstellungen } from '../../core/einstellungen';
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { ZurueckLink } from '../../shared/ui/zurueck-link';
 import { varianteMitId } from '../../varianten/varianten';
@@ -180,7 +179,6 @@ const LEBEN_AUSWAHL = [20, 30, 40];
 export class Einrichten {
   private readonly store = inject(SpielStore);
   private readonly router = inject(Router);
-  private readonly einstellungen = inject(Einstellungen);
 
   /** Kommt über die Route `neu/:variante`. */
   readonly variante = input<string>('');
@@ -212,7 +210,6 @@ export class Einrichten {
     if (!v) return;
     const namen = this.plaetze().map((i) => this.namen()[i].trim() || `Spieler ${i + 1}`);
     this.store.starten(v.id, namen, this.startLeben());
-    this.einstellungen.letzteVariante.set(v.id);
     this.router.navigateByUrl('/spiel');
   }
 }

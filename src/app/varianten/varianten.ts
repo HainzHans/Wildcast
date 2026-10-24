@@ -14,7 +14,7 @@ export const VARIANTEN: Variante[] = [
     regeln: [
       'Nur die Manamenge zählt, die Farbe ist egal.',
       'Effekte wirkst du jederzeit wie einen Spontanzauber. Sie gehen auf den Stapel, und Gegner können antworten – auch mit eigenen Effekten.',
-      'Würfel 1 entscheidet die Art: positiv (65 %), negativ für dich (31,5 %) oder Chaos für alle (3,5 %).',
+      'Würfel 1 entscheidet die Art: positiv (65 %), negativ für dich (31,5 %) oder Chaos für alle (3,5 %).',
       'Würfel 2 entscheidet die Form: normal, verrückt, Verzauberung (zerstörbar) oder Emblem (bleibt für immer).',
       'Je mehr Mana, desto stärker der Effekt – in beide Richtungen.',
     ],

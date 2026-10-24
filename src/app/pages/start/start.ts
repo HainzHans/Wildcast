@@ -1,9 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { Einstellungen } from '../../core/einstellungen';
 import { SpielStore } from '../../core/spiel/spiel-store';
-import { varianteMitId } from '../../varianten/varianten';
 
 /** Hauptmenü im Stil eines Spiel-Titelbildschirms. */
 @Component({
@@ -17,9 +15,11 @@ import { varianteMitId } from '../../varianten/varianten';
       </header>
 
       <nav class="menue" aria-label="Hauptmenü" (keydown)="pfeiltasten($event)">
-        <a class="punkt" [routerLink]="jetztSpielen().ziel">
+        <a class="punkt" routerLink="/spielen">
           <span class="punkt-text">Jetzt spielen</span>
-          <span class="punkt-hinweis">{{ jetztSpielen().hinweis }}</span>
+          @if (laeuft()) {
+            <span class="punkt-hinweis">Partie läuft</span>
+          }
         </a>
         <a class="punkt" routerLink="/varianten">
           <span class="punkt-text">Spielvarianten</span>
@@ -163,19 +163,9 @@ import { varianteMitId } from '../../varianten/varianten';
 })
 export class Start {
   private readonly store = inject(SpielStore);
-  private readonly einstellungen = inject(Einstellungen);
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  /** Läuft eine Partie, geht es dort weiter – sonst direkt zur zuletzt gespielten Variante. */
-  protected readonly jetztSpielen = computed(() => {
-    const s = this.store.stand();
-    if (s) {
-      return { ziel: '/spiel', hinweis: `Weiter: ${varianteMitId(s.variante)?.name ?? ''}` };
-    }
-    const v = varianteMitId(this.einstellungen.letzteVariante());
-    const variante = v?.verfuegbar ? v : varianteMitId('mana-wuerfel')!;
-    return { ziel: `/neu/${variante.id}`, hinweis: variante.name };
-  });
+  protected readonly laeuft = computed(() => !!this.store.stand());
 
   /** Pfeil hoch/runter wandert durchs Menü, wie man es von Spielen kennt. */
   protected pfeiltasten(ereignis: KeyboardEvent): void {

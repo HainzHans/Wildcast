@@ -10,6 +10,11 @@ export const routes: Routes = [
     title: 'Wildcast',
   },
   {
+    path: 'spielen',
+    loadComponent: () => import('./pages/spielen/spielen-seite').then((m) => m.SpielenSeite),
+    title: 'Jetzt spielen · Wildcast',
+  },
+  {
     path: 'varianten',
     loadComponent: () => import('./pages/varianten/varianten-seite').then((m) => m.VariantenSeite),
     title: 'Spielvarianten · Wildcast',
