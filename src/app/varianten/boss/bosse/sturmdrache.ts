@@ -13,26 +13,27 @@ export const STURMDRACHE: BossDefinition = {
     'Rückenwind: Alle Diener des Sturmdrachen haben Flugfähigkeit. Kreaturen der Spieler mit Flugfähigkeit erhalten −1/−0, solange sie den Sturmdrachen angreifen.',
   startDiener: 1,
   diener: [
-    { name: 'Sturmfalke', staerke: 1, widerstand: 1, faehigkeit: 'Flugfähigkeit, Eile' },
+    { name: 'Sturmfalke', staerke: 1, widerstand: 1, faehigkeit: 'Flugfähigkeit, Eile', eile: true },
     {
       name: 'Blitzwyrm',
       staerke: 2,
       widerstand: 2,
       faehigkeit: 'Flugfähigkeit. Wenn er stirbt, verliert jeder Spieler 1 Leben.',
     },
-    { name: 'Donnergreif', staerke: 3, widerstand: 3, faehigkeit: 'Flugfähigkeit, Wachsamkeit' },
+    { name: 'Donnergreif', staerke: 3, widerstand: 3, faehigkeit: 'Flugfähigkeit, Wachsamkeit', wachsamkeit: true },
     {
       name: 'Wolkenwächter',
       staerke: 1,
       widerstand: 4,
       faehigkeit: 'Flugfähigkeit. Greift nicht an, blockt aber immer, falls möglich.',
+      greiftNichtAn: true,
     },
   ],
 
   fragen: [
     {
       id: 'kreaturen',
-      text: 'Ich sehe Schatten unter mir … Wie viele Kreaturen kontrolliert ihr zusammen?',
+      text: 'Wie viele Kreaturen kontrolliert ihr zusammen?',
       antworten: [
         { wert: '0-2', label: '0–2' },
         { wert: '3-5', label: '3–5' },
@@ -42,7 +43,7 @@ export const STURMDRACHE: BossDefinition = {
     },
     {
       id: 'grosseKreatur',
-      text: 'Wer wagt es, sich mir entgegenzustellen? Habt ihr eine Kreatur mit Stärke 6 oder mehr?',
+      text: 'Habt ihr eine Kreatur mit Stärke 6 oder mehr?',
       antworten: [
         { wert: 'ja', label: 'Ja' },
         { wert: 'nein', label: 'Nein' },
@@ -50,7 +51,7 @@ export const STURMDRACHE: BossDefinition = {
     },
     {
       id: 'flieger',
-      text: 'Wer teilt meinen Himmel? Habt ihr Kreaturen mit Flugfähigkeit?',
+      text: 'Habt ihr Kreaturen mit Flugfähigkeit?',
       antworten: [
         { wert: 'ja', label: 'Ja' },
         { wert: 'nein', label: 'Nein' },
@@ -58,7 +59,7 @@ export const STURMDRACHE: BossDefinition = {
     },
     {
       id: 'bleibende',
-      text: 'Euer Spielzeug glitzert im Blitzlicht. Wie viele Artefakte und Verzauberungen besitzt ihr zusammen?',
+      text: 'Wie viele Artefakte und Verzauberungen habt ihr zusammen?',
       antworten: [
         { wert: 'wenige', label: '0–1' },
         { wert: 'einige', label: '2–4' },
@@ -67,8 +68,30 @@ export const STURMDRACHE: BossDefinition = {
     },
     {
       id: 'handkarten',
-      text: 'Ich höre Karten rascheln. Wer von euch hält mehr in der Hand?',
+      text: 'Wer von euch hat mehr Karten auf der Hand?',
       antworten: [{ wert: 'gleich', label: 'Gleich viele' }],
+    },
+    {
+      id: 'kommandeur',
+      text: 'Ist gerade ein Kommandeur von euch im Spiel?',
+      antworten: [
+        { wert: 'ja', label: 'Ja' },
+        { wert: 'nein', label: 'Nein' },
+      ],
+    },
+    {
+      id: 'friedhof',
+      text: 'Wie viele Kreaturen liegen in euren Friedhöfen zusammen?',
+      antworten: [
+        { wert: 'wenige', label: '0–2' },
+        { wert: 'einige', label: '3–6' },
+        { wert: 'viele', label: '7 oder mehr' },
+      ],
+    },
+    {
+      id: 'rache',
+      text: 'Wer von euch hat dem Drachen in dieser Runde am meisten Schaden gemacht?',
+      antworten: [{ wert: 'niemand', label: 'Niemand' }],
     },
   ],
 
@@ -179,6 +202,63 @@ export const STURMDRACHE: BossDefinition = {
       text: 'Wirbelnde Winde umgeben den Drachen: Bis zu seinem nächsten Zug verhindert er die ersten 10 Schaden.',
       folgen: { schutz: 10 },
     },
+    {
+      id: 'vergeltung',
+      name: 'Vergeltung',
+      schlagworte: ['angriff'],
+      gewicht: 2,
+      text: 'Der Drache rächt sich an dem, der ihn zuletzt am meisten verletzt hat: Dieser Spieler verliert 7 Leben. Weiß der Drache es nicht, trifft es den Spieler mit den meisten Leben.',
+      bevorzugt: { rache: ['1', '2', '3', '4'] },
+      folgen: { leben: { ziel: 'rache', um: -7 } },
+    },
+    {
+      id: 'anfuehrer',
+      name: 'Blitz auf den Anführer',
+      schlagworte: ['kontrolle'],
+      gewicht: 1,
+      text: 'Ein gezielter Blitz trifft den Kommandeur mit der höchsten Stärke: Er erhält 6 Schaden. Ist kein Kommandeur im Spiel, verliert jeder Spieler 2 Leben.',
+      bevorzugt: { kommandeur: ['ja'] },
+    },
+    {
+      id: 'aschewind',
+      name: 'Aschewind',
+      schlagworte: ['kontrolle'],
+      gewicht: 1,
+      text: 'Ein heißer Wind fegt über die Friedhöfe: Jeder Spieler schickt alle Kreaturenkarten aus seinem Friedhof ins Exil. Wer dort keine hat, verliert stattdessen 2 Leben.',
+      bevorzugt: { friedhof: ['einige', 'viele'] },
+    },
+    {
+      id: 'hagel',
+      name: 'Hagelschauer',
+      schlagworte: ['angriff'],
+      gewicht: 2,
+      text: 'Hagel prasselt auf das Schlachtfeld: Jeder Spieler verliert 2 Leben, und der Drache erhält 4 Leben.',
+      folgen: { leben: { ziel: 'alle', um: -2 }, heilung: 4 },
+    },
+    {
+      id: 'wolkenbruch',
+      name: 'Wolkenbruch',
+      schlagworte: ['kontrolle'],
+      gewicht: 2,
+      text: 'Ein Wolkenbruch drückt alles zu Boden: Tappe alle Kreaturen der Spieler mit Stärke 2 oder weniger. Sie enttappen im nächsten Enttappsegment nicht.',
+      bevorzugt: { kreaturen: ['3-5', '6-9', '10+'] },
+    },
+    {
+      id: 'grollen',
+      name: 'Donnergrollen',
+      schlagworte: ['kontrolle', 'angriff'],
+      gewicht: 1,
+      text: 'Das Grollen lässt die Hände zittern: Jeder Spieler wirft eine Karte ab oder verliert 3 Leben.',
+      bevorzugt: { handkarten: ['1', '2', 'gleich'] },
+    },
+    {
+      id: 'sturmruf',
+      name: 'Sturmruf',
+      schlagworte: ['beschwoerung', 'angriff'],
+      gewicht: 1,
+      text: 'Ein weiterer Diener stößt aus den Wolken herab. Alle Diener erhalten bis zum Ende des Zuges +1/+0.',
+      folgen: { diener: 1 },
+    },
   ],
 
   spezial: {
@@ -197,26 +277,36 @@ export const STURMDRACHE: BossDefinition = {
       'Ihr habt mir {verlust} Leben geraubt. Dafür bezahlt ihr – mit Zinsen!',
       '{verlust} Leben?! Niemand verletzt den {boss} und lebt lange genug, um davon zu erzählen.',
       'Ihr wollt Krieg? Dann bekommt ihr Gewitter.',
+      'Das wird euch noch leidtun. Sehr bald.',
+      'Ich habe Narben, die älter sind als eure Königreiche. Ihr fügt keine hinzu!',
     ],
     bedroht: [
       'Eure Armee wird zu groß. Zeit, das Feld zu lichten.',
       'So viele Kreaturen … Der Wind wird sie schon sortieren.',
       'Ihr glaubt, Masse schlägt Macht? Ich zeige euch das Gegenteil.',
+      'Eure kleine Armee macht mir keine Angst. Aber sie macht mich ungeduldig.',
+      'Wer zu viel aufbaut, hat mehr zu verlieren.',
     ],
     ueberlegen: [
       'Ich rieche Schwäche. {schwaechster}, du wackelst schon.',
       'Das Ende ist nah. Für einige von euch näher als für andere.',
       'Noch ein Windstoß, und ihr fallt wie Laub.',
+      'Gebt auf. Es würde mir Zeit sparen.',
+      'Ich höre dein Herz rasen, {schwaechster}.',
     ],
     verzweifelt: [
       'Ihr … seid stärker, als ich dachte. Zu mir, meine Kinder!',
       'Der Sturm zieht sich zusammen. Und er kommt wieder.',
       'Ich falle nicht. Nicht heute. Nicht gegen euch.',
+      'Ein verwundeter Drache ist der gefährlichste.',
+      'Noch ist der letzte Blitz nicht gefallen!',
     ],
     lauernd: [
       'Der Wind dreht sich. Ihr spürt es, oder?',
       'Ich kreise über euch. Geduldig. Hungrig.',
       'Genießt die Ruhe. Sie ist das Letzte, was ihr von mir bekommt.',
+      'Irgendwo da unten ist ein Fehler. Ich warte, bis ihr ihn macht.',
+      'Der Himmel ist geduldig. Ich bin es auch.',
     ],
   },
 };

@@ -60,7 +60,6 @@ type Dialog =
             [gedreht]="ansicht.istGedreht(i, s.spieler.length)"
             [effektWuerfel]="effektWuerfel()"
             [bleibende]="bleibendeJeSpieler().get(p.id) ?? []"
-            [amZug]="s.boss?.amZug === p.id"
             (leben)="store.aendereLeben(p.id, $event)"
             (wirken)="
               dialog.set({
@@ -85,26 +84,20 @@ type Dialog =
 
         <nav class="mitte" aria-label="Spielsteuerung">
           @if (zugInfo(); as z) {
-            <div class="zugleiste" [class.boss-dran]="z.bossDran" aria-live="polite">
+            <div class="zugleiste" aria-live="polite">
               @if (z.besiegt) {
                 <span class="zug-text"><strong>Sieg!</strong> {{ z.bossName }} ist besiegt.</span>
               } @else {
                 <span class="zug-text"
-                  >Runde {{ z.runde }} · <strong>{{ z.amZug }}</strong> ist dran</span
+                  >Runde <strong>{{ z.runde }}</strong></span
                 >
-                @if (z.bossDran) {
-                  <button
-                    type="button"
-                    class="knopf knopf--haupt zug-knopf"
-                    (click)="dialog.set({ art: 'bosszug' })"
-                  >
-                    Boss-Zug starten
-                  </button>
-                } @else {
-                  <button type="button" class="knopf zug-knopf" (click)="store.zugBeenden()">
-                    Zug beenden →
-                  </button>
-                }
+                <button
+                  type="button"
+                  class="knopf knopf--haupt zug-knopf"
+                  (click)="dialog.set({ art: 'bosszug' })"
+                >
+                  Boss-Zug
+                </button>
               }
             </div>
           }
@@ -239,9 +232,6 @@ type Dialog =
       border-radius: 99px;
       background: var(--filz-tief);
     }
-    .zugleiste.boss-dran {
-      box-shadow: 0 0 0 2px var(--negativ);
-    }
     .zug-text {
       font-size: 0.9rem;
     }
@@ -354,19 +344,11 @@ export class Spiel implements OnDestroy {
     return { effekt, von, gedreht: d.gedreht };
   });
 
-  /** Zugleiste im Bosskampf: Runde, wer dran ist, und ob der Boss besiegt ist. */
+  /** Zugleiste im Bosskampf: Runde und ob der Boss besiegt ist. Der Boss-Zug geht jederzeit. */
   protected readonly zugInfo = computed(() => {
-    const s = this.store.stand();
-    const b = s?.boss;
-    if (!s || !b) return null;
-    const bossName = bossMitId(b.bossId).name;
-    return {
-      runde: b.runde,
-      bossName,
-      bossDran: b.amZug === 'boss',
-      besiegt: b.leben <= 0,
-      amZug: b.amZug === 'boss' ? bossName : (s.spieler.find((p) => p.id === b.amZug)?.name ?? ''),
-    };
+    const b = this.store.stand()?.boss;
+    if (!b) return null;
+    return { runde: b.runde, bossName: bossMitId(b.bossId).name, besiegt: b.leben <= 0 };
   });
 
   constructor() {

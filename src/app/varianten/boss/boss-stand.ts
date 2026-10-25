@@ -1,10 +1,22 @@
 import { Zufall } from '../../core/zufall';
 import { heilen, schadenAmBoss } from './boss-logik';
-import { Antworten, BossDefinition, BossZug, DienerVorlage, Lage, Stimmung } from './boss-modell';
+import {
+  Antworten,
+  BossDefinition,
+  BossZug,
+  DienerVorlage,
+  FrageId,
+  Lage,
+  Stimmung,
+} from './boss-modell';
+
+/** So viele vergangene Aktionen und Sprüche merkt sich der Boss, um sich nicht zu wiederholen. */
+const GEDAECHTNIS = 6;
 
 /** Ein Diener auf dem Tisch. Die Nummer bleibt stabil, damit „Besiegt“ den richtigen trifft. */
 export interface Diener extends DienerVorlage {
   nr: number;
+  getappt: boolean;
 }
 
 export interface BossProtokoll {
@@ -14,6 +26,8 @@ export interface BossProtokoll {
   aktionen: { name: string; text: string }[];
   neueDiener: string[];
   angriffsziel: string | null;
+  /** Wie viele Diener tatsächlich angegriffen haben. */
+  angreifer: number;
   ankuendigung: string | null;
   lebenAenderungen: { name: string; um: number }[];
 }
@@ -25,25 +39,29 @@ export interface BossStand {
   maxLeben: number;
   /** Leben zu Beginn des vorigen Boss-Zugs. */
   lebenVorher: number;
+  /** Phasen-Schild: hält bis zum nächsten Boss-Zug oder bis ihn jemand aufhebt. */
   schild: boolean;
   schutz: number;
   runde: number;
-  /** Spieler-ID oder der Boss. Reihenfolge: Spieler 1, Spieler 2, …, Boss. */
-  amZug: number | 'boss';
   diener: Diener[];
   naechsteNr: number;
   letzteAktionen: string[];
+  verlauf: string[];
+  letzteFragen: FrageId[];
+  /** Antworten aus früheren Zügen – der Boss erinnert sich, auch wenn er nicht neu fragt. */
+  gemerkteAntworten: Antworten;
+  letzteSprueche: string[];
   spezialAngekuendigt: boolean;
   ankuendigung: string | null;
   protokoll: BossProtokoll[];
 }
 
 function dienerAnlegen(stand: BossStand, vorlagen: DienerVorlage[]): BossStand {
-  const neu = vorlagen.map((v, i) => ({ ...v, nr: stand.naechsteNr + i }));
+  const neu = vorlagen.map((v, i) => ({ ...v, nr: stand.naechsteNr + i, getappt: false }));
   return { ...stand, diener: [...stand.diener, ...neu], naechsteNr: stand.naechsteNr + neu.length };
 }
 
-export function bossStarten(boss: BossDefinition, spielerIds: number[], zufall: Zufall): BossStand {
+export function bossStarten(boss: BossDefinition, zufall: Zufall): BossStand {
   const leer: BossStand = {
     bossId: boss.id,
     leben: boss.leben,
@@ -52,10 +70,13 @@ export function bossStarten(boss: BossDefinition, spielerIds: number[], zufall: 
     schild: false,
     schutz: 0,
     runde: 1,
-    amZug: spielerIds[0],
     diener: [],
     naechsteNr: 1,
     letzteAktionen: [],
+    verlauf: [],
+    letzteFragen: [],
+    gemerkteAntworten: {},
+    letzteSprueche: [],
     spezialAngekuendigt: false,
     ankuendigung: null,
     protokoll: [],
@@ -76,20 +97,26 @@ export function bossTreffen(
   return { stand: { ...stand, ...nach }, verfallen };
 }
 
-/** Manuelle Korrektur nach oben, z. B. wenn sich jemand vertippt hat. */
+/** Heilung oder Korrektur nach oben, z. B. wenn sich jemand vertippt hat. */
 export function bossKorrigieren(stand: BossStand, um: number): BossStand {
   return { ...stand, leben: Math.min(stand.maxLeben, Math.max(0, stand.leben + um)) };
+}
+
+/** Für den nächsten Spielerzug: Der Schild gilt nur für den Zug, in dem die Grenze erreicht wurde. */
+export function schildAufheben(stand: BossStand): BossStand {
+  return { ...stand, schild: false };
 }
 
 export function dienerBesiegen(stand: BossStand, nr: number): BossStand {
   return { ...stand, diener: stand.diener.filter((d) => d.nr !== nr) };
 }
 
-/** Nächster am Zug. Mit jedem neuen Zug fällt der Phasen-Schild wieder. */
-export function zugBeenden(stand: BossStand, spielerIds: number[]): BossStand {
-  const i = stand.amZug === 'boss' ? -1 : spielerIds.indexOf(stand.amZug);
-  const amZug = i + 1 < spielerIds.length ? spielerIds[i + 1] : 'boss';
-  return { ...stand, amZug, schild: false };
+/** Für Effekte der Spieler, die Diener tappen oder enttappen. */
+export function dienerTappen(stand: BossStand, nr: number): BossStand {
+  return {
+    ...stand,
+    diener: stand.diener.map((d) => (d.nr === nr ? { ...d, getappt: !d.getappt } : d)),
+  };
 }
 
 export function bossLage(
@@ -104,32 +131,65 @@ export function bossLage(
     lebenVorher: stand.lebenVorher,
     diener: stand.diener.length,
     spieler,
-    antworten,
+    // Neue Antworten gehen vor; was er nicht neu gefragt hat, weiß er noch vom letzten Mal.
+    antworten: { ...stand.gemerkteAntworten, ...antworten },
     letzteAktionen: stand.letzteAktionen,
+    verlauf: stand.verlauf,
+    letzteFragen: stand.letzteFragen,
+    letzteSprueche: stand.letzteSprueche,
     spezialAngekuendigt: stand.spezialAngekuendigt,
   };
 }
 
 /**
- * Trägt einen ausgewürfelten Boss-Zug ein: Heilung, Schutz, neue Diener, Protokoll.
- * Danach beginnt die nächste Runde mit dem ersten Spieler. Die Leben der Spieler ändert der Store.
+ * Wie in Magic: Zu Beginn seines Zuges enttappt der Boss seine Diener. Angreifen dürfen alle,
+ * die schon da waren, und neue mit Eile – außer reinen Blockern. Wer angreift, wird getappt,
+ * es sei denn, er hat Wachsamkeit.
+ */
+function angreifen(diener: Diener[], neueNr: Set<number>): { diener: Diener[]; angreifer: number } {
+  let angreifer = 0;
+  const nach = diener.map((d) => {
+    const darf = !d.greiftNichtAn && (!neueNr.has(d.nr) || d.eile);
+    if (!darf) return { ...d, getappt: false };
+    angreifer++;
+    return { ...d, getappt: !d.wachsamkeit };
+  });
+  return { diener: nach, angreifer };
+}
+
+/**
+ * Trägt einen ausgewürfelten Boss-Zug ein: Heilung, Schutz, neue Diener, Angriff, Gedächtnis
+ * und Protokoll. Danach beginnt die nächste Runde. Die Leben der Spieler ändert der Store.
  */
 export function bossZugEintragen(
   stand: BossStand,
   zug: BossZug,
   spieler: { id: number; name: string }[],
+  antworten: Antworten,
 ): BossStand {
   const name = (id: number | null) => spieler.find((s) => s.id === id)?.name ?? null;
   const mitDienern = dienerAnlegen(stand, zug.neueDiener);
+  const neueNr = new Set(mitDienern.diener.slice(stand.diener.length).map((d) => d.nr));
+  const angriff =
+    zug.angriffsziel === null
+      ? { diener: mitDienern.diener.map((d) => ({ ...d, getappt: false })), angreifer: 0 }
+      : angreifen(mitDienern.diener, neueNr);
+  // Wer ihm diese Runde am meisten geschadet hat, gilt nur für diese Runde.
+  const { rache: _, ...gemerkt } = { ...stand.gemerkteAntworten, ...antworten };
+
   return {
     ...mitDienern,
+    diener: angriff.diener,
     leben: heilen(stand.leben, stand.maxLeben, zug.heilung),
     lebenVorher: stand.leben,
     schutz: zug.schutz,
     schild: false,
     runde: stand.runde + 1,
-    amZug: spieler[0]?.id ?? 'boss',
     letzteAktionen: zug.aktionen.map((a) => a.id),
+    verlauf: [...stand.verlauf, ...zug.aktionen.map((a) => a.id)].slice(-GEDAECHTNIS),
+    letzteFragen: Object.keys(antworten) as FrageId[],
+    gemerkteAntworten: gemerkt,
+    letzteSprueche: [...stand.letzteSprueche, zug.spruchVorlage].slice(-GEDAECHTNIS),
     spezialAngekuendigt: zug.spezialAngekuendigt,
     ankuendigung: zug.ankuendigung,
     protokoll: [
@@ -140,7 +200,8 @@ export function bossZugEintragen(
         spruch: zug.spruch,
         aktionen: zug.aktionen.map(({ name, text }) => ({ name, text })),
         neueDiener: zug.neueDiener.map((d) => d.name),
-        angriffsziel: name(zug.angriffsziel),
+        angriffsziel: angriff.angreifer ? name(zug.angriffsziel) : null,
+        angreifer: angriff.angreifer,
         ankuendigung: zug.ankuendigung,
         lebenAenderungen: zug.lebenAenderungen.map((l) => ({
           name: name(l.spielerId) ?? '',

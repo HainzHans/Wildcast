@@ -8,24 +8,18 @@ import {
 } from '@angular/core';
 
 import { Effekt, Spieler } from '../../core/spiel/modell';
+import { HalteKnopf } from '../../shared/ui/halte-knopf';
 
 /** Ab hier wird die Lebensanzeige rot. */
 const KRITISCH = 10;
 /** So lange sammelt die Blase schnelle Tipps zu einer Summe (−1 −1 −1 → −3). */
 const SAMMELZEIT = 1500;
-/** Gedrückt halten zählt weiter: erst nach dieser Pause, dann in diesem Takt. */
-const HALTEN_START = 450;
-const HALTEN_TAKT = 90;
 
 @Component({
   selector: 'app-spieler-feld',
+  imports: [HalteKnopf],
   template: `
-    <section
-      class="feld"
-      [class.gedreht]="gedreht()"
-      [class.am-zug]="amZug()"
-      [attr.aria-label]="spieler().name + (amZug() ? ', am Zug' : '')"
-    >
+    <section class="feld" [class.gedreht]="gedreht()" [attr.aria-label]="spieler().name">
       <h2 class="name">{{ spieler().name }}</h2>
 
       <div class="leben" [class.kritisch]="spieler().leben <= kritisch">
@@ -38,12 +32,8 @@ const HALTEN_TAKT = 90;
             [attr.aria-label]="
               (s > 0 ? 'Ein Leben mehr für ' : 'Ein Leben weniger für ') + spieler().name
             "
-            (pointerdown)="halten(s, $event)"
-            (pointerup)="loslassen()"
-            (pointerleave)="loslassen()"
-            (pointercancel)="loslassen()"
-            (contextmenu)="$event.preventDefault()"
-            (click)="tastatur(s, $event)"
+            appHalteKnopf
+            (halte)="aendern(s)"
           >
             {{ s > 0 ? '+' : '−' }}
           </button>
@@ -100,11 +90,6 @@ const HALTEN_TAKT = 90;
       box-shadow: var(--schatten);
       overflow: hidden;
     }
-    .am-zug {
-      box-shadow:
-        0 0 0 2px var(--messing),
-        var(--schatten);
-    }
     .gedreht {
       transform: rotate(180deg);
     }
@@ -137,7 +122,7 @@ const HALTEN_TAKT = 90;
         'WONK' 1;
       font-weight: 800;
       /* Richtet sich nach der kleineren Seite und der Breite, damit +/− daneben passen */
-      font-size: clamp(2.4rem, min(32cqmin, 24cqi), 9rem);
+      font-size: clamp(2rem, min(26cqmin, 20cqi), 7rem);
       font-variant-numeric: tabular-nums;
       transition: color 200ms;
     }
@@ -158,7 +143,7 @@ const HALTEN_TAKT = 90;
     }
     .schritt {
       flex-shrink: 0;
-      width: clamp(2.75rem, min(20cqmin, 17cqi), 4.75rem);
+      width: clamp(2.75rem, min(18cqmin, 15cqi), 4.25rem);
       aspect-ratio: 1;
       border-radius: 50%;
       border: 1px solid var(--feld-rand);
@@ -166,9 +151,6 @@ const HALTEN_TAKT = 90;
       font-size: clamp(1.4rem, min(11cqmin, 9cqi), 2.4rem);
       font-weight: 700;
       line-height: 1;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
       transition: transform 80ms;
     }
     .schritt:active {
@@ -209,8 +191,6 @@ export class SpielerFeld implements OnDestroy {
   readonly spieler = input.required<Spieler>();
   readonly gedreht = input(false);
   readonly effektWuerfel = input(false);
-  /** Im Bosskampf: Dieser Spieler ist gerade dran. */
-  readonly amZug = input(false);
   /** Aktive Verzauberungen und Embleme, die diesen Spieler betreffen. */
   readonly bleibende = input<Effekt[]>([]);
 
@@ -222,8 +202,6 @@ export class SpielerFeld implements OnDestroy {
   protected readonly kritisch = KRITISCH;
   protected readonly aenderung = signal(0);
   private zeitgeber?: ReturnType<typeof setTimeout>;
-  private halteStart?: ReturnType<typeof setTimeout>;
-  private halteTakt?: ReturnType<typeof setInterval>;
 
   protected aendern(um: number): void {
     this.leben.emit(um);
@@ -232,28 +210,7 @@ export class SpielerFeld implements OnDestroy {
     this.zeitgeber = setTimeout(() => this.aenderung.set(0), SAMMELZEIT);
   }
 
-  /** Tippen zählt einmal, Gedrückthalten zählt im Takt weiter. */
-  protected halten(um: number, ereignis: PointerEvent): void {
-    if (ereignis.button !== 0) return;
-    this.loslassen();
-    this.aendern(um);
-    this.halteStart = setTimeout(() => {
-      this.halteTakt = setInterval(() => this.aendern(um), HALTEN_TAKT);
-    }, HALTEN_START);
-  }
-
-  protected loslassen(): void {
-    clearTimeout(this.halteStart);
-    clearInterval(this.halteTakt);
-  }
-
-  /** Maus und Finger laufen über pointerdown; nur die Tastatur (Enter/Leertaste) kommt hier an. */
-  protected tastatur(um: number, ereignis: MouseEvent): void {
-    if (ereignis.detail === 0) this.aendern(um);
-  }
-
   ngOnDestroy(): void {
     clearTimeout(this.zeitgeber);
-    this.loslassen();
   }
 }

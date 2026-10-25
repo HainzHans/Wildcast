@@ -10,6 +10,7 @@ import {
   Lage,
   Phase,
   Schlagwort,
+  SPIELER_FRAGEN,
   Stimmung,
   Ziel,
 } from './boss-modell';
@@ -82,12 +83,19 @@ export function stimmung(lage: Lage): Stimmung {
 
 /** Wie stark eine Stimmung jede Art von Aktion bevorzugt. */
 const NEIGUNG: Record<Stimmung, Record<Schlagwort, number>> = {
-  wuetend: { angriff: 2.5, beschwoerung: 1.5, kontrolle: 1, heilung: 0.5 },
-  bedroht: { angriff: 1, beschwoerung: 1, kontrolle: 3, heilung: 0.5 },
-  ueberlegen: { angriff: 3, beschwoerung: 0.8, kontrolle: 0.7, heilung: 0.3 },
-  verzweifelt: { angriff: 0.7, beschwoerung: 2.5, kontrolle: 1, heilung: 3 },
-  lauernd: { angriff: 1, beschwoerung: 1.5, kontrolle: 1, heilung: 0.7 },
+  wuetend: { angriff: 2, beschwoerung: 1.4, kontrolle: 1, heilung: 0.5 },
+  bedroht: { angriff: 1, beschwoerung: 1, kontrolle: 2.2, heilung: 0.6 },
+  ueberlegen: { angriff: 2.2, beschwoerung: 0.9, kontrolle: 0.8, heilung: 0.4 },
+  verzweifelt: { angriff: 0.8, beschwoerung: 2, kontrolle: 1, heilung: 2.2 },
+  lauernd: { angriff: 1, beschwoerung: 1.3, kontrolle: 1, heilung: 0.8 },
 };
+
+/** Aktionen aus den letzten Zügen werden so viel seltener – damit der Boss abwechslungsreich bleibt. */
+const SCHON_GESEHEN = 0.35;
+/** Frage aus dem vorigen Zug: nur noch selten wieder. */
+const SCHON_GEFRAGT = 0.15;
+/** Mit dieser Wahrscheinlichkeit stellt der Boss zwei Fragen statt einer. */
+const ZWEI_FRAGEN = 0.6;
 
 function verfuegbar(aktion: BossAktion, p: Phase): boolean {
   return !aktion.phasen || aktion.phasen.includes(p);
@@ -100,7 +108,8 @@ export function aktionsGewicht(aktion: BossAktion, lage: Lage, s: Stimmung): num
   const treffer = Object.entries(aktion.bevorzugt ?? {}).filter(([frage, werte]) =>
     werte?.includes(lage.antworten[frage as FrageId] ?? ''),
   ).length;
-  return aktion.gewicht * neigung * 2 ** treffer;
+  const gesehen = lage.verlauf.includes(aktion.id) ? SCHON_GESEHEN : 1;
+  return aktion.gewicht * neigung * 2 ** treffer * gesehen;
 }
 
 function gewichtetAus<T>(eintraege: { wert: T; gewicht: number }[], zufall: Zufall): T | null {
@@ -125,7 +134,7 @@ export function waehleAktion(
   zufall: Zufall,
   ausschluss: string[] = [],
 ): BossAktion {
-  const gesperrt = new Set([...ausschluss, lage.letzteAktionen.at(-1) ?? '']);
+  const gesperrt = new Set([...ausschluss, ...lage.letzteAktionen]);
   const kandidaten = boss.aktionen
     .filter((a) => !gesperrt.has(a.id))
     .map((a) => ({ wert: a, gewicht: aktionsGewicht(a, lage, s) }));
@@ -137,14 +146,15 @@ export function waehleAktion(
 }
 
 /**
- * Höchstens zwei Fragen pro Zug: zuerst die Kreaturen (davon hängt „bedroht“ ab), dann eine
- * weitere, die für die Aktionen der aktuellen Phase gerade am meisten zählt.
+ * Ein oder zwei Fragen pro Zug. Gewichtet danach, wie viele Aktionen der aktuellen Phase die
+ * Antwort brauchen; die Kreaturen-Frage zählt etwas mehr, weil davon „bedroht“ abhängt.
+ * Was er im vorigen Zug gefragt hat, fragt er nur noch selten.
  */
 export function fragenFuerZug(
   boss: BossDefinition,
   lage: Lage,
   zufall: Zufall,
-  anzahl = 2,
+  anzahl = zufall() < ZWEI_FRAGEN ? 2 : 1,
 ): Frage[] {
   const p = phase(lage.leben, lage.maxLeben);
   const relevanz = new Map<FrageId, number>();
@@ -153,12 +163,16 @@ export function fragenFuerZug(
       relevanz.set(frage, (relevanz.get(frage) ?? 0) + a.gewicht);
     }
   }
-  const gewaehlt: FrageId[] = ['kreaturen'];
+  relevanz.set('kreaturen', (relevanz.get('kreaturen') ?? 0) + 3);
+  const gewaehlt: FrageId[] = [];
   while (gewaehlt.length < anzahl) {
     const naechste = gewichtetAus(
       [...relevanz]
-        .filter(([f]) => !gewaehlt.includes(f))
-        .map(([wert, gewicht]) => ({ wert, gewicht })),
+        .filter(([f]) => !gewaehlt.includes(f) && boss.fragen.some((q) => q.id === f))
+        .map(([wert, gewicht]) => ({
+          wert,
+          gewicht: gewicht * (lage.letzteFragen.includes(wert) ? SCHON_GEFRAGT : 1),
+        })),
       zufall,
     );
     if (!naechste) break;
@@ -167,10 +181,10 @@ export function fragenFuerZug(
   return gewaehlt
     .map((id) => boss.fragen.find((f) => f.id === id))
     .filter((f): f is Frage => !!f)
-    .map((f) => (f.id === 'handkarten' ? mitSpielern(f, lage) : f));
+    .map((f) => (SPIELER_FRAGEN.includes(f.id) ? mitSpielern(f, lage) : f));
 }
 
-/** Bei „Wer hat mehr Handkarten?“ sind die Spieler selbst die Antworten. */
+/** Bei Fragen wie „Wer hat mehr Handkarten?“ sind die Spieler selbst die Antworten. */
 function mitSpielern(frage: Frage, lage: Lage): Frage {
   const antworten: Antwort[] = lage.spieler.map((s) => ({ wert: String(s.id), label: s.name }));
   return { ...frage, antworten: [...antworten, ...frage.antworten] };
@@ -178,6 +192,10 @@ function mitSpielern(frage: Frage, lage: Lage): Frage {
 
 export function zielSpieler(lage: Lage, ziel: Ziel, zufall: Zufall): number[] {
   if (ziel === 'alle') return lage.spieler.map((s) => s.id);
+  if (ziel === 'rache') {
+    const genannt = lage.spieler.find((s) => String(s.id) === lage.antworten.rache);
+    return genannt ? [genannt.id] : zielSpieler(lage, 'meisteLeben', zufall);
+  }
   const leben = lage.spieler.map((s) => s.leben);
   const grenze = ziel === 'meisteLeben' ? Math.max(...leben) : Math.min(...leben);
   const kandidaten = lage.spieler.filter((s) => s.leben === grenze);
@@ -195,6 +213,12 @@ function fuelle(text: string, lage: Lage, verlust: number, boss: BossDefinition)
 
 function zufaelligAus<T>(liste: T[], zufall: Zufall): T {
   return liste[Math.floor(zufall() * liste.length)];
+}
+
+/** Ein Spruch, der zuletzt nicht kam – solange es noch andere gibt. */
+function neuerSpruch(sprueche: string[], zuletzt: string[], zufall: Zufall): string {
+  const frisch = sprueche.filter((s) => !zuletzt.includes(s));
+  return zufaelligAus(frisch.length ? frisch : sprueche, zufall);
 }
 
 /**
@@ -229,6 +253,7 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
     );
   }
 
+  const spruch = neuerSpruch(boss.sprueche[s], lage.letzteSprueche, zufall);
   const lebenAenderungen: BossZug['lebenAenderungen'] = [];
   let heilung = 0;
   let schutz = 0;
@@ -259,7 +284,8 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
   return {
     phase: p,
     stimmung: s,
-    spruch: fuelle(zufaelligAus(boss.sprueche[s], zufall), lage, verlust, boss),
+    spruch: fuelle(spruch, lage, verlust, boss),
+    spruchVorlage: spruch,
     aktionen: aktionen.map((a) => ({
       id: a.id,
       name: a.name,

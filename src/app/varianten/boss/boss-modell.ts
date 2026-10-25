@@ -12,7 +12,18 @@ export type Stimmung = 'wuetend' | 'bedroht' | 'ueberlegen' | 'verzweifelt' | 'l
 export type Schlagwort = 'angriff' | 'kontrolle' | 'beschwoerung' | 'heilung';
 
 /** Fragen, die der Boss am Tisch stellen kann. Die App selbst kennt nur Leben, Diener und Runden. */
-export type FrageId = 'kreaturen' | 'grosseKreatur' | 'flieger' | 'bleibende' | 'handkarten';
+export type FrageId =
+  | 'kreaturen'
+  | 'grosseKreatur'
+  | 'flieger'
+  | 'bleibende'
+  | 'handkarten'
+  | 'kommandeur'
+  | 'friedhof'
+  | 'rache';
+
+/** Fragen, deren Antworten die Spieler selbst sind. */
+export const SPIELER_FRAGEN: FrageId[] = ['handkarten', 'rache'];
 
 export interface Antwort {
   wert: string;
@@ -22,20 +33,29 @@ export interface Antwort {
 export interface Frage {
   id: FrageId;
   text: string;
-  /** Feste Antworten; bei `handkarten` ergänzt die Logik die Spielernamen. */
+  /** Feste Antworten; bei Spieler-Fragen ergänzt die Logik die Spielernamen davor. */
   antworten: Antwort[];
 }
 
 export type Antworten = Partial<Record<FrageId, string>>;
 
-/** Wen eine Lebensänderung trifft. Die App löst das selbst auf, weil sie alle Leben kennt. */
-export type Ziel = 'meisteLeben' | 'wenigsteLeben' | 'alle';
+/**
+ * Wen eine Lebensänderung trifft. Die App löst das selbst auf, weil sie alle Leben kennt.
+ * `rache` meint den Spieler, den die Spieler auf die Rache-Frage genannt haben.
+ */
+export type Ziel = 'meisteLeben' | 'wenigsteLeben' | 'alle' | 'rache';
 
 export interface DienerVorlage {
   name: string;
   staerke: number;
   widerstand: number;
   faehigkeit?: string;
+  /** Wird beim Angreifen nicht getappt. */
+  wachsamkeit?: boolean;
+  /** Greift schon in dem Zug an, in dem er erscheint. */
+  eile?: boolean;
+  /** Greift nie an (z. B. reine Blocker). */
+  greiftNichtAn?: boolean;
 }
 
 export interface BossAktion {
@@ -87,8 +107,13 @@ export interface Lage {
   diener: number;
   spieler: { id: number; name: string; leben: number }[];
   antworten: Antworten;
-  /** IDs der zuletzt ausgeführten Aktionen, neueste zuletzt. */
+  /** IDs der Aktionen aus dem vorigen Boss-Zug – die wiederholt er nie direkt. */
   letzteAktionen: string[];
+  /** Ältere Aktionen, neueste zuletzt – die werden seltener. */
+  verlauf: string[];
+  /** Was er im vorigen Zug gefragt hat – das fragt er möglichst nicht gleich wieder. */
+  letzteFragen: FrageId[];
+  letzteSprueche: string[];
   spezialAngekuendigt: boolean;
 }
 
@@ -103,6 +128,8 @@ export interface BossZug {
   phase: Phase;
   stimmung: Stimmung;
   spruch: string;
+  /** Der Spruch vor dem Einsetzen der Platzhalter – damit er sich nicht gleich wiederholt. */
+  spruchVorlage: string;
   aktionen: AusgefuehrteAktion[];
   lebenAenderungen: { spielerId: number; um: number }[];
   heilung: number;

@@ -26,6 +26,9 @@ function lage(aenderung: Partial<Lage> = {}): Lage {
     ],
     antworten: {},
     letzteAktionen: [],
+    verlauf: [],
+    letzteFragen: [],
+    letzteSprueche: [],
     spezialAngekuendigt: false,
     ...aenderung,
   };
@@ -136,11 +139,66 @@ describe('Boss-Logik', () => {
     });
   });
 
-  it('stellt höchstens zwei Fragen und beginnt mit den Kreaturen', () => {
-    const fragen = fragenFuerZug(STURMDRACHE, lage(), zufallMitStartwert(1));
-    expect(fragen.length).toBe(2);
-    expect(fragen[0].id).toBe('kreaturen');
-    expect(fragen[1].id).not.toBe('kreaturen');
+  it('stellt ein oder zwei verschiedene Fragen', () => {
+    const zufall = zufallMitStartwert(1);
+    const anzahlen = new Set<number>();
+    for (let i = 0; i < 100; i++) {
+      const fragen = fragenFuerZug(STURMDRACHE, lage(), zufall);
+      anzahlen.add(fragen.length);
+      expect(new Set(fragen.map((f) => f.id)).size).toBe(fragen.length);
+    }
+    expect([...anzahlen].sort()).toEqual([1, 2]);
+  });
+
+  it('fragt selten dasselbe wie im vorigen Zug', () => {
+    const zufall = zufallMitStartwert(12);
+    let wiederholt = 0;
+    for (let i = 0; i < 500; i++) {
+      const fragen = fragenFuerZug(STURMDRACHE, lage({ letzteFragen: ['kreaturen'] }), zufall, 1);
+      if (fragen[0].id === 'kreaturen') wiederholt++;
+    }
+    expect(wiederholt / 500).toBeLessThan(0.15);
+  });
+
+  it('stellt über mehrere Züge viele verschiedene Fragen', () => {
+    const zufall = zufallMitStartwert(21);
+    const gestellt = new Set<string>();
+    for (let i = 0; i < 40; i++) {
+      for (const f of fragenFuerZug(STURMDRACHE, lage(), zufall)) gestellt.add(f.id);
+    }
+    expect(gestellt.size).toBeGreaterThanOrEqual(6);
+  });
+
+  it('nimmt Aktionen aus den letzten Zügen deutlich seltener', () => {
+    const zufall = zufallMitStartwert(14);
+    const zaehle = (verlauf: string[]) => {
+      let blitz = 0;
+      for (let i = 0; i < 2000; i++) {
+        if (waehleAktion(STURMDRACHE, lage({ verlauf }), 'lauernd', zufall).id === 'blitzschlag')
+          blitz++;
+      }
+      return blitz;
+    };
+    expect(zaehle(['blitzschlag'])).toBeLessThan(zaehle([]) * 0.6);
+  });
+
+  it('wiederholt keine Aktion aus dem vorigen Zug, auch in Phase 3 nicht', () => {
+    const zufall = zufallMitStartwert(15);
+    for (let i = 0; i < 300; i++) {
+      const a = waehleAktion(
+        STURMDRACHE,
+        lage({ letzteAktionen: ['hagel', 'brutruf'] }),
+        'wuetend',
+        zufall,
+      );
+      expect(['hagel', 'brutruf']).not.toContain(a.id);
+    }
+  });
+
+  it('nimmt einen Spruch, der zuletzt nicht kam', () => {
+    const alle = STURMDRACHE.sprueche.lauernd;
+    const zug = bossZug(STURMDRACHE, lage({ letzteSprueche: alle.slice(1) }), () => 0.99);
+    expect(zug.spruchVorlage).toBe(alle[0]);
   });
 
   it('bietet bei der Handkarten-Frage die Spieler als Antworten an', () => {
@@ -165,6 +223,11 @@ describe('Boss-Logik', () => {
       ],
     });
     expect(zielSpieler(gleich, 'meisteLeben', () => 0.99)).toEqual([2]);
+  });
+
+  it('rächt sich an dem Spieler, den die Antwort nennt', () => {
+    expect(zielSpieler(lage({ antworten: { rache: '2' } }), 'rache', () => 0)).toEqual([2]);
+    expect(zielSpieler(lage({ antworten: { rache: 'niemand' } }), 'rache', () => 0)).toEqual([1]);
   });
 
   describe('Boss-Zug', () => {

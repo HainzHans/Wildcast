@@ -9,7 +9,8 @@ import {
   bossTreffen,
   bossZugEintragen,
   dienerBesiegen,
-  zugBeenden,
+  dienerTappen,
+  schildAufheben,
 } from '../../varianten/boss/boss-stand';
 import { bossMitId } from '../../varianten/boss/bosse';
 import { EffektArchiv } from '../../varianten/mana-wuerfel/effekt-archiv';
@@ -28,7 +29,21 @@ function ladeStand(): Spielstand | null {
   const stand = lesen<Spielstand & { variante?: VarianteId }>(SCHLUESSEL);
   if (!stand) return null;
   const { variante, ...rest } = stand;
-  return variante && !rest.varianten ? { ...rest, varianten: [variante] } : rest;
+  const mitVarianten = variante && !rest.varianten ? { ...rest, varianten: [variante] } : rest;
+  // Bosskämpfe aus früheren Versionen kannten das Gedächtnis des Bosses noch nicht.
+  const boss = mitVarianten.boss;
+  return boss
+    ? {
+        ...mitVarianten,
+        boss: {
+          ...boss,
+          verlauf: boss.verlauf ?? [],
+          letzteFragen: boss.letzteFragen ?? [],
+          gemerkteAntworten: boss.gemerkteAntworten ?? {},
+          letzteSprueche: boss.letzteSprueche ?? [],
+        },
+      }
+    : mitVarianten;
 }
 
 /**
@@ -65,11 +80,7 @@ export class SpielStore {
       effekte: [],
       optionen,
       boss: varianten.includes('boss')
-        ? bossStarten(
-            bossMitId(optionen.bossId),
-            spieler.map((p) => p.id),
-            this.zufall,
-          )
+        ? bossStarten(bossMitId(optionen.bossId), this.zufall)
         : undefined,
     });
   }
@@ -127,18 +138,12 @@ export class SpielStore {
     this.mitBoss((b) => dienerBesiegen(b, nr));
   }
 
-  zugBeenden(): void {
-    this.aendern((s) =>
-      s.boss
-        ? {
-            ...s,
-            boss: zugBeenden(
-              s.boss,
-              s.spieler.map((p) => p.id),
-            ),
-          }
-        : s,
-    );
+  dienerTappen(nr: number): void {
+    this.mitBoss((b) => dienerTappen(b, nr));
+  }
+
+  schildAufheben(): void {
+    this.mitBoss((b) => schildAufheben(b));
   }
 
   /** Die Fragen, die der Boss zu Beginn seines Zuges stellt. Ändert nichts am Stand. */
@@ -165,7 +170,7 @@ export class SpielStore {
           p.leben +
           zug.lebenAenderungen.filter((l) => l.spielerId === p.id).reduce((n, l) => n + l.um, 0),
       })),
-      boss: alt.boss && bossZugEintragen(alt.boss, zug, alt.spieler),
+      boss: alt.boss && bossZugEintragen(alt.boss, zug, alt.spieler, antworten),
     }));
     return zug;
   }

@@ -34,21 +34,13 @@ const DENKZEIT = 1100;
   template: `
     <app-ueberlagerung [titel]="bossName() + ' ist am Zug'" (schliessen)="fertig.emit()">
       @switch (schritt()) {
-        @case ('start') {
-          <div class="start">
-            <p class="ueber">Runde {{ runde() }}</p>
-            <h2>{{ bossName() }} ist am Zug</h2>
-            <p class="leise">Der Boss mustert das Schlachtfeld …</p>
-            <button type="button" class="knopf knopf--haupt gross" (click)="weiter()">
-              {{ fragen().length ? 'Er hat Fragen' : 'Boss-Zug starten' }}
-            </button>
-          </div>
-        }
         @case ('frage') {
           @if (aktuelleFrage(); as f) {
             <div class="frage">
-              <p class="ueber">Frage {{ frageNr() + 1 }} von {{ fragen().length }}</p>
-              <p class="boss-stimme">„{{ f.text }}“</p>
+              <p class="ueber">
+                {{ bossName() }} fragt · {{ frageNr() + 1 }} von {{ fragen().length }}
+              </p>
+              <h2 class="frage-text">{{ f.text }}</h2>
               <div class="antworten" [class.viele]="f.antworten.length > 3">
                 @for (a of f.antworten; track a.wert) {
                   <button type="button" class="antwort" (click)="antworten(f.id, a.wert)">
@@ -112,14 +104,12 @@ const DENKZEIT = 1100;
     </app-ueberlagerung>
   `,
   styles: `
-    .start,
     .frage,
     .denkt,
     .ergebnis {
       display: grid;
       gap: 0.9rem;
     }
-    .start,
     .denkt {
       text-align: center;
       padding: 1rem 0;
@@ -136,13 +126,14 @@ const DENKZEIT = 1100;
       font-size: 1.8rem;
       font-weight: 800;
     }
-    .leise {
-      margin: 0;
-      color: var(--text-leise);
-    }
     .gross {
       min-height: 3.5rem;
       font-size: 1.15rem;
+    }
+    .frage-text {
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1.2;
     }
     .boss-stimme {
       margin: 0;
@@ -248,7 +239,7 @@ export class BossZugDialog implements OnDestroy {
 
   /** Einmal beim Öffnen festgelegt, damit sich die Fragen nicht mitten im Gespräch ändern. */
   protected readonly fragen = signal<Frage[]>(this.store.bossFragen());
-  protected readonly schritt = signal<'start' | 'frage' | 'denkt' | 'ergebnis'>('start');
+  protected readonly schritt = signal<'frage' | 'denkt' | 'ergebnis'>('frage');
   protected readonly frageNr = signal(0);
   protected readonly aktuelleFrage = computed(() => this.fragen()[this.frageNr()] ?? null);
   private readonly gesammelt = signal<Antworten>({});
@@ -269,20 +260,23 @@ export class BossZugDialog implements OnDestroy {
     (this.zug()?.neueDiener ?? []).map((d) => `${d.name} ${d.staerke}/${d.widerstand}`).join(', '),
   );
 
+  /** Aus dem Protokoll, weil erst beim Eintragen feststeht, wer angreifen durfte. */
   protected readonly angriffText = computed(() => {
-    const z = this.zug();
-    const anzahl = this.boss()?.diener.length ?? 0;
-    if (!z || z.angriffsziel === null || !anzahl) return null;
-    return `Alle ${anzahl} Diener greifen ${this.namen().get(z.angriffsziel)} an.`;
+    if (!this.zug()) return null;
+    const eintrag = this.boss()?.protokoll.at(-1);
+    if (!eintrag?.angreifer || !eintrag.angriffsziel) return 'Diesmal greifen keine Diener an.';
+    const diener =
+      eintrag.angreifer === 1 ? '1 Diener greift' : `${eintrag.angreifer} Diener greifen`;
+    return `${diener} ${eintrag.angriffsziel} an. Wer angreift, wird getappt – außer mit Wachsamkeit.`;
   });
+
+  constructor() {
+    // Ohne Fragen legt der Boss sofort los.
+    if (!this.fragen().length) this.ausfuehren();
+  }
 
   protected stimmungName(s: Stimmung): string {
     return STIMMUNG_NAME[s];
-  }
-
-  protected weiter(): void {
-    if (this.fragen().length) this.schritt.set('frage');
-    else this.ausfuehren();
   }
 
   protected antworten(frage: Frage['id'], wert: string): void {
