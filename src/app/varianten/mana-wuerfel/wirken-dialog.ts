@@ -14,9 +14,11 @@ import { Effekt, Spieler } from '../../core/spiel/modell';
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { Ueberlagerung } from '../../shared/ui/ueberlagerung';
 import { EffektKarte } from './effekt-karte';
-import { ANTWORT } from './wuerfel';
 
-const SCHNELLWAHL = [1, 2, 3, 4, 5, 6, 8, 10, 13, 15, 20];
+/** Wählbare Manamenge pro Effekt. */
+const MANA_MIN = 1;
+const MANA_MAX = 10;
+const SCHNELLWAHL = Array.from({ length: MANA_MAX - MANA_MIN + 1 }, (_, i) => MANA_MIN + i);
 /** Kurze Spannungspause, bevor das Ergebnis aufgedeckt wird. */
 const WUERFELZEIT = 700;
 
@@ -36,11 +38,23 @@ const WUERFELZEIT = 700;
             <p class="frage">Wie viel {{ energie }} bezahlst du?</p>
 
             <div class="zaehler">
-              <button type="button" class="pm" aria-label="Weniger" (click)="setzen(mana() - 1)">
+              <button
+                type="button"
+                class="pm"
+                aria-label="Weniger"
+                [disabled]="mana() <= manaMin"
+                (click)="setzen(mana() - 1)"
+              >
                 −
               </button>
               <output class="zahl" aria-live="polite">{{ mana() }}</output>
-              <button type="button" class="pm" aria-label="Mehr" (click)="setzen(mana() + 1)">
+              <button
+                type="button"
+                class="pm"
+                aria-label="Mehr"
+                [disabled]="mana() >= manaMax"
+                (click)="setzen(mana() + 1)"
+              >
                 +
               </button>
             </div>
@@ -132,9 +146,13 @@ const WUERFELZEIT = 700;
       line-height: 1;
       font-variant-numeric: tabular-nums;
     }
+    .pm:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
     .schnell {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
       justify-content: center;
       gap: 0.4rem;
     }
@@ -211,6 +229,8 @@ export class WirkenDialog implements OnDestroy {
 
   protected readonly energie = ENERGIE;
   protected readonly schnellwahl = SCHNELLWAHL;
+  protected readonly manaMin = MANA_MIN;
+  protected readonly manaMax = MANA_MAX;
   protected readonly mana = signal(3);
   protected readonly stufe = computed(() => stufe(this.mana()));
   protected readonly phase = signal<'wahl' | 'rollt' | 'ergebnis'>('wahl');
@@ -218,7 +238,7 @@ export class WirkenDialog implements OnDestroy {
   private zeitgeber?: ReturnType<typeof setTimeout>;
 
   protected setzen(mana: number): void {
-    this.mana.set(Math.min(Math.max(mana, 1), ANTWORT));
+    this.mana.set(Math.min(Math.max(mana, MANA_MIN), MANA_MAX));
   }
 
   protected wuerfeln(): void {
