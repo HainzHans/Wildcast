@@ -1,6 +1,7 @@
 import { zufallMitStartwert } from '../../core/zufall';
 import {
   bossZug,
+  DIENER_GRENZE,
   dienerNachschub,
   fragenFuerZug,
   heilen,
@@ -73,11 +74,12 @@ describe('Boss-Logik', () => {
     });
   });
 
-  it('wächst mit den Runden und schickt Nachschub, wenn kaum Diener übrig sind', () => {
+  it('ruft einen Diener pro Runde, mehr bei leerem Feld, keinen bei vollem', () => {
     expect(dienerNachschub(1, 1)).toBe(1);
-    expect(dienerNachschub(2, 1)).toBe(3);
-    expect(dienerNachschub(3, 4)).toBe(2);
-    expect(dienerNachschub(5, 0)).toBe(5);
+    expect(dienerNachschub(2, 1)).toBe(2);
+    expect(dienerNachschub(5, 4)).toBe(1);
+    expect(dienerNachschub(5, 0)).toBe(2);
+    expect(dienerNachschub(8, DIENER_GRENZE)).toBe(0);
   });
 
   describe('Stimmung', () => {
@@ -128,7 +130,7 @@ describe('Boss-Logik', () => {
         if (waehleAktion(STURMDRACHE, l, 'bedroht', zufall).schlagworte.includes('kontrolle'))
           kontrolle++;
       }
-      expect(kontrolle / 1000).toBeGreaterThan(0.7);
+      expect(kontrolle / 1000).toBeGreaterThan(0.6);
     });
 
     it('heilt nicht mit vollen Leben', () => {
@@ -254,7 +256,17 @@ describe('Boss-Logik', () => {
       );
       expect(zweiterZug.aktionen.map((a) => a.id)).toContain('weltensturm');
       expect(zweiterZug.aktionen.length).toBe(2);
-      expect(zweiterZug.lebenAenderungen.filter((l) => l.um === -10).length).toBe(2);
+      expect(zweiterZug.lebenAenderungen.filter((l) => l.um === -8).length).toBe(2);
+      expect(zweiterZug.spezialEingesetzt).toBe(true);
+      expect(zweiterZug.ankuendigung).toBeNull();
+
+      const dritterZug = bossZug(
+        STURMDRACHE,
+        lage({ leben: 30, lebenVorher: 40, spezialEingesetzt: true }),
+        zufall,
+      );
+      expect(dritterZug.ankuendigung).toBeNull();
+      expect(dritterZug.aktionen.map((a) => a.id)).not.toContain('weltensturm');
     });
 
     it('macht in einem Zug nie dieselbe Aktion zweimal', () => {

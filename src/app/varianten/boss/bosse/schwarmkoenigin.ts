@@ -10,7 +10,7 @@ export const SCHWARMKOENIGIN: BossDefinition = {
   beschreibung: 'Überflutet den Tisch mit Insekten, die sich häuten und immer stärker werden.',
   passiv:
     'Schwarmbewusstsein: Solange die Königin sechs oder mehr Diener hat, erhalten alle ihre Diener +1/+0.',
-  startDiener: 2,
+  startDiener: 1,
   diener: [
     { name: 'Drohne', staerke: 1, widerstand: 1, faehigkeit: 'Eile', eile: true },
     { name: 'Stachler', staerke: 3, widerstand: 1, faehigkeit: 'Flugfähigkeit' },

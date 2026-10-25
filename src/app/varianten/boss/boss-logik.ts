@@ -64,11 +64,17 @@ export function heilen(leben: number, maxLeben: number, menge: number): number {
   return Math.min(leben + menge, deckel);
 }
 
-/** Wachstum: Runde 1–2 ein Diener, 3–4 zwei, ab 5 drei. Nachschub ab Runde 2 bei höchstens einem Diener. */
+/** Ab so vielen Dienern kommt kein automatischer Nachschub mehr (Aktionen können trotzdem rufen). */
+export const DIENER_GRENZE = 6;
+
+/**
+ * Ein Diener pro Runde, solange weniger als {@link DIENER_GRENZE} da sind. Ab Runde 2 kommt bei
+ * höchstens einem Diener einer extra dazu. Mehr würde zwei Spieler auf Dauer überrennen.
+ */
 export function dienerNachschub(runde: number, diener: number): number {
-  const wachstum = runde <= 2 ? 1 : runde <= 4 ? 2 : 3;
-  const nachschub = runde >= 2 && diener <= 1 ? 2 : 0;
-  return wachstum + nachschub;
+  if (diener >= DIENER_GRENZE) return 0;
+  const nachschub = runde >= 2 && diener <= 1 ? 1 : 0;
+  return 1 + nachschub;
 }
 
 export function stimmung(lage: Lage): Stimmung {
@@ -306,7 +312,7 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
 
   if (p === 3 && lage.spezialAngekuendigt) {
     aktionen.push(boss.spezial);
-  } else if (p === 3) {
+  } else if (p === 3 && !lage.spezialEingesetzt) {
     ankuendigung = boss.ankuendigung;
     spezialAngekuendigt = true;
   }
@@ -421,5 +427,6 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
     angriffsziel,
     ankuendigung,
     spezialAngekuendigt,
+    spezialEingesetzt: aktionen.includes(boss.spezial),
   };
 }

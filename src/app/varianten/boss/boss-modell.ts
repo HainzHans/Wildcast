@@ -145,6 +145,8 @@ export interface Lage {
   letzteFragen: FrageId[];
   letzteSprueche: string[];
   spezialAngekuendigt: boolean;
+  /** Den Spezialangriff setzt der Boss nur einmal pro Kampf ein. */
+  spezialEingesetzt?: boolean;
   /** Charakterzug dieser Partie. */
   temperament?: Temperament;
   /** Aktionen, die der Boss in dieser Partie beherrscht. Ohne Angabe: alle. */
@@ -178,4 +180,6 @@ export interface BossZug {
   /** Ankündigung des Spezialangriffs für den nächsten Zug. */
   ankuendigung: string | null;
   spezialAngekuendigt: boolean;
+  /** Ob in diesem Zug der Spezialangriff kam. */
+  spezialEingesetzt: boolean;
 }

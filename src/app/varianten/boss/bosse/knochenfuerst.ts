@@ -36,8 +36,8 @@ export const KNOCHENFUERST: BossDefinition = {
       name: 'Knochenhagel',
       schlagworte: ['angriff'],
       gewicht: 2,
-      text: 'Ein Hagel aus Knochensplittern trifft den Spieler mit den meisten Leben: Er verliert 7 Leben.',
-      folgen: { leben: { ziel: 'meisteLeben', um: -7 } },
+      text: 'Ein Hagel aus Knochensplittern trifft den Spieler mit den meisten Leben: Er verliert 8 Leben.',
+      folgen: { leben: { ziel: 'meisteLeben', um: -8 } },
     },
     {
       id: 'seelenernte',
@@ -52,9 +52,9 @@ export const KNOCHENFUERST: BossDefinition = {
       name: 'Lebensentzug',
       schlagworte: ['angriff', 'heilung'],
       gewicht: 1,
-      text: 'Der Fürst saugt den aus, der ihn zuletzt verletzt hat: Dieser Spieler verliert 6 Leben, und der Fürst erhält 6 Leben.',
+      text: 'Der Fürst saugt den aus, der ihn zuletzt verletzt hat: Dieser Spieler verliert 7 Leben, und der Fürst erhält 7 Leben.',
       bevorzugt: { rache: ['1', '2', '3', '4'] },
-      folgen: { leben: { ziel: 'rache', um: -6 }, heilung: 6 },
+      folgen: { leben: { ziel: 'rache', um: -7 }, heilung: 7 },
     },
     {
       id: 'grabesgriff',

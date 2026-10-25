@@ -11,7 +11,7 @@ export const NEBELKOENIGIN: BossDefinition = {
     'Verschwindet im Nebel, heilt sich an ihren Dienern und lässt euch ins Leere greifen.',
   passiv:
     'Nebelschleier: Alle Diener der Königin haben Flugfähigkeit. Immer wenn einer ihrer Diener stirbt, erhält sie 2 Leben (mit „+“ eintragen).',
-  startDiener: 1,
+  startDiener: 2,
   diener: [
     { name: 'Nebelgeist', staerke: 1, widerstand: 2, faehigkeit: 'Flugfähigkeit' },
     { name: 'Irrlicht', staerke: 1, widerstand: 1, faehigkeit: 'Flugfähigkeit, Eile', eile: true },

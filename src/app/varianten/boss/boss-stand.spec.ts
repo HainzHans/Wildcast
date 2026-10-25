@@ -50,6 +50,7 @@ function zug(aenderung: Partial<BossZug> = {}): BossZug {
     angriffsziel: 1,
     ankuendigung: null,
     spezialAngekuendigt: false,
+    spezialEingesetzt: false,
     ...aenderung,
   };
 }

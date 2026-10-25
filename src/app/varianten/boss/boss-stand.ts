@@ -53,6 +53,8 @@ export interface BossStand {
   gemerkteAntworten: Antworten;
   letzteSprueche: string[];
   spezialAngekuendigt: boolean;
+  /** Fehlt in älteren Spielständen. */
+  spezialEingesetzt?: boolean;
   ankuendigung: string | null;
   protokoll: BossProtokoll[];
   /** Charakterzug und beherrschte Aktionen – pro Partie neu gewürfelt, gleich stark. */
@@ -144,6 +146,7 @@ export function bossLage(
     letzteFragen: stand.letzteFragen,
     letzteSprueche: stand.letzteSprueche,
     spezialAngekuendigt: stand.spezialAngekuendigt,
+    spezialEingesetzt: stand.spezialEingesetzt ?? false,
     temperament: stand.temperament ?? 'unberechenbar',
     // Ältere Spielstände kennen kein Repertoire: dann beherrscht er alles.
     repertoire: stand.repertoire?.length ? stand.repertoire : undefined,
@@ -219,6 +222,7 @@ export function bossZugEintragen(
     gemerkteAntworten: gemerkt,
     letzteSprueche: [...stand.letzteSprueche, zug.spruchVorlage].slice(-GEDAECHTNIS),
     spezialAngekuendigt: zug.spezialAngekuendigt,
+    spezialEingesetzt: !!stand.spezialEingesetzt || zug.spezialEingesetzt,
     ankuendigung: zug.ankuendigung,
     protokoll: [
       ...stand.protokoll,
