@@ -245,8 +245,8 @@
   {
     "art": "positiv",
     "form": "emblem",
-    "mana_min": 4,
-    "mana_max": 9,
+    "mana_min": 6,
+    "mana_max": 10,
     "name": "Ewige Flamme",
     "spruch": "Brennt ewig. Riecht auch so.",
     "text": "Immer wenn du einen Spruch wirkst, fügt dieses Emblem einem Gegner deiner Wahl 1 Schaden zu."
@@ -321,7 +321,7 @@
     "mana_max": 6,
     "name": "Eigentor",
     "spruch": "Falsches Tor, aber schöner Schuss.",
-    "text": "Zerstöre eine zufällige Kreatur mit Manawert {m-1} oder weniger, die du kontrollierst."
+    "text": "Zerstöre eine zufällige Kreatur mit Manawert {m-1} oder weniger, die du kontrollierst. Hast du keine solche Kreatur, verlierst du stattdessen {m-2} Leben."
   },
   {
     "art": "negativ",
@@ -470,8 +470,8 @@
   {
     "art": "negativ",
     "form": "emblem",
-    "mana_min": 1,
-    "mana_max": 4,
+    "mana_min": 3,
+    "mana_max": 5,
     "name": "Stotterzunge",
     "spruch": "Ab-ab-abrakadabra.",
     "text": "Der erste Spruch, den du in jedem Zug wirkst, kostet 1 Mana mehr."
@@ -479,8 +479,8 @@
   {
     "art": "negativ",
     "form": "emblem",
-    "mana_min": 3,
-    "mana_max": 7,
+    "mana_min": 5,
+    "mana_max": 8,
     "name": "Ewiger Juckreiz",
     "spruch": "Der Arzt sagt, das bleibt jetzt so.",
     "text": "Zu Beginn deines Zuges verlierst du 1 Leben."
@@ -488,7 +488,7 @@
   {
     "art": "negativ",
     "form": "emblem",
-    "mana_min": 6,
+    "mana_min": 8,
     "mana_max": 12,
     "name": "Verfluchte Krone",
     "spruch": "Sie steht dir. Leider für immer.",
@@ -501,7 +501,7 @@
     "mana_max": 20,
     "name": "Leere Sanduhr",
     "spruch": "Die Zeit ist abgelaufen. Für dich jedenfalls.",
-    "text": "Du ziehst zu Beginn deines Zuges keine Karte mehr."
+    "text": "In jedem deiner Züge kannst du höchstens eine Karte ziehen."
   },
   {
     "art": "negativ",

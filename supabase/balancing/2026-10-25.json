@@ -1,0 +1,18 @@
+[
+  { "name": "Ewige Flamme", "mana_min": 6, "mana_max": 10, "grund": "Dauerhafter Schaden bei jedem Spruch war ab 4 Mana zu stark." },
+  { "name": "Leere Sanduhr", "text": "In jedem deiner Züge kannst du höchstens eine Karte ziehen.", "grund": "Nie mehr ziehen war praktisch eine Niederlage." },
+  { "name": "Verfluchte Krone", "mana_min": 8, "mana_max": 12, "grund": "Dauerhaft −1/−1 ab 6 Mana war zu hart." },
+  { "name": "Ewiger Juckreiz", "mana_min": 5, "mana_max": 8, "grund": "Ein Leben pro Zug für das ganze Spiel ab 3 Mana war zu teuer." },
+  { "name": "Stotterzunge", "mana_min": 3, "mana_max": 5, "grund": "Dauerhafte Steuer schon für 1 Mana war zu hart." },
+  { "name": "Kompletter Tausch", "neuer_name": "Umzugshelfer", "spruch": "Er hilft beim Umzug. Leider nur in eine Richtung.", "text": "Der Gegner, der die wenigsten Kreaturen kontrolliert, wählt zwei Kreaturen, die du kontrollierst, und übernimmt dauerhaft die Kontrolle darüber. Bei Gleichstand entscheidet der Würfel. Kontrollierst du keine Kreatur, verlierst du stattdessen 6 Leben.", "grund": "Das ganze Feld gegen nichts zu tauschen war für 10 Mana zu brutal." },
+  { "name": "Desertion", "text": "Ein Gegner deiner Wahl wählt eine Kreatur, die du kontrollierst. Opfere sie und verliere 2 Leben. Kontrollierst du keine Kreatur, verlierst du stattdessen 4 Leben.", "grund": "Bei 4 Spielern hätte man drei Kreaturen verloren." },
+  { "name": "Lawine", "text": "Opfere zwei Kreaturen und verliere 3 Leben. Für jede Kreatur, die dir dafür fehlt, verlierst du 2 weitere Leben.", "grund": "Ersatzstrafe ergänzt." },
+  { "name": "Eigentor", "text": "Zerstöre eine zufällige Kreatur mit Manawert {m-1} oder weniger, die du kontrollierst. Hast du keine solche Kreatur, verlierst du stattdessen {m-2} Leben.", "grund": "Ersatzstrafe ergänzt." },
+  { "name": "Hungernde Erde", "text": "Zu Beginn deines Zuges opferst du eine bleibende Karte, die kein Land ist, oder verlierst 3 Leben.", "grund": "Jeden Zug eine Karte opfern war härter als manche Effekte für 13 Mana." },
+  { "name": "Weltuntergangsuhr", "text": "Erzeuge einen Artefakt-Spielstein mit fünf Zeitmarken und „Zu Beginn deines Versorgungssegments entferne eine Zeitmarke. Wenn die letzte entfernt wird, opfere diesen Spielstein und verliere 20 Leben.“ Jeder Spieler darf {5} bezahlen, um ihn zu zerstören.", "grund": "Spielverlust nur noch beim 42-Gag." },
+  { "name": "Halbes Leben", "text": "Deine Lebenspunkte werden halbiert, aufgerundet. Immer wenn du Leben erhältst, erhältst du 1 Leben weniger.", "grund": "Halbieren plus nie mehr heilen war doppelt bestraft." },
+  { "name": "Verbotsliste", "text": "Jeder Gegner zeigt seine Hand. Nenne einen Kartentyp außer Land: Jeder Gegner wirft eine Karte dieses Typs ab, falls er eine hat.", "grund": "Alle Karten eines Typs bei drei Gegnern war für 7 Mana zu stark." },
+  { "name": "Großdenker", "text": "Einmal in jedem Zug, wenn du einen Spruch mit Manawert 4 oder mehr wirkst, ziehst du eine Karte.", "grund": "Unbegrenztes Ziehen über ein Emblem war zu stark." },
+  { "name": "Totengedenken", "text": "Immer wenn eine Kreatur, die du kontrollierst, stirbt, ziehst du eine Karte. Das passiert höchstens zweimal pro Zug.", "grund": "Mit Spielsteinen hätte man ganze Stapel gezogen." },
+  { "name": "Ewige Schatzkammer", "text": "Erzeuge sieben Schatz-Spielsteine und ziehe zwei Karten.", "grund": "Nur Schätze waren für 13–15 Mana zu schwach." }
+]
