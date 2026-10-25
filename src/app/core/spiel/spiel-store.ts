@@ -1,5 +1,17 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 
+import { bossZug, fragenFuerZug } from '../../varianten/boss/boss-logik';
+import { Antworten, BossZug, Frage } from '../../varianten/boss/boss-modell';
+import {
+  bossKorrigieren,
+  bossLage,
+  bossStarten,
+  bossTreffen,
+  bossZugEintragen,
+  dienerBesiegen,
+  zugBeenden,
+} from '../../varianten/boss/boss-stand';
+import { bossMitId } from '../../varianten/boss/bosse';
 import { EffektArchiv } from '../../varianten/mana-wuerfel/effekt-archiv';
 import { wuerfleEffekt } from '../../varianten/mana-wuerfel/wuerfel';
 import { lesen, schreiben } from '../speicher';
@@ -45,12 +57,20 @@ export class SpielStore {
     optionen: SpielOptionen = {},
   ): void {
     this.verlauf.set([]);
+    const spieler = namen.map((name, i) => ({ id: i + 1, name, leben: startLeben }));
     this._stand.set({
       varianten,
       gestartet: new Date().toISOString(),
-      spieler: namen.map((name, i) => ({ id: i + 1, name, leben: startLeben })),
+      spieler,
       effekte: [],
       optionen,
+      boss: varianten.includes('boss')
+        ? bossStarten(
+            bossMitId(optionen.bossId),
+            spieler.map((p) => p.id),
+            this.zufall,
+          )
+        : undefined,
     });
   }
 
@@ -86,6 +106,74 @@ export class SpielStore {
       ...s,
       effekte: s.effekte.map((e) => (e.nr === nr ? { ...e, zerstoert: true } : e)),
     }));
+  }
+
+  // ── Bosskampf ─────────────────────────────────────────────────
+
+  /** Schaden am Boss; gibt zurück, wie viel am Phasen-Schild verfallen ist. */
+  bossTreffen(schaden: number): number {
+    const boss = this._stand()?.boss;
+    if (!boss) return 0;
+    const { stand, verfallen } = bossTreffen(boss, schaden);
+    this.aendern((s) => ({ ...s, boss: stand }));
+    return verfallen;
+  }
+
+  bossKorrigieren(um: number): void {
+    this.mitBoss((b) => bossKorrigieren(b, um));
+  }
+
+  dienerBesiegen(nr: number): void {
+    this.mitBoss((b) => dienerBesiegen(b, nr));
+  }
+
+  zugBeenden(): void {
+    this.aendern((s) =>
+      s.boss
+        ? {
+            ...s,
+            boss: zugBeenden(
+              s.boss,
+              s.spieler.map((p) => p.id),
+            ),
+          }
+        : s,
+    );
+  }
+
+  /** Die Fragen, die der Boss zu Beginn seines Zuges stellt. Ändert nichts am Stand. */
+  bossFragen(): Frage[] {
+    const s = this._stand();
+    if (!s?.boss) return [];
+    return fragenFuerZug(bossMitId(s.boss.bossId), bossLage(s.boss, s.spieler, {}), this.zufall);
+  }
+
+  /** Würfelt den Boss-Zug mit den Antworten aus und trägt ihn sofort ein (rückgängig möglich). */
+  bossZugAusfuehren(antworten: Antworten): BossZug | null {
+    const s = this._stand();
+    if (!s?.boss) return null;
+    const zug = bossZug(
+      bossMitId(s.boss.bossId),
+      bossLage(s.boss, s.spieler, antworten),
+      this.zufall,
+    );
+    this.aendern((alt) => ({
+      ...alt,
+      spieler: alt.spieler.map((p) => ({
+        ...p,
+        leben:
+          p.leben +
+          zug.lebenAenderungen.filter((l) => l.spielerId === p.id).reduce((n, l) => n + l.um, 0),
+      })),
+      boss: alt.boss && bossZugEintragen(alt.boss, zug, alt.spieler),
+    }));
+    return zug;
+  }
+
+  private mitBoss(
+    neu: (b: NonNullable<Spielstand['boss']>) => NonNullable<Spielstand['boss']>,
+  ): void {
+    this.aendern((s) => (s.boss ? { ...s, boss: neu(s.boss) } : s));
   }
 
   rueckgaengig(): void {

@@ -8,10 +8,16 @@ describe('Varianten kombinieren', () => {
     expect(k.werkzeuge).toEqual(['leben', 'effekt-wuerfel']);
   });
 
-  it('lehnt unbekannte, noch nicht spielbare oder leere Auswahl ab', () => {
+  it('lehnt unbekannte oder leere Auswahl ab', () => {
     expect(kombinieren([])).toBeNull();
     expect(kombinieren(['gibt-es-nicht'])).toBeNull();
-    expect(kombinieren(['mana-wuerfel', 'boss'])).toBeNull();
+  });
+
+  it('kombiniert Mana-Würfel und Bosskampf zu einer Partie für zwei Spieler', () => {
+    const k = kombinieren(['mana-wuerfel', 'boss'])!;
+    expect(k.name).toBe('Mana-Würfel + Bosskampf');
+    expect(k.spieler).toEqual({ min: 2, max: 2, standard: 2 });
+    expect(k.werkzeuge).toEqual(['leben', 'effekt-wuerfel', 'boss']);
   });
 
   it('nennt laufende Partien nach allen Varianten', () => {

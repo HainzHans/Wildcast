@@ -18,6 +18,7 @@ import {
   STANDARD_WUERFEL,
 } from '../../varianten/mana-wuerfel/wuerfel-einstellungen';
 import { WuerfelRegeln } from '../../varianten/mana-wuerfel/wuerfel-regeln';
+import { bossMitId } from '../../varianten/boss/bosse';
 import { kombinieren } from '../../varianten/varianten';
 
 const LEBEN_AUSWAHL = [20, 40];
@@ -103,6 +104,15 @@ const LEBEN_MAX = 999;
               </label>
             </div>
           </fieldset>
+
+          @if (boss(); as b) {
+            <section class="boss-info" aria-label="Boss">
+              <p class="boss-titel">
+                {{ b.name }} <span>Level {{ b.level }} · {{ b.leben }} Leben</span>
+              </p>
+              <p class="boss-passiv">{{ b.passiv }}</p>
+            </section>
+          }
 
           @if (mitWuerfel()) {
             <details class="hausregeln">
@@ -218,6 +228,29 @@ const LEBEN_MAX = 999;
     .eigene.aktiv input {
       border: 2px solid var(--messing);
     }
+    .boss-info {
+      background: var(--feld);
+      border-radius: var(--radius);
+      border-left: 4px solid var(--negativ);
+      padding: 0.8rem 1rem;
+    }
+    .boss-titel {
+      margin: 0;
+      font-family: var(--schrift-anzeige);
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+    .boss-titel span {
+      font-family: var(--schrift-text);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-leise);
+    }
+    .boss-passiv {
+      margin: 0.3rem 0 0;
+      font-size: 0.9rem;
+      color: var(--text-leise);
+    }
     .hausregeln {
       background: var(--feld);
       border-radius: var(--radius);
@@ -263,6 +296,9 @@ export class Einrichten {
   protected readonly wuerfel = signal(letzteWuerfelEinstellungen());
   protected readonly mitWuerfel = computed(
     () => this.eintrag()?.ids.includes('mana-wuerfel') ?? false,
+  );
+  protected readonly boss = computed(() =>
+    this.eintrag()?.ids.includes('boss') ? bossMitId(undefined) : null,
   );
   protected readonly wuerfelAngepasst = computed(
     () => JSON.stringify(this.wuerfel()) !== JSON.stringify(STANDARD_WUERFEL),

@@ -20,7 +20,12 @@ const HALTEN_TAKT = 90;
 @Component({
   selector: 'app-spieler-feld',
   template: `
-    <section class="feld" [class.gedreht]="gedreht()" [attr.aria-label]="spieler().name">
+    <section
+      class="feld"
+      [class.gedreht]="gedreht()"
+      [class.am-zug]="amZug()"
+      [attr.aria-label]="spieler().name + (amZug() ? ', am Zug' : '')"
+    >
       <h2 class="name">{{ spieler().name }}</h2>
 
       <div class="leben" [class.kritisch]="spieler().leben <= kritisch">
@@ -94,6 +99,11 @@ const HALTEN_TAKT = 90;
       border-radius: var(--radius);
       box-shadow: var(--schatten);
       overflow: hidden;
+    }
+    .am-zug {
+      box-shadow:
+        0 0 0 2px var(--messing),
+        var(--schatten);
     }
     .gedreht {
       transform: rotate(180deg);
@@ -199,6 +209,8 @@ export class SpielerFeld implements OnDestroy {
   readonly spieler = input.required<Spieler>();
   readonly gedreht = input(false);
   readonly effektWuerfel = input(false);
+  /** Im Bosskampf: Dieser Spieler ist gerade dran. */
+  readonly amZug = input(false);
   /** Aktive Verzauberungen und Embleme, die diesen Spieler betreffen. */
   readonly bleibende = input<Effekt[]>([]);
 

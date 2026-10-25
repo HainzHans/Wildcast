@@ -27,9 +27,17 @@ export const VARIANTEN: Variante[] = [
     untertitel: 'Zwei Spieler gegen einen Boss, der mit jeder Runde stärker wird.',
     spieler: { min: 2, max: 2, standard: 2 },
     startLeben: 40,
-    regeln: [],
+    regeln: [
+      'Spieler 1 macht seinen Zug, dann Spieler 2, dann ist der Boss dran. Danach beginnt die nächste Runde.',
+      'Im Boss-Zug stellt der Boss bis zu zwei Fragen zur Lage am Tisch. Je nach Antwort und Verlauf entscheidet er, ob er angreift, aufräumt, Diener ruft oder sich heilt.',
+      'Der Boss beschwört jede Runde neue Diener (Runde 1–2: einen, 3–4: zwei, ab 5: drei). Hat er höchstens einen, kommen zwei weitere dazu.',
+      'Seine Diener sind Spielsteine auf eurer Seite des Tischs und greifen jeden Boss-Zug an.',
+      'Phasen bei 60 % und 30 % der Leben. An jeder Phasengrenze verfällt der restliche Schaden dieses Zugs (Phasen-Schild).',
+      'In Phase 3 handelt der Boss zweimal pro Zug und kündigt seinen Spezialangriff eine Runde vorher an.',
+      'Der Boss kennt euer Spielfeld nicht: Seine Aktionen nennen relative Ziele wie „die Kreatur mit der höchsten Stärke“. Fehlt ein Ziel, gibt es eine Ersatzstrafe.',
+    ],
     werkzeuge: ['leben', 'boss'],
-    verfuegbar: false,
+    verfuegbar: true,
   },
 ];
 

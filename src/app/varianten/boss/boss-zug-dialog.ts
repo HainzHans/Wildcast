@@ -1,0 +1,303 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnDestroy,
+  output,
+  signal,
+} from '@angular/core';
+
+import { SpielStore } from '../../core/spiel/spiel-store';
+import { Ueberlagerung } from '../../shared/ui/ueberlagerung';
+import { Antworten, BossZug, Frage, Stimmung } from './boss-modell';
+import { bossMitId } from './bosse';
+
+export const STIMMUNG_NAME: Record<Stimmung, string> = {
+  wuetend: 'Wütend',
+  bedroht: 'Bedroht',
+  ueberlegen: 'Überlegen',
+  verzweifelt: 'Verzweifelt',
+  lauernd: 'Lauernd',
+};
+
+/** Spannungspause, bevor der Boss seinen Zug enthüllt. */
+const DENKZEIT = 1100;
+
+/**
+ * Der Boss-Zug als Gespräch: Der Boss stellt seine Fragen, denkt kurz nach und verkündet dann,
+ * was er tut. Das Ergebnis wird sofort eingetragen und lässt sich am Tisch rückgängig machen.
+ */
+@Component({
+  selector: 'app-boss-zug-dialog',
+  imports: [Ueberlagerung],
+  template: `
+    <app-ueberlagerung [titel]="bossName() + ' ist am Zug'" (schliessen)="fertig.emit()">
+      @switch (schritt()) {
+        @case ('start') {
+          <div class="start">
+            <p class="ueber">Runde {{ runde() }}</p>
+            <h2>{{ bossName() }} ist am Zug</h2>
+            <p class="leise">Der Boss mustert das Schlachtfeld …</p>
+            <button type="button" class="knopf knopf--haupt gross" (click)="weiter()">
+              {{ fragen().length ? 'Er hat Fragen' : 'Boss-Zug starten' }}
+            </button>
+          </div>
+        }
+        @case ('frage') {
+          @if (aktuelleFrage(); as f) {
+            <div class="frage">
+              <p class="ueber">Frage {{ frageNr() + 1 }} von {{ fragen().length }}</p>
+              <p class="boss-stimme">„{{ f.text }}“</p>
+              <div class="antworten" [class.viele]="f.antworten.length > 3">
+                @for (a of f.antworten; track a.wert) {
+                  <button type="button" class="antwort" (click)="antworten(f.id, a.wert)">
+                    {{ a.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        }
+        @case ('denkt') {
+          <div class="denkt" aria-live="polite">
+            <div class="auge" aria-hidden="true"></div>
+            <p>{{ bossName() }} überlegt …</p>
+          </div>
+        }
+        @case ('ergebnis') {
+          @if (zug(); as z) {
+            <div class="ergebnis">
+              <p class="stimmung" [attr.data-stimmung]="z.stimmung">
+                {{ stimmungName(z.stimmung) }} · Phase {{ z.phase }}
+              </p>
+              <p class="boss-stimme">„{{ z.spruch }}“</p>
+
+              @for (a of z.aktionen; track a.id) {
+                <article class="aktion" [class.spezial]="a.id === spezialId()">
+                  <h3>{{ a.name }}</h3>
+                  <p>{{ a.text }}</p>
+                </article>
+              }
+
+              @if (z.ankuendigung) {
+                <p class="warnung">⚠ {{ z.ankuendigung }}</p>
+              }
+
+              <ul class="folgen">
+                @for (l of lebenText(); track $index) {
+                  <li>{{ l }}</li>
+                }
+                @if (z.heilung) {
+                  <li>Der Boss heilt sich um {{ z.heilung }}.</li>
+                }
+                @if (z.schutz) {
+                  <li>Der Boss verhindert bis zu seinem nächsten Zug {{ z.schutz }} Schaden.</li>
+                }
+                @if (z.neueDiener.length) {
+                  <li>Neue Diener: {{ dienerText() }}</li>
+                }
+                @if (angriffText(); as t) {
+                  <li class="angriff">{{ t }}</li>
+                }
+              </ul>
+
+              <button type="button" class="knopf knopf--haupt gross" (click)="fertig.emit()">
+                Weiter – Runde {{ runde() }} beginnt
+              </button>
+            </div>
+          }
+        }
+      }
+    </app-ueberlagerung>
+  `,
+  styles: `
+    .start,
+    .frage,
+    .denkt,
+    .ergebnis {
+      display: grid;
+      gap: 0.9rem;
+    }
+    .start,
+    .denkt {
+      text-align: center;
+      padding: 1rem 0;
+    }
+    .ueber {
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-leise);
+    }
+    h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+    }
+    .leise {
+      margin: 0;
+      color: var(--text-leise);
+    }
+    .gross {
+      min-height: 3.5rem;
+      font-size: 1.15rem;
+    }
+    .boss-stimme {
+      margin: 0;
+      font-family: var(--schrift-anzeige);
+      font-style: italic;
+      font-size: 1.3rem;
+      line-height: 1.3;
+    }
+    .antworten {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+    .antwort {
+      min-height: 3.5rem;
+      border-radius: var(--radius-klein);
+      border: 1px solid var(--feld-rand);
+      background: var(--feld);
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .antwort:active {
+      transform: scale(0.97);
+    }
+    .auge {
+      justify-self: center;
+      width: 4.5rem;
+      height: 4.5rem;
+      border-radius: 50%;
+      border: 0.45rem solid var(--negativ);
+      border-top-color: transparent;
+      animation: drehen 900ms linear infinite;
+    }
+    @keyframes drehen {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .stimmung {
+      justify-self: start;
+      margin: 0;
+      padding: 0.2rem 0.7rem;
+      border-radius: 99px;
+      background: var(--negativ);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .stimmung[data-stimmung='lauernd'] {
+      background: var(--feld-rand);
+      color: var(--text);
+    }
+    .stimmung[data-stimmung='verzweifelt'] {
+      background: var(--chaos);
+    }
+    .aktion {
+      background: var(--feld);
+      border-radius: var(--radius);
+      border-left: 4px solid var(--negativ);
+      padding: 0.8rem 1rem;
+    }
+    .aktion.spezial {
+      border-left-color: var(--chaos);
+      box-shadow: 0 0 0 2px var(--chaos);
+    }
+    .aktion h3 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: 0.3rem;
+    }
+    .aktion p {
+      margin: 0;
+    }
+    .warnung {
+      margin: 0;
+      color: var(--negativ);
+      font-weight: 700;
+    }
+    .folgen {
+      margin: 0;
+      padding-left: 1.2rem;
+      display: grid;
+      gap: 0.3rem;
+      color: var(--text-leise);
+    }
+    .angriff {
+      color: var(--text);
+      font-weight: 700;
+    }
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class BossZugDialog implements OnDestroy {
+  private readonly store = inject(SpielStore);
+  readonly fertig = output<void>();
+
+  private readonly boss = computed(() => this.store.stand()?.boss ?? null);
+  protected readonly bossName = computed(() => bossMitId(this.boss()?.bossId).name);
+  protected readonly spezialId = computed(() => bossMitId(this.boss()?.bossId).spezial.id);
+  protected readonly runde = computed(() => this.boss()?.runde ?? 1);
+
+  /** Einmal beim Öffnen festgelegt, damit sich die Fragen nicht mitten im Gespräch ändern. */
+  protected readonly fragen = signal<Frage[]>(this.store.bossFragen());
+  protected readonly schritt = signal<'start' | 'frage' | 'denkt' | 'ergebnis'>('start');
+  protected readonly frageNr = signal(0);
+  protected readonly aktuelleFrage = computed(() => this.fragen()[this.frageNr()] ?? null);
+  private readonly gesammelt = signal<Antworten>({});
+  protected readonly zug = signal<BossZug | null>(null);
+  private zeitgeber?: ReturnType<typeof setTimeout>;
+
+  private readonly namen = computed(
+    () => new Map(this.store.stand()?.spieler.map((s) => [s.id, s.name]) ?? []),
+  );
+
+  protected readonly lebenText = computed(() =>
+    (this.zug()?.lebenAenderungen ?? []).map(
+      (l) => `${this.namen().get(l.spielerId)} verliert ${-l.um} Leben (schon eingetragen).`,
+    ),
+  );
+
+  protected readonly dienerText = computed(() =>
+    (this.zug()?.neueDiener ?? []).map((d) => `${d.name} ${d.staerke}/${d.widerstand}`).join(', '),
+  );
+
+  protected readonly angriffText = computed(() => {
+    const z = this.zug();
+    const anzahl = this.boss()?.diener.length ?? 0;
+    if (!z || z.angriffsziel === null || !anzahl) return null;
+    return `Alle ${anzahl} Diener greifen ${this.namen().get(z.angriffsziel)} an.`;
+  });
+
+  protected stimmungName(s: Stimmung): string {
+    return STIMMUNG_NAME[s];
+  }
+
+  protected weiter(): void {
+    if (this.fragen().length) this.schritt.set('frage');
+    else this.ausfuehren();
+  }
+
+  protected antworten(frage: Frage['id'], wert: string): void {
+    this.gesammelt.update((a) => ({ ...a, [frage]: wert }));
+    if (this.frageNr() + 1 < this.fragen().length) this.frageNr.update((n) => n + 1);
+    else this.ausfuehren();
+  }
+
+  private ausfuehren(): void {
+    this.zug.set(this.store.bossZugAusfuehren(this.gesammelt()));
+    this.schritt.set('denkt');
+    this.zeitgeber = setTimeout(() => this.schritt.set('ergebnis'), DENKZEIT);
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.zeitgeber);
+  }
+}

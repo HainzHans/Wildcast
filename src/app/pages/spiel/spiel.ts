@@ -14,6 +14,10 @@ import { TischAnsicht } from '../../core/tisch-ansicht';
 import { WachHalten } from '../../core/wach-halten';
 import { BestaetigenKnopf } from '../../shared/ui/bestaetigen-knopf';
 import { Ueberlagerung } from '../../shared/ui/ueberlagerung';
+import { BossFeld } from '../../varianten/boss/boss-feld';
+import { BossProtokollListe } from '../../varianten/boss/boss-protokoll';
+import { BossZugDialog } from '../../varianten/boss/boss-zug-dialog';
+import { bossMitId } from '../../varianten/boss/bosse';
 import { EffektKarte } from '../../varianten/mana-wuerfel/effekt-karte';
 import { EffektListe } from '../../varianten/mana-wuerfel/effekt-liste';
 import { WirkenDialog } from '../../varianten/mana-wuerfel/wirken-dialog';
@@ -23,7 +27,9 @@ import { SpielerFeld } from './spieler-feld';
 type Dialog =
   | { art: 'wirken'; spielerId: number; gedreht: boolean }
   | { art: 'effekt'; nr: number; gedreht: boolean }
-  | { art: 'liste' };
+  | { art: 'liste' }
+  | { art: 'bosszug' }
+  | { art: 'bossprotokoll' };
 
 @Component({
   selector: 'app-spiel',
@@ -35,10 +41,18 @@ type Dialog =
     EffektKarte,
     Ueberlagerung,
     BestaetigenKnopf,
+    BossFeld,
+    BossZugDialog,
+    BossProtokollListe,
   ],
   template: `
     @if (store.stand(); as s) {
-      <div class="tisch" [class.drehen]="ansicht.drehen()" [attr.data-spieler]="s.spieler.length">
+      <div
+        class="tisch"
+        [class.drehen]="ansicht.drehen()"
+        [attr.data-spieler]="s.spieler.length"
+        [attr.data-boss]="s.boss ? '' : null"
+      >
         @for (p of s.spieler; track p.id; let i = $index) {
           <app-spieler-feld
             [style.grid-area]="'p' + (i + 1)"
@@ -46,6 +60,7 @@ type Dialog =
             [gedreht]="ansicht.istGedreht(i, s.spieler.length)"
             [effektWuerfel]="effektWuerfel()"
             [bleibende]="bleibendeJeSpieler().get(p.id) ?? []"
+            [amZug]="s.boss?.amZug === p.id"
             (leben)="store.aendereLeben(p.id, $event)"
             (wirken)="
               dialog.set({
@@ -64,7 +79,35 @@ type Dialog =
           />
         }
 
+        @if (s.boss; as b) {
+          <app-boss-feld [stand]="b" (protokoll)="dialog.set({ art: 'bossprotokoll' })" />
+        }
+
         <nav class="mitte" aria-label="Spielsteuerung">
+          @if (zugInfo(); as z) {
+            <div class="zugleiste" [class.boss-dran]="z.bossDran" aria-live="polite">
+              @if (z.besiegt) {
+                <span class="zug-text"><strong>Sieg!</strong> {{ z.bossName }} ist besiegt.</span>
+              } @else {
+                <span class="zug-text"
+                  >Runde {{ z.runde }} · <strong>{{ z.amZug }}</strong> ist dran</span
+                >
+                @if (z.bossDran) {
+                  <button
+                    type="button"
+                    class="knopf knopf--haupt zug-knopf"
+                    (click)="dialog.set({ art: 'bosszug' })"
+                  >
+                    Boss-Zug starten
+                  </button>
+                } @else {
+                  <button type="button" class="knopf zug-knopf" (click)="store.zugBeenden()">
+                    Zug beenden →
+                  </button>
+                }
+              }
+            </div>
+          }
           <a class="steuer" routerLink="/"
             ><span aria-hidden="true">☰</span> <span class="kurz">Menü</span></a
           >
@@ -122,6 +165,12 @@ type Dialog =
         @case ('liste') {
           <app-effekt-liste (schliessen)="dialog.set(null)" />
         }
+        @case ('bosszug') {
+          <app-boss-zug-dialog (fertig)="dialog.set(null)" />
+        }
+        @case ('bossprotokoll') {
+          <app-boss-protokoll (schliessen)="dialog.set(null)" />
+        }
       }
     }
   `,
@@ -141,6 +190,14 @@ type Dialog =
       grid-area: auto !important;
     }
     .tisch:not(.drehen) .mitte {
+      grid-column: 1 / -1;
+      order: -2;
+    }
+    /* Im Bosskampf teilen sich die zwei Spieler die volle Breite unter dem Boss */
+    .tisch[data-boss]:not(.drehen) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .tisch:not(.drehen) app-boss-feld {
       grid-column: 1 / -1;
       order: -1;
     }
@@ -162,8 +219,37 @@ type Dialog =
     .drehen[data-spieler='4'] {
       grid-template: 'p2 p3' 1fr 'mitte mitte' auto 'p1 p4' 1fr / 1fr 1fr;
     }
+    /* Bosskampf: der Boss liegt zwischen den beiden Spielern */
+    .drehen[data-spieler='2'][data-boss] {
+      grid-template: 'p2' 1fr 'boss' minmax(0, 1.6fr) 'mitte' auto 'p1' 1fr / 1fr;
+    }
+    .drehen app-boss-feld {
+      grid-area: boss;
+    }
     .drehen .mitte {
       grid-area: mitte;
+    }
+    .zugleiste {
+      flex-basis: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.25rem 0.3rem 0.25rem 0.8rem;
+      border-radius: 99px;
+      background: var(--filz-tief);
+    }
+    .zugleiste.boss-dran {
+      box-shadow: 0 0 0 2px var(--negativ);
+    }
+    .zug-text {
+      font-size: 0.9rem;
+    }
+    .zug-knopf {
+      min-height: 2.5rem;
+      padding: 0.3rem 0.9rem;
+      border-radius: 99px;
+      white-space: nowrap;
     }
 
     .mitte {
@@ -266,6 +352,21 @@ export class Spiel implements OnDestroy {
     if (!effekt) return null;
     const von = s?.spieler.find((p) => p.id === effekt.spielerId)?.name;
     return { effekt, von, gedreht: d.gedreht };
+  });
+
+  /** Zugleiste im Bosskampf: Runde, wer dran ist, und ob der Boss besiegt ist. */
+  protected readonly zugInfo = computed(() => {
+    const s = this.store.stand();
+    const b = s?.boss;
+    if (!s || !b) return null;
+    const bossName = bossMitId(b.bossId).name;
+    return {
+      runde: b.runde,
+      bossName,
+      bossDran: b.amZug === 'boss',
+      besiegt: b.leben <= 0,
+      amZug: b.amZug === 'boss' ? bossName : (s.spieler.find((p) => p.id === b.amZug)?.name ?? ''),
+    };
   });
 
   constructor() {
