@@ -41,8 +41,7 @@ type Dialog =
       <div class="tisch" [class.drehen]="ansicht.drehen()" [attr.data-spieler]="s.spieler.length">
         @for (p of s.spieler; track p.id; let i = $index) {
           <app-spieler-feld
-            [style.grid-area]="'p' + (ansicht.sitz(i, s.spieler.length) + 1)"
-            [style.order]="ansicht.sitz(i, s.spieler.length)"
+            [style.grid-area]="'p' + (i + 1)"
             [spieler]="p"
             [gedreht]="ansicht.istGedreht(i, s.spieler.length)"
             [effektWuerfel]="effektWuerfel()"
@@ -81,11 +80,6 @@ type Dialog =
             <button type="button" class="steuer" (click)="dialog.set({ art: 'liste' })">
               <span aria-hidden="true">✦</span> Effekte
               <span class="anzahl">{{ s.effekte.length }}</span>
-            </button>
-          }
-          @if (s.spieler.length > 1) {
-            <button type="button" class="steuer" (click)="ansicht.plaetzeTauschen()">
-              <span aria-hidden="true">⇅</span> <span class="kurz">Plätze tauschen</span>
             </button>
           }
         </nav>
@@ -196,7 +190,7 @@ type Dialog =
       opacity: 0.4;
       cursor: not-allowed;
     }
-    /* Schmale Handys: Menü und Plätze tauschen nur als Symbol, damit die Leiste einzeilig bleibt */
+    /* Schmale Handys: Menü nur als Symbol, damit die Leiste einzeilig bleibt */
     @media (max-width: 479px) {
       .steuer {
         padding-inline: 0.65rem;
