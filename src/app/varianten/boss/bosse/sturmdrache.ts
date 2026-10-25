@@ -1,4 +1,5 @@
 import { BossDefinition } from '../boss-modell';
+import { fragen } from './fragen';
 
 /**
  * Level 4 aus dem Briefing, der erste Boss mit den neuen Balancing-Regeln
@@ -9,18 +10,31 @@ export const STURMDRACHE: BossDefinition = {
   name: 'Sturmdrache',
   level: 4,
   leben: 160,
+  beschreibung: 'Kreist über dem Schlachtfeld, ruft fliegende Diener und schlägt mit Blitzen zu.',
   passiv:
     'Rückenwind: Alle Diener des Sturmdrachen haben Flugfähigkeit. Kreaturen der Spieler mit Flugfähigkeit erhalten −1/−0, solange sie den Sturmdrachen angreifen.',
   startDiener: 1,
   diener: [
-    { name: 'Sturmfalke', staerke: 1, widerstand: 1, faehigkeit: 'Flugfähigkeit, Eile', eile: true },
+    {
+      name: 'Sturmfalke',
+      staerke: 2,
+      widerstand: 1,
+      faehigkeit: 'Flugfähigkeit, Eile',
+      eile: true,
+    },
     {
       name: 'Blitzwyrm',
       staerke: 2,
       widerstand: 2,
       faehigkeit: 'Flugfähigkeit. Wenn er stirbt, verliert jeder Spieler 1 Leben.',
     },
-    { name: 'Donnergreif', staerke: 3, widerstand: 3, faehigkeit: 'Flugfähigkeit, Wachsamkeit', wachsamkeit: true },
+    {
+      name: 'Donnergreif',
+      staerke: 3,
+      widerstand: 3,
+      faehigkeit: 'Flugfähigkeit, Wachsamkeit',
+      wachsamkeit: true,
+    },
     {
       name: 'Wolkenwächter',
       staerke: 1,
@@ -30,70 +44,7 @@ export const STURMDRACHE: BossDefinition = {
     },
   ],
 
-  fragen: [
-    {
-      id: 'kreaturen',
-      text: 'Wie viele Kreaturen kontrolliert ihr zusammen?',
-      antworten: [
-        { wert: '0-2', label: '0–2' },
-        { wert: '3-5', label: '3–5' },
-        { wert: '6-9', label: '6–9' },
-        { wert: '10+', label: '10 oder mehr' },
-      ],
-    },
-    {
-      id: 'grosseKreatur',
-      text: 'Habt ihr eine Kreatur mit Stärke 6 oder mehr?',
-      antworten: [
-        { wert: 'ja', label: 'Ja' },
-        { wert: 'nein', label: 'Nein' },
-      ],
-    },
-    {
-      id: 'flieger',
-      text: 'Habt ihr Kreaturen mit Flugfähigkeit?',
-      antworten: [
-        { wert: 'ja', label: 'Ja' },
-        { wert: 'nein', label: 'Nein' },
-      ],
-    },
-    {
-      id: 'bleibende',
-      text: 'Wie viele Artefakte und Verzauberungen habt ihr zusammen?',
-      antworten: [
-        { wert: 'wenige', label: '0–1' },
-        { wert: 'einige', label: '2–4' },
-        { wert: 'viele', label: '5 oder mehr' },
-      ],
-    },
-    {
-      id: 'handkarten',
-      text: 'Wer von euch hat mehr Karten auf der Hand?',
-      antworten: [{ wert: 'gleich', label: 'Gleich viele' }],
-    },
-    {
-      id: 'kommandeur',
-      text: 'Ist gerade ein Kommandeur von euch im Spiel?',
-      antworten: [
-        { wert: 'ja', label: 'Ja' },
-        { wert: 'nein', label: 'Nein' },
-      ],
-    },
-    {
-      id: 'friedhof',
-      text: 'Wie viele Kreaturen liegen in euren Friedhöfen zusammen?',
-      antworten: [
-        { wert: 'wenige', label: '0–2' },
-        { wert: 'einige', label: '3–6' },
-        { wert: 'viele', label: '7 oder mehr' },
-      ],
-    },
-    {
-      id: 'rache',
-      text: 'Wer von euch hat dem Drachen in dieser Runde am meisten Schaden gemacht?',
-      antworten: [{ wert: 'niemand', label: 'Niemand' }],
-    },
-  ],
+  fragen: fragen(),
 
   aktionen: [
     {
@@ -101,17 +52,17 @@ export const STURMDRACHE: BossDefinition = {
       name: 'Blitzschlag',
       schlagworte: ['angriff'],
       gewicht: 3,
-      text: 'Ein Blitz fährt in den Spieler mit den meisten Leben: Er verliert 6 Leben.',
-      folgen: { leben: { ziel: 'meisteLeben', um: -6 } },
+      text: 'Ein Blitz fährt in den Spieler mit den meisten Leben: Er verliert 7 Leben.',
+      folgen: { leben: { ziel: 'meisteLeben', um: -7 } },
     },
     {
       id: 'kettenblitz',
       name: 'Kettenblitz',
       schlagworte: ['angriff'],
       gewicht: 2,
-      text: 'Der Blitz springt von Ziel zu Ziel: Jeder Spieler verliert 3 Leben, und jede Kreatur der Spieler erhält 1 Schaden.',
+      text: 'Der Blitz springt von Ziel zu Ziel: Jeder Spieler verliert 4 Leben, und jede Kreatur der Spieler erhält 1 Schaden.',
       bevorzugt: { kreaturen: ['6-9', '10+'] },
-      folgen: { leben: { ziel: 'alle', um: -3 } },
+      folgen: { leben: { ziel: 'alle', um: -4 } },
     },
     {
       id: 'sturzflug',
@@ -174,7 +125,7 @@ export const STURMDRACHE: BossDefinition = {
       id: 'brutruf',
       name: 'Ruf der Brut',
       schlagworte: ['beschwoerung'],
-      gewicht: 2,
+      gewicht: 3,
       text: 'Ein Schrei hallt durch die Wolken: Zwei weitere Diener schließen sich dem Drachen an.',
       folgen: { diener: 2 },
     },
@@ -207,9 +158,9 @@ export const STURMDRACHE: BossDefinition = {
       name: 'Vergeltung',
       schlagworte: ['angriff'],
       gewicht: 2,
-      text: 'Der Drache rächt sich an dem, der ihn zuletzt am meisten verletzt hat: Dieser Spieler verliert 7 Leben. Weiß der Drache es nicht, trifft es den Spieler mit den meisten Leben.',
+      text: 'Der Drache rächt sich an dem, der ihn zuletzt am meisten verletzt hat: Dieser Spieler verliert 8 Leben. Weiß der Drache es nicht, trifft es den Spieler mit den meisten Leben.',
       bevorzugt: { rache: ['1', '2', '3', '4'] },
-      folgen: { leben: { ziel: 'rache', um: -7 } },
+      folgen: { leben: { ziel: 'rache', um: -8 } },
     },
     {
       id: 'anfuehrer',
@@ -232,8 +183,8 @@ export const STURMDRACHE: BossDefinition = {
       name: 'Hagelschauer',
       schlagworte: ['angriff'],
       gewicht: 2,
-      text: 'Hagel prasselt auf das Schlachtfeld: Jeder Spieler verliert 2 Leben, und der Drache erhält 4 Leben.',
-      folgen: { leben: { ziel: 'alle', um: -2 }, heilung: 4 },
+      text: 'Hagel prasselt auf das Schlachtfeld: Jeder Spieler verliert 3 Leben, und der Drache erhält 4 Leben.',
+      folgen: { leben: { ziel: 'alle', um: -3 }, heilung: 4 },
     },
     {
       id: 'wolkenbruch',

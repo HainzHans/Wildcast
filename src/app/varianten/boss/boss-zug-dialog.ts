@@ -80,6 +80,26 @@ const DENKZEIT = 1100;
                 @for (l of lebenText(); track $index) {
                   <li>{{ l }}</li>
                 }
+                @if (z.rundenEffekt) {
+                  <li>{{ z.rundenEffekt }}</li>
+                }
+                @if (z.dienerOpfern) {
+                  <li>
+                    Der Boss opfert
+                    {{
+                      z.dienerOpfern === 1
+                        ? 'seinen schwächsten Diener'
+                        : 'seine ' + z.dienerOpfern + ' schwächsten Diener'
+                    }}.
+                  </li>
+                }
+                @if (z.dienerBonus.staerke || z.dienerBonus.widerstand) {
+                  <li>
+                    Alle Diener erhalten dauerhaft +{{ z.dienerBonus.staerke }}/+{{
+                      z.dienerBonus.widerstand
+                    }}.
+                  </li>
+                }
                 @if (z.heilung) {
                   <li>Der Boss heilt sich um {{ z.heilung }}.</li>
                 }
@@ -250,11 +270,16 @@ export class BossZugDialog implements OnDestroy {
     () => new Map(this.store.stand()?.spieler.map((s) => [s.id, s.name]) ?? []),
   );
 
-  protected readonly lebenText = computed(() =>
-    (this.zug()?.lebenAenderungen ?? []).map(
-      (l) => `${this.namen().get(l.spielerId)} verliert ${-l.um} Leben (schon eingetragen).`,
-    ),
-  );
+  /** Pro Spieler zusammengefasst – Aktionen und Runden-Effekt können denselben treffen. */
+  protected readonly lebenText = computed(() => {
+    const summe = new Map<number, number>();
+    for (const l of this.zug()?.lebenAenderungen ?? []) {
+      summe.set(l.spielerId, (summe.get(l.spielerId) ?? 0) + l.um);
+    }
+    return [...summe].map(
+      ([id, um]) => `${this.namen().get(id)} verliert ${-um} Leben (schon eingetragen).`,
+    );
+  });
 
   protected readonly dienerText = computed(() =>
     (this.zug()?.neueDiener ?? []).map((d) => `${d.name} ${d.staerke}/${d.widerstand}`).join(', '),

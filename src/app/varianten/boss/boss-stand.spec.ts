@@ -10,6 +10,8 @@ import {
   schildAufheben,
 } from './boss-stand';
 import { STURMDRACHE } from './bosse/sturmdrache';
+import { TEMPERAMENTE } from './boss-logik';
+import { zufallMitStartwert } from '../../core/zufall';
 
 const spieler = [
   { id: 1, name: 'Jo' },
@@ -42,6 +44,9 @@ function zug(aenderung: Partial<BossZug> = {}): BossZug {
     heilung: 0,
     schutz: 0,
     neueDiener: [],
+    dienerBonus: { staerke: 0, widerstand: 0 },
+    dienerOpfern: 0,
+    rundenEffekt: null,
     angriffsziel: 1,
     ankuendigung: null,
     spezialAngekuendigt: false,
@@ -141,5 +146,25 @@ describe('Boss-Stand', () => {
 
     const lage = bossLage(nach, [{ id: 1, name: 'Jo', leben: 40 }], { grosseKreatur: 'ja' });
     expect(lage.antworten).toEqual({ kreaturen: '10+', grosseKreatur: 'ja' });
+  });
+
+  it('würfelt Temperament und Repertoire beim Start', () => {
+    const stand = bossStarten(STURMDRACHE, zufallMitStartwert(3));
+    expect(Object.keys(TEMPERAMENTE)).toContain(stand.temperament);
+    expect(stand.repertoire.length).toBeLessThan(STURMDRACHE.aktionen.length);
+  });
+
+  it('opfert die schwächsten Diener und stärkt die übrigen dauerhaft', () => {
+    const stand = mitDienern(wachsam, normal, eilig);
+    const nach = bossZugEintragen(
+      stand,
+      zug({ dienerOpfern: 1, dienerBonus: { staerke: 1, widerstand: 1 }, angriffsziel: null }),
+      spieler,
+      {},
+    );
+    expect(nach.diener.map((d) => [d.name, d.staerke, d.widerstand])).toEqual([
+      ['Donnergreif', 4, 4],
+      ['Blitzwyrm', 3, 3],
+    ]);
   });
 });

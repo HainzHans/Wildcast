@@ -28,7 +28,9 @@ export const VARIANTEN: Variante[] = [
     spieler: { min: 2, max: 2, standard: 2 },
     startLeben: 40,
     regeln: [
-      'Spieler 1 macht seinen Zug, dann Spieler 2, dann ist der Boss dran. Danach beginnt die nächste Runde.',
+      'Zehn Bosse von Level 1 bis 10, jeder mit eigenen Dienern, Fähigkeiten und Spezialangriff. Je höher das Level, desto mehr Leben und desto härter die Angriffe.',
+      'Jeder Boss hat in jeder Partie eine andere Laune (z. B. jähzornig oder listig) und beherrscht nur einen Teil seiner Aktionen. Er spielt sich dadurch jedes Mal anders, bleibt aber gleich stark.',
+      'Ihr macht eure Züge, dann startet ihr den Boss-Zug. Danach beginnt die nächste Runde.',
       'Im Boss-Zug stellt der Boss bis zu zwei Fragen zur Lage am Tisch. Je nach Antwort und Verlauf entscheidet er, ob er angreift, aufräumt, Diener ruft oder sich heilt.',
       'Der Boss beschwört jede Runde neue Diener (Runde 1–2: einen, 3–4: zwei, ab 5: drei). Hat er höchstens einen, kommen zwei weitere dazu.',
       'Seine Diener sind Spielsteine auf eurer Seite des Tischs und greifen jeden Boss-Zug an.',

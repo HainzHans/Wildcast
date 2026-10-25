@@ -12,6 +12,7 @@ import {
   Schlagwort,
   SPIELER_FRAGEN,
   Stimmung,
+  Temperament,
   Ziel,
 } from './boss-modell';
 
@@ -90,6 +91,74 @@ const NEIGUNG: Record<Stimmung, Record<Schlagwort, number>> = {
   lauernd: { angriff: 1, beschwoerung: 1.3, kontrolle: 1, heilung: 0.8 },
 };
 
+/** Charakterzüge für eine Partie. Jeder bevorzugt eine Art von Aktion leicht – die Stärke bleibt gleich. */
+export const TEMPERAMENTE: Record<
+  Temperament,
+  { name: string; text: string; neigung: Record<Schlagwort, number> }
+> = {
+  jaehzornig: {
+    name: 'Jähzornig',
+    text: 'greift lieber an, heilt sich seltener',
+    neigung: { angriff: 1.35, kontrolle: 1, beschwoerung: 1, heilung: 0.75 },
+  },
+  listig: {
+    name: 'Listig',
+    text: 'stört lieber eure Pläne, als direkt anzugreifen',
+    neigung: { angriff: 0.85, kontrolle: 1.35, beschwoerung: 1, heilung: 1 },
+  },
+  bruetend: {
+    name: 'Brütend',
+    text: 'ruft lieber Diener, als selbst zuzuschlagen',
+    neigung: { angriff: 0.85, kontrolle: 1, beschwoerung: 1.35, heilung: 1 },
+  },
+  zaeh: {
+    name: 'Zäh',
+    text: 'schützt und heilt sich lieber',
+    neigung: { angriff: 1, kontrolle: 1, beschwoerung: 0.85, heilung: 1.35 },
+  },
+  unberechenbar: {
+    name: 'Unberechenbar',
+    text: 'folgt keiner Vorliebe',
+    neigung: { angriff: 1, kontrolle: 1, beschwoerung: 1, heilung: 1 },
+  },
+};
+
+/** Anteil der Aktionen, die ein Boss in einer Partie beherrscht. */
+const REPERTOIRE_ANTEIL = 0.8;
+
+export function temperamentWaehlen(zufall: Zufall): Temperament {
+  const alle = Object.keys(TEMPERAMENTE) as Temperament[];
+  return alle[Math.floor(zufall() * alle.length)];
+}
+
+/**
+ * Welche Aktionen der Boss in dieser Partie beherrscht: etwa 80 %, aber von jeder Art
+ * mindestens zwei (soweit vorhanden), damit er in jeder Lage reagieren kann.
+ */
+export function repertoireWaehlen(boss: BossDefinition, zufall: Zufall): string[] {
+  const gemischt = [...boss.aktionen]
+    .map((a) => ({ a, z: zufall() }))
+    .sort((x, y) => x.z - y.z)
+    .map((x) => x.a);
+  const ziel = Math.ceil(boss.aktionen.length * REPERTOIRE_ANTEIL);
+  const gewaehlt = new Set<string>();
+  for (const art of ['angriff', 'kontrolle', 'beschwoerung', 'heilung'] as Schlagwort[]) {
+    gemischt
+      .filter((a) => a.schlagworte.includes(art))
+      .slice(0, 2)
+      .forEach((a) => gewaehlt.add(a.id));
+  }
+  for (const a of gemischt) {
+    if (gewaehlt.size >= ziel) break;
+    gewaehlt.add(a.id);
+  }
+  return boss.aktionen.filter((a) => gewaehlt.has(a.id)).map((a) => a.id);
+}
+
+function beherrscht(aktion: BossAktion, lage: Lage): boolean {
+  return !lage.repertoire || lage.repertoire.includes(aktion.id);
+}
+
 /** Aktionen aus den letzten Zügen werden so viel seltener – damit der Boss abwechslungsreich bleibt. */
 const SCHON_GESEHEN = 0.35;
 /** Frage aus dem vorigen Zug: nur noch selten wieder. */
@@ -104,7 +173,8 @@ function verfuegbar(aktion: BossAktion, p: Phase): boolean {
 export function aktionsGewicht(aktion: BossAktion, lage: Lage, s: Stimmung): number {
   if (!verfuegbar(aktion, phase(lage.leben, lage.maxLeben))) return 0;
   if (aktion.folgen?.heilung && lage.leben >= lage.maxLeben) return 0;
-  const neigung = Math.max(...aktion.schlagworte.map((w) => NEIGUNG[s][w]));
+  const temperament = TEMPERAMENTE[lage.temperament ?? 'unberechenbar'].neigung;
+  const neigung = Math.max(...aktion.schlagworte.map((w) => NEIGUNG[s][w] * temperament[w]));
   const treffer = Object.entries(aktion.bevorzugt ?? {}).filter(([frage, werte]) =>
     werte?.includes(lage.antworten[frage as FrageId] ?? ''),
   ).length;
@@ -136,7 +206,7 @@ export function waehleAktion(
 ): BossAktion {
   const gesperrt = new Set([...ausschluss, ...lage.letzteAktionen]);
   const kandidaten = boss.aktionen
-    .filter((a) => !gesperrt.has(a.id))
+    .filter((a) => !gesperrt.has(a.id) && beherrscht(a, lage))
     .map((a) => ({ wert: a, gewicht: aktionsGewicht(a, lage, s) }));
   return (
     gewichtetAus(kandidaten, zufall) ??
@@ -158,7 +228,7 @@ export function fragenFuerZug(
 ): Frage[] {
   const p = phase(lage.leben, lage.maxLeben);
   const relevanz = new Map<FrageId, number>();
-  for (const a of boss.aktionen.filter((a) => verfuegbar(a, p))) {
+  for (const a of boss.aktionen.filter((a) => verfuegbar(a, p) && beherrscht(a, lage))) {
     for (const frage of Object.keys(a.bevorzugt ?? {}) as FrageId[]) {
       relevanz.set(frage, (relevanz.get(frage) ?? 0) + a.gewicht);
     }
@@ -240,8 +310,25 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
     ankuendigung = boss.ankuendigung;
     spezialAngekuendigt = true;
   }
-  const anzahl = p === 3 ? 2 : 1;
+  let anzahl = p === 3 ? 2 : 1;
+  let extra = false;
   while (aktionen.length < anzahl) {
+    aktionen.push(
+      waehleAktion(
+        boss,
+        lage,
+        s,
+        zufall,
+        aktionen.map((a) => a.id),
+      ),
+    );
+    // „Handelt noch einmal“: höchstens eine zusätzliche Aktion pro Zug.
+    if (!extra && aktionen.at(-1)?.folgen?.extraAktion) {
+      extra = true;
+      anzahl++;
+    }
+  }
+  if (!extra && aktionen.some((a) => a.folgen?.extraAktion)) {
     aktionen.push(
       waehleAktion(
         boss,
@@ -258,6 +345,9 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
   let heilung = 0;
   let schutz = 0;
   let zusatzDiener = 0;
+  const benannteDiener: DienerVorlage[] = [];
+  const dienerBonus = { staerke: 0, widerstand: 0 };
+  let dienerOpfern = 0;
   for (const a of aktionen) {
     const f = a.folgen ?? {};
     if (f.leben) {
@@ -266,14 +356,43 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
       }
     }
     heilung += f.heilung ?? 0;
+    if (f.heilungAusVerlust) {
+      heilung += Math.min(
+        f.heilungAusVerlust.max,
+        Math.floor(verlust * f.heilungAusVerlust.anteil),
+      );
+    }
     schutz += f.schutz ?? 0;
-    zusatzDiener += f.diener ?? 0;
+    const benannt = f.dienerName && boss.diener.find((d) => d.name === f.dienerName);
+    if (benannt) {
+      for (let i = 0; i < (f.diener ?? 1); i++) benannteDiener.push(benannt);
+    } else {
+      zusatzDiener += f.diener ?? 0;
+    }
+    dienerBonus.staerke += f.dienerBonus?.staerke ?? 0;
+    dienerBonus.widerstand += f.dienerBonus?.widerstand ?? 0;
+    dienerOpfern += f.dienerOpfern ?? 0;
   }
 
-  const neueDiener: DienerVorlage[] = Array.from(
-    { length: dienerNachschub(lage.runde, lage.diener) + zusatzDiener },
-    () => zufaelligAus(boss.diener, zufall),
-  );
+  // Runden-Effekt (z. B. Hunger): trifft jeden Spieler in jedem Boss-Zug.
+  let rundenEffekt: string | null = null;
+  if (boss.rundenEffekt) {
+    const e = boss.rundenEffekt;
+    const menge = Math.floor(
+      Math.min(e.max ?? Infinity, (e.leben ?? 0) + (e.lebenProDiener ?? 0) * lage.diener),
+    );
+    if (menge > 0) {
+      rundenEffekt = e.text;
+      for (const sp of lage.spieler) lebenAenderungen.push({ spielerId: sp.id, um: -menge });
+    }
+  }
+
+  const neueDiener: DienerVorlage[] = [
+    ...Array.from({ length: dienerNachschub(lage.runde, lage.diener) + zusatzDiener }, () =>
+      zufaelligAus(boss.diener, zufall),
+    ),
+    ...benannteDiener,
+  ];
 
   // Wer schwächelt, wird gejagt; sonst trifft es den Spieler mit den meisten Leben.
   const angriffsziel =
@@ -296,6 +415,9 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
     heilung,
     schutz,
     neueDiener,
+    dienerBonus,
+    dienerOpfern,
+    rundenEffekt,
     angriffsziel,
     ankuendigung,
     spezialAngekuendigt,

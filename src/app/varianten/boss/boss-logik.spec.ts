@@ -275,4 +275,57 @@ describe('Boss-Logik', () => {
       expect(zug.spruch).toContain('40');
     });
   });
+
+  describe('Besondere Mechaniken', () => {
+    const aktion = (folgen: object) => ({
+      ...STURMDRACHE,
+      aktionen: [
+        { id: 'a', name: 'A', schlagworte: ['angriff' as const], gewicht: 1, text: '', folgen },
+        { id: 'b', name: 'B', schlagworte: ['angriff' as const], gewicht: 0.0001, text: '' },
+        { id: 'c', name: 'C', schlagworte: ['angriff' as const], gewicht: 0.0001, text: '' },
+      ],
+    });
+
+    it('handelt mit „noch einmal“ ein zusätzliches Mal', () => {
+      const zug = bossZug(aktion({ extraAktion: true }), lage(), zufallMitStartwert(2));
+      expect(zug.aktionen.length).toBe(2);
+    });
+
+    it('heilt einen Anteil des erlittenen Schadens', () => {
+      const zug = bossZug(
+        aktion({ heilungAusVerlust: { anteil: 0.5, max: 25 } }),
+        lage({ leben: 100, lebenVorher: 140 }),
+        () => 0,
+      );
+      expect(zug.heilung).toBe(20);
+    });
+
+    it('ruft benannte Diener gezielt', () => {
+      const zug = bossZug(
+        aktion({ diener: 2, dienerName: 'Donnergreif' }),
+        lage({ runde: 1, diener: 5 }),
+        () => 0,
+      );
+      expect(zug.neueDiener.filter((d) => d.name === 'Donnergreif').length).toBeGreaterThanOrEqual(
+        2,
+      );
+    });
+
+    it('wendet den Runden-Effekt auf jeden Spieler an', () => {
+      const boss = { ...STURMDRACHE, rundenEffekt: { text: 'Hunger', lebenProDiener: 1, max: 2 } };
+      const zug = bossZug(boss, lage({ diener: 5 }), zufallMitStartwert(1));
+      expect(zug.rundenEffekt).toBe('Hunger');
+      const hunger = zug.lebenAenderungen.filter((l) => l.um === -2);
+      expect(hunger.map((l) => l.spielerId).sort()).toEqual([1, 2]);
+    });
+
+    it('nimmt nur Aktionen aus dem Repertoire', () => {
+      const zufall = zufallMitStartwert(3);
+      const erlaubt = ['hagel', 'auge', 'brutruf'];
+      for (let i = 0; i < 200; i++) {
+        const a = waehleAktion(STURMDRACHE, lage({ repertoire: erlaubt }), 'wuetend', zufall);
+        expect(erlaubt).toContain(a.id);
+      }
+    });
+  });
 });

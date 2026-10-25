@@ -1,5 +1,5 @@
 import { Zufall } from '../../core/zufall';
-import { heilen, schadenAmBoss } from './boss-logik';
+import { heilen, repertoireWaehlen, schadenAmBoss, temperamentWaehlen } from './boss-logik';
 import {
   Antworten,
   BossDefinition,
@@ -8,6 +8,7 @@ import {
   FrageId,
   Lage,
   Stimmung,
+  Temperament,
 } from './boss-modell';
 
 /** So viele vergangene Aktionen und Sprüche merkt sich der Boss, um sich nicht zu wiederholen. */
@@ -54,6 +55,9 @@ export interface BossStand {
   spezialAngekuendigt: boolean;
   ankuendigung: string | null;
   protokoll: BossProtokoll[];
+  /** Charakterzug und beherrschte Aktionen – pro Partie neu gewürfelt, gleich stark. */
+  temperament: Temperament;
+  repertoire: string[];
 }
 
 function dienerAnlegen(stand: BossStand, vorlagen: DienerVorlage[]): BossStand {
@@ -80,6 +84,8 @@ export function bossStarten(boss: BossDefinition, zufall: Zufall): BossStand {
     spezialAngekuendigt: false,
     ankuendigung: null,
     protokoll: [],
+    temperament: temperamentWaehlen(zufall),
+    repertoire: repertoireWaehlen(boss, zufall),
   };
   const start = Array.from(
     { length: boss.startDiener },
@@ -138,7 +144,22 @@ export function bossLage(
     letzteFragen: stand.letzteFragen,
     letzteSprueche: stand.letzteSprueche,
     spezialAngekuendigt: stand.spezialAngekuendigt,
+    temperament: stand.temperament ?? 'unberechenbar',
+    // Ältere Spielstände kennen kein Repertoire: dann beherrscht er alles.
+    repertoire: stand.repertoire?.length ? stand.repertoire : undefined,
   };
+}
+
+/** Der Boss opfert seine schwächsten Diener zuerst. */
+function opfern(diener: Diener[], anzahl: number): Diener[] {
+  if (anzahl <= 0) return diener;
+  const weg = new Set(
+    [...diener]
+      .sort((a, b) => a.staerke + a.widerstand - (b.staerke + b.widerstand))
+      .slice(0, anzahl)
+      .map((d) => d.nr),
+  );
+  return diener.filter((d) => !weg.has(d.nr));
 }
 
 /**
@@ -168,8 +189,15 @@ export function bossZugEintragen(
   antworten: Antworten,
 ): BossStand {
   const name = (id: number | null) => spieler.find((s) => s.id === id)?.name ?? null;
-  const mitDienern = dienerAnlegen(stand, zug.neueDiener);
-  const neueNr = new Set(mitDienern.diener.slice(stand.diener.length).map((d) => d.nr));
+  const nachOpfer = { ...stand, diener: opfern(stand.diener, zug.dienerOpfern ?? 0) };
+  const mitDienern = dienerAnlegen(nachOpfer, zug.neueDiener);
+  const bonus = zug.dienerBonus ?? { staerke: 0, widerstand: 0 };
+  mitDienern.diener = mitDienern.diener.map((d) => ({
+    ...d,
+    staerke: d.staerke + bonus.staerke,
+    widerstand: d.widerstand + bonus.widerstand,
+  }));
+  const neueNr = new Set(mitDienern.diener.slice(nachOpfer.diener.length).map((d) => d.nr));
   const angriff =
     zug.angriffsziel === null
       ? { diener: mitDienern.diener.map((d) => ({ ...d, getappt: false })), angreifer: 0 }

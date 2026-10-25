@@ -76,7 +76,34 @@ export interface BossAktion {
     /** Schaden, den der Boss bis zu seinem nächsten Zug verhindert. */
     schutz?: number;
     diener?: number;
+    /** Ruft gezielt diesen Diener (Name aus der Diener-Liste) statt eines zufälligen. */
+    dienerName?: string;
+    /** Dauerhafte Stärkung aller Diener, auch der neu gerufenen. */
+    dienerBonus?: { staerke: number; widerstand: number };
+    /** Der Boss opfert so viele eigene Diener (die schwächsten zuerst). */
+    dienerOpfern?: number;
+    /** Heilt einen Anteil des Schadens, den er seit seinem letzten Zug erlitten hat. */
+    heilungAusVerlust?: { anteil: number; max: number };
+    /** Der Boss handelt in diesem Zug noch ein weiteres Mal. */
+    extraAktion?: boolean;
   };
+}
+
+/**
+ * Charakterzug für eine Partie. Er verschiebt nur, welche Art von Aktion der Boss lieber nimmt –
+ * nicht, wie stark er ist. So spielt sich derselbe Boss jedes Mal etwas anders.
+ */
+export type Temperament = 'jaehzornig' | 'listig' | 'bruetend' | 'zaeh' | 'unberechenbar';
+
+/** Was jede Runde im Boss-Zug automatisch passiert, z. B. Gorvaks Hunger. */
+export interface RundenEffekt {
+  text: string;
+  /** Jeder Spieler verliert so viele Leben … */
+  leben?: number;
+  /** … plus so viele pro Diener des Bosses … */
+  lebenProDiener?: number;
+  /** … höchstens so viele. */
+  max?: number;
 }
 
 export interface BossDefinition {
@@ -95,6 +122,9 @@ export interface BossDefinition {
   ankuendigung: string;
   /** Einleitende Sprüche je Stimmung. Platzhalter: {verlust}, {schwaechster}, {boss}. */
   sprueche: Record<Stimmung, string[]>;
+  /** Kurzer Untertitel für die Auswahl. */
+  beschreibung: string;
+  rundenEffekt?: RundenEffekt;
 }
 
 /** Alles, was der Boss zu Beginn seines Zuges über die Partie weiß. */
@@ -115,6 +145,10 @@ export interface Lage {
   letzteFragen: FrageId[];
   letzteSprueche: string[];
   spezialAngekuendigt: boolean;
+  /** Charakterzug dieser Partie. */
+  temperament?: Temperament;
+  /** Aktionen, die der Boss in dieser Partie beherrscht. Ohne Angabe: alle. */
+  repertoire?: string[];
 }
 
 export interface AusgefuehrteAktion {
@@ -135,6 +169,10 @@ export interface BossZug {
   heilung: number;
   schutz: number;
   neueDiener: DienerVorlage[];
+  dienerBonus: { staerke: number; widerstand: number };
+  dienerOpfern: number;
+  /** Was der Runden-Effekt diesmal ausgelöst hat (schon in lebenAenderungen enthalten). */
+  rundenEffekt: string | null;
   /** Spieler, den die Diener angreifen; null ohne Diener. */
   angriffsziel: number | null;
   /** Ankündigung des Spezialangriffs für den nächsten Zug. */

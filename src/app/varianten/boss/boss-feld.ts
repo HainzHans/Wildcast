@@ -11,7 +11,7 @@ import {
 
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { HalteKnopf } from '../../shared/ui/halte-knopf';
-import { phase } from './boss-logik';
+import { phase, TEMPERAMENTE } from './boss-logik';
 import { BossStand } from './boss-stand';
 import { bossMitId } from './bosse';
 
@@ -43,8 +43,14 @@ const SAMMELZEIT = 1500;
         </button>
       </header>
       @if (passivOffen()) {
-        <p class="passiv">{{ def().passiv }}</p>
+        <p class="passiv"><strong>Passiv:</strong> {{ def().passiv }}</p>
+        @if (def().rundenEffekt; as r) {
+          <p class="passiv"><strong>Jede Runde:</strong> {{ r.text }}</p>
+        }
       }
+      <p class="laune">
+        Heute <strong>{{ laune().name }}</strong> – {{ laune().text }}
+      </p>
 
       <div class="leben">
         <button
@@ -217,6 +223,11 @@ const SAMMELZEIT = 1500;
       background: none;
       color: var(--text-leise);
       font-size: 1.1rem;
+    }
+    .laune {
+      margin: -0.3rem 0 0;
+      font-size: 0.78rem;
+      color: var(--text-leise);
     }
     .passiv {
       margin: 0;
@@ -450,6 +461,9 @@ export class BossFeld implements OnDestroy {
   readonly protokoll = output<void>();
 
   protected readonly def = computed(() => bossMitId(this.stand().bossId));
+  protected readonly laune = computed(
+    () => TEMPERAMENTE[this.stand().temperament ?? 'unberechenbar'],
+  );
   protected readonly phase = computed(() => phase(this.stand().leben, this.stand().maxLeben));
   protected readonly prozent = computed(() => (this.stand().leben / this.stand().maxLeben) * 100);
   protected readonly getappt = computed(() => this.stand().diener.filter((d) => d.getappt).length);

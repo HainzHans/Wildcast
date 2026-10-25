@@ -1,0 +1,215 @@
+import { BossDefinition } from '../boss-modell';
+import { fragen } from './fragen';
+
+/**
+ * Level 10: das Ende. Leert jede Runde Leben, verschlingt eure stärksten Karten, handelt
+ * doppelt und wächst mit jedem Zug. Nur für eingespielte Runden.
+ */
+export const WELTENFRESSER: BossDefinition = {
+  id: 'weltenfresser',
+  name: 'Der Weltenfresser',
+  level: 10,
+  leben: 300,
+  beschreibung:
+    'Das Ende aller Dinge. Saugt jede Runde Leben ab, verschlingt eure Besten und wächst ohne Ende.',
+  passiv:
+    'Leere: Kreaturen, die die Spieler in einem Zug wirken, in dem der Weltenfresser Schaden erhalten hat, kosten 1 Mana mehr.',
+  rundenEffekt: {
+    text: 'Die Leere zehrt: Jeder Spieler verliert 2 Leben.',
+    leben: 2,
+  },
+  startDiener: 3,
+  diener: [
+    { name: 'Leerling', staerke: 3, widerstand: 3, faehigkeit: 'Eile', eile: true },
+    { name: 'Sternenschlund', staerke: 5, widerstand: 5, faehigkeit: 'Flugfähigkeit' },
+    {
+      name: 'Weltensplitter',
+      staerke: 2,
+      widerstand: 2,
+      faehigkeit: 'Wachsamkeit. Wenn er stirbt, verliert jeder Spieler 2 Leben.',
+      wachsamkeit: true,
+    },
+    {
+      name: 'Ankerwurm',
+      staerke: 4,
+      widerstand: 8,
+      faehigkeit: 'Greift nicht an. Blockt immer, falls möglich.',
+      greiftNichtAn: true,
+    },
+  ],
+  fragen: fragen(),
+
+  aktionen: [
+    {
+      id: 'sternensturz',
+      name: 'Sternensturz',
+      schlagworte: ['angriff'],
+      gewicht: 2,
+      text: 'Ein Stern stürzt auf den Spieler mit den meisten Leben: Er verliert 12 Leben.',
+      folgen: { leben: { ziel: 'meisteLeben', um: -12 } },
+    },
+    {
+      id: 'leere',
+      name: 'Hauch der Leere',
+      schlagworte: ['angriff'],
+      gewicht: 2,
+      text: 'Die Leere zieht an jedem: Jeder Spieler verliert 6 Leben.',
+      folgen: { leben: { ziel: 'alle', um: -6 } },
+    },
+    {
+      id: 'absorbieren',
+      name: 'Absorbieren',
+      schlagworte: ['angriff', 'heilung'],
+      gewicht: 1,
+      text: 'Der Weltenfresser verschlingt die Kraft dessen, der ihn zuletzt verletzt hat: Dieser Spieler verliert 10 Leben, der Weltenfresser erhält 10 Leben.',
+      bevorzugt: { rache: ['1', '2', '3', '4'] },
+      folgen: { leben: { ziel: 'rache', um: -10 }, heilung: 10 },
+    },
+    {
+      id: 'zeitlosigkeit',
+      name: 'Zeitlosigkeit',
+      schlagworte: ['angriff'],
+      gewicht: 1,
+      text: 'Für den Weltenfresser gibt es keine Züge: Er handelt sofort noch einmal.',
+      folgen: { extraAktion: true },
+    },
+    {
+      id: 'verschlingen',
+      name: 'Verschlingen',
+      schlagworte: ['kontrolle'],
+      gewicht: 2,
+      text: 'Der Weltenfresser verschlingt die zwei Kreaturen der Spieler mit der höchsten Stärke: Schicke sie ins Exil. Für jede fehlende verliert der Spieler mit den meisten Leben 5 Leben.',
+      bevorzugt: { grosseKreatur: ['ja'], kreaturen: ['3-5', '6-9', '10+'] },
+    },
+    {
+      id: 'singularitaet',
+      name: 'Singularität',
+      schlagworte: ['kontrolle'],
+      gewicht: 2,
+      text: 'Alles wird zusammengepresst: Alle Kreaturen der Spieler erhalten −3/−3 bis zum Ende ihres nächsten Zuges.',
+      bevorzugt: { kreaturen: ['6-9', '10+'] },
+    },
+    {
+      id: 'entropie',
+      name: 'Entropie',
+      schlagworte: ['kontrolle'],
+      gewicht: 1,
+      text: 'Alles zerfällt: Jeder Spieler opfert eine bleibende Karte, die kein Land ist. Wer keine hat, verliert stattdessen 5 Leben.',
+      bevorzugt: { bleibende: ['einige', 'viele'] },
+    },
+    {
+      id: 'vergessen',
+      name: 'Vergessen',
+      schlagworte: ['kontrolle'],
+      gewicht: 1,
+      text: 'Die Leere löscht Erinnerungen: Jeder Spieler schickt seinen Friedhof und eine Karte aus seiner Hand ins Exil.',
+      bevorzugt: { friedhof: ['einige', 'viele'], handkarten: ['1', '2', 'gleich'] },
+    },
+    {
+      id: 'kronenfall',
+      name: 'Kronenfall',
+      schlagworte: ['kontrolle'],
+      gewicht: 1,
+      text: 'Der Weltenfresser greift nach den Anführern: Jeder Kommandeur der Spieler erhält 8 Schaden. Ist keiner im Spiel, verliert jeder Spieler 4 Leben.',
+      bevorzugt: { kommandeur: ['ja'] },
+    },
+    {
+      id: 'ausloeschung',
+      name: 'Auslöschung',
+      schlagworte: ['kontrolle'],
+      gewicht: 1,
+      phasen: [3],
+      text: 'Schicke alle Kreaturen der Spieler mit Manawert 3 oder weniger ins Exil.',
+      bevorzugt: { kreaturen: ['6-9', '10+'] },
+    },
+    {
+      id: 'dimensionsriss',
+      name: 'Dimensionsriss',
+      schlagworte: ['beschwoerung'],
+      gewicht: 2,
+      text: 'Ein Riss reißt auf: Drei Diener quellen aus der Leere.',
+      folgen: { diener: 3 },
+    },
+    {
+      id: 'sternenruf',
+      name: 'Sternenruf',
+      schlagworte: ['beschwoerung'],
+      gewicht: 1,
+      text: 'Ein Sternenschlund löst sich vom Himmel und senkt sich herab.',
+      folgen: { diener: 1, dienerName: 'Sternenschlund' },
+    },
+    {
+      id: 'anpassung',
+      name: 'Anpassung',
+      schlagworte: ['beschwoerung', 'heilung'],
+      gewicht: 1,
+      text: 'Der Weltenfresser lernt aus eurem Angriff: Alle seine Diener erhalten dauerhaft +1/+1, und er erhält 6 Leben.',
+      folgen: { dienerBonus: { staerke: 1, widerstand: 1 }, heilung: 6 },
+    },
+    {
+      id: 'neuschoepfung',
+      name: 'Neuschöpfung',
+      schlagworte: ['heilung'],
+      gewicht: 1,
+      text: 'Aus den Trümmern einer Welt baut er sich neu: Er erhält 15 Leben.',
+      folgen: { heilung: 15 },
+    },
+    {
+      id: 'weltenhaut',
+      name: 'Weltenhaut',
+      schlagworte: ['heilung'],
+      gewicht: 1,
+      text: 'Die Haut aus Kontinenten verhärtet sich: Bis zu seinem nächsten Zug verhindert er die ersten 20 Schaden.',
+      folgen: { schutz: 20 },
+    },
+  ],
+
+  spezial: {
+    id: 'ende-aller-welten',
+    name: 'Ende aller Welten',
+    schlagworte: ['angriff'],
+    gewicht: 0,
+    text: 'Der Weltenfresser öffnet sein Maul: Jeder Spieler verliert 15 Leben, und alle Kreaturen der Spieler mit Stärke 4 oder weniger werden zerstört.',
+    folgen: { leben: { ziel: 'alle', um: -15 } },
+  },
+  ankuendigung:
+    'Die Sterne verlöschen einer nach dem anderen. Im nächsten Zug kommt das Ende aller Welten!',
+
+  sprueche: {
+    wuetend: [
+      '{verlust} Leben. Eine Welt verliert mehr in einer Sekunde.',
+      'Ihr kratzt an der Ewigkeit. Die Ewigkeit kratzt zurück.',
+      'Ich habe Sonnen verschluckt. Ihr seid nur Krümel.',
+      'Schmerz. Wie lange ist das her? Ich hatte es vermisst.',
+      'Ihr habt meine Aufmerksamkeit. Das hättet ihr nicht wollen sollen.',
+    ],
+    bedroht: [
+      'Eine Welt im Kleinen. Ich fresse sie im Ganzen.',
+      'Ihr baut. Ich verschlinge. So war es immer.',
+      'Je mehr ihr habt, desto satter werde ich.',
+      'Eure Armee ist ein Vorspeisenteller.',
+      'Alles, was ist, wird einmal mir gehören.',
+    ],
+    ueberlegen: [
+      '{schwaechster}, dein Licht flackert.',
+      'Das Ende kommt nicht. Es ist schon da.',
+      'Ich höre eure Welt knistern. Gleich bricht sie.',
+      'Ihr seid der letzte Bissen.',
+      'Kämpft ruhig weiter. Es schmeckt besser so.',
+    ],
+    verzweifelt: [
+      'Ihr … verletzt das Unendliche? Unmöglich!',
+      'Ich habe tausend Welten verschlungen. Eure wird nicht die letzte sein!',
+      'Die Leere vergeht nicht. Sie wartet nur.',
+      'Kommt, ihr Splitter! Haltet sie auf!',
+      'Selbst sterbend fresse ich noch.',
+    ],
+    lauernd: [
+      'Ich habe Zeit. Ich BIN Zeit. Und Raum. Und Hunger.',
+      'Eure Welt ist klein. Aber sie riecht gut.',
+      'Ich warte, bis ihr reif seid.',
+      'Hört ihr die Stille zwischen den Sternen? Das bin ich.',
+      'Alles endet. Ich bin nur pünktlich.',
+    ],
+  },
+};

@@ -18,7 +18,7 @@ import {
   STANDARD_WUERFEL,
 } from '../../varianten/mana-wuerfel/wuerfel-einstellungen';
 import { WuerfelRegeln } from '../../varianten/mana-wuerfel/wuerfel-regeln';
-import { bossMitId } from '../../varianten/boss/bosse';
+import { BOSSE, bossMitId } from '../../varianten/boss/bosse';
 import { kombinieren } from '../../varianten/varianten';
 
 const LEBEN_AUSWAHL = [20, 40];
@@ -106,12 +106,34 @@ const LEBEN_MAX = 999;
           </fieldset>
 
           @if (boss(); as b) {
-            <section class="boss-info" aria-label="Boss">
-              <p class="boss-titel">
-                {{ b.name }} <span>Level {{ b.level }} · {{ b.leben }} Leben</span>
-              </p>
-              <p class="boss-passiv">{{ b.passiv }}</p>
-            </section>
+            <fieldset>
+              <legend>Boss</legend>
+              <div class="bosse" role="radiogroup" aria-label="Boss wählen">
+                @for (x of bosse; track x.id) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="boss-wahl"
+                    [class.aktiv]="x.id === b.id"
+                    [attr.aria-checked]="x.id === b.id"
+                    (click)="bossId.set(x.id)"
+                  >
+                    <span class="boss-level">{{ x.level }}</span>
+                    <span class="boss-name">{{ x.name }}</span>
+                  </button>
+                }
+              </div>
+              <section class="boss-info" aria-live="polite">
+                <p class="boss-titel">
+                  {{ b.name }} <span>Level {{ b.level }} · {{ b.leben }} Leben</span>
+                </p>
+                <p class="boss-beschreibung">{{ b.beschreibung }}</p>
+                <p class="boss-passiv"><strong>Passiv:</strong> {{ b.passiv }}</p>
+                @if (b.rundenEffekt) {
+                  <p class="boss-passiv"><strong>Jede Runde:</strong> {{ b.rundenEffekt.text }}</p>
+                }
+              </section>
+            </fieldset>
           }
 
           @if (mitWuerfel()) {
@@ -228,6 +250,43 @@ const LEBEN_MAX = 999;
     .eigene.aktiv input {
       border: 2px solid var(--messing);
     }
+    .bosse {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+    }
+    .boss-wahl {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: var(--tippflaeche);
+      padding: 0.4rem 0.6rem;
+      text-align: start;
+      border-radius: var(--radius-klein);
+      border: 1px solid var(--feld-rand);
+      background: var(--feld);
+      font-size: 0.85rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .boss-wahl.aktiv {
+      border: 2px solid var(--negativ);
+    }
+    .boss-level {
+      flex-shrink: 0;
+      width: 1.8rem;
+      height: 1.8rem;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--negativ);
+      color: #fff;
+      font-weight: 800;
+    }
+    .boss-beschreibung {
+      margin: 0.3rem 0 0;
+    }
     .boss-info {
       background: var(--feld);
       border-radius: var(--radius);
@@ -297,8 +356,10 @@ export class Einrichten {
   protected readonly mitWuerfel = computed(
     () => this.eintrag()?.ids.includes('mana-wuerfel') ?? false,
   );
+  protected readonly bosse = BOSSE;
+  protected readonly bossId = signal(BOSSE[0].id);
   protected readonly boss = computed(() =>
-    this.eintrag()?.ids.includes('boss') ? bossMitId(undefined) : null,
+    this.eintrag()?.ids.includes('boss') ? bossMitId(this.bossId()) : null,
   );
   protected readonly wuerfelAngepasst = computed(
     () => JSON.stringify(this.wuerfel()) !== JSON.stringify(STANDARD_WUERFEL),
@@ -341,7 +402,10 @@ export class Einrichten {
     const v = this.eintrag();
     if (!v || !this.startbereit()) return;
     const namen = this.plaetze().map((i) => this.namen()[i].trim() || `Spieler ${i + 1}`);
-    const optionen = this.mitWuerfel() ? { manaWuerfel: this.wuerfel() } : {};
+    const optionen = {
+      ...(this.mitWuerfel() ? { manaWuerfel: this.wuerfel() } : {}),
+      ...(this.boss() ? { bossId: this.bossId() } : {}),
+    };
     if (optionen.manaWuerfel) merkeWuerfelEinstellungen(optionen.manaWuerfel);
     this.store.starten(v.ids, namen, this.startLeben(), optionen);
     this.router.navigateByUrl('/spiel');
