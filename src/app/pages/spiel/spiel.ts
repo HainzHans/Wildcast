@@ -41,7 +41,8 @@ type Dialog =
       <div class="tisch" [class.drehen]="ansicht.drehen()" [attr.data-spieler]="s.spieler.length">
         @for (p of s.spieler; track p.id; let i = $index) {
           <app-spieler-feld
-            [style.grid-area]="'p' + (i + 1)"
+            [style.grid-area]="'p' + (ansicht.sitz(i, s.spieler.length) + 1)"
+            [style.order]="ansicht.sitz(i, s.spieler.length)"
             [spieler]="p"
             [gedreht]="ansicht.istGedreht(i, s.spieler.length)"
             [effektWuerfel]="effektWuerfel()"
@@ -82,14 +83,11 @@ type Dialog =
               <span class="anzahl">{{ s.effekte.length }}</span>
             </button>
           }
-          <button
-            type="button"
-            class="steuer tischmodus"
-            [attr.aria-pressed]="ansicht.tischmodus()"
-            (click)="ansicht.tischmodus.set(!ansicht.tischmodus())"
-          >
-            <span aria-hidden="true">⇅</span> <span class="kurz">Tischmodus</span>
-          </button>
+          @if (s.spieler.length > 1) {
+            <button type="button" class="steuer" (click)="ansicht.plaetzeTauschen()">
+              <span aria-hidden="true">⇅</span> <span class="kurz">Plätze tauschen</span>
+            </button>
+          }
         </nav>
       </div>
 
@@ -198,7 +196,7 @@ type Dialog =
       opacity: 0.4;
       cursor: not-allowed;
     }
-    /* Schmale Handys: Menü und Tischmodus nur als Symbol, damit die Leiste einzeilig bleibt */
+    /* Schmale Handys: Menü und Plätze tauschen nur als Symbol, damit die Leiste einzeilig bleibt */
     @media (max-width: 479px) {
       .steuer {
         padding-inline: 0.65rem;
@@ -212,10 +210,6 @@ type Dialog =
         white-space: nowrap;
       }
     }
-    .tischmodus[aria-pressed='true'] {
-      border-color: var(--messing);
-      color: var(--messing);
-    }
     .anzahl {
       min-width: 1.4rem;
       padding: 0 0.35rem;
@@ -224,12 +218,6 @@ type Dialog =
       color: var(--messing-text);
       font-size: 0.8rem;
       text-align: center;
-    }
-    /* Auf dem Laptop spielt der Tischmodus keine Rolle */
-    @media (min-width: 900px) {
-      .tischmodus {
-        display: none;
-      }
     }
     .gezeigt {
       display: grid;
