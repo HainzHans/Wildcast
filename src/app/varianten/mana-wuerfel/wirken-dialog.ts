@@ -14,11 +14,12 @@ import { Effekt, Spieler } from '../../core/spiel/modell';
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { Ueberlagerung } from '../../shared/ui/ueberlagerung';
 import { EffektKarte } from './effekt-karte';
+import { ANTWORT } from './wuerfel';
 
-/** Wählbare Manamenge pro Effekt. */
+/** Wählbare Manamenge pro Effekt; über 10 geht es nur mit „+“ weiter, bis zur Antwort (42). */
 const MANA_MIN = 1;
-const MANA_MAX = 10;
-const SCHNELLWAHL = Array.from({ length: MANA_MAX - MANA_MIN + 1 }, (_, i) => MANA_MIN + i);
+const MANA_MAX = ANTWORT;
+const SCHNELLWAHL = Array.from({ length: 10 }, (_, i) => i + 1);
 /** Kurze Spannungspause, bevor das Ergebnis aufgedeckt wird. */
 const WUERFELZEIT = 700;
 
