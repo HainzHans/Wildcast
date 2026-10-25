@@ -15,6 +15,8 @@ export const ART_NAME: Record<Art, string> = {
 export const FORM_NAME: Record<Form, string> = {
   normal: 'Normal',
   verrueckt: 'Verrückt',
+  kreatur: 'Kreatur',
+  artefakt: 'Artefakt',
   verzauberung: 'Verzauberung',
   emblem: 'Emblem',
 };

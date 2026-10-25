@@ -64,7 +64,7 @@
   },
   {
     "art": "positiv",
-    "form": "normal",
+    "form": "kreatur",
     "mana_min": 4,
     "mana_max": 6,
     "name": "Spontane Rekrutierung",
@@ -73,7 +73,7 @@
   },
   {
     "art": "positiv",
-    "form": "normal",
+    "form": "kreatur",
     "mana_min": 7,
     "mana_max": 10,
     "name": "Drache aus dem Nichts",
@@ -277,6 +277,15 @@
     "name": "Die Antwort",
     "spruch": "Die Antwort auf die Frage nach dem Leben, dem Universum und dem ganzen Rest.",
     "text": "Du gewinnst das Spiel."
+  },
+  {
+    "art": "positiv",
+    "form": "artefakt",
+    "mana_min": 1,
+    "mana_max": 10,
+    "name": "Werkzeugkiste",
+    "spruch": "Hammer, Zange, Gold. Was man halt so braucht.",
+    "text": "Erzeuge {m/3} Schatz-Spielsteine."
   },
   {
     "art": "negativ",
@@ -495,6 +504,24 @@
     "text": "Du ziehst zu Beginn deines Zuges keine Karte mehr."
   },
   {
+    "art": "negativ",
+    "form": "kreatur",
+    "mana_min": 1,
+    "mana_max": 10,
+    "name": "Ungebetener Gast",
+    "spruch": "Er hat bei dir geklingelt. Wohnen tut er aber drüben.",
+    "text": "Ein Gegner deiner Wahl erzeugt einen {m/2}/{m/2} Oger-Kreaturenspielstein."
+  },
+  {
+    "art": "negativ",
+    "form": "artefakt",
+    "mana_min": 1,
+    "mana_max": 10,
+    "name": "Spendenaktion",
+    "spruch": "Danke für deine großzügige Spende! Sie war nicht freiwillig.",
+    "text": "Ein Gegner deiner Wahl erzeugt {m/3} Schatz-Spielsteine."
+  },
+  {
     "art": "chaos",
     "form": "normal",
     "mana_min": 1,
@@ -565,6 +592,24 @@
     "name": "Ewige Nacht",
     "spruch": "Wer hat das Licht ausgemacht? Und warum für immer?",
     "text": "Kreaturen können nicht blocken."
+  },
+  {
+    "art": "chaos",
+    "form": "kreatur",
+    "mana_min": 1,
+    "mana_max": 10,
+    "name": "Der Zoo ist offen",
+    "spruch": "Wer hat das Gehege aufgelassen?",
+    "text": "Jeder Spieler erzeugt einen {m/2}/{m/2} Bestien-Kreaturenspielstein."
+  },
+  {
+    "art": "chaos",
+    "form": "artefakt",
+    "mana_min": 1,
+    "mana_max": 10,
+    "name": "Schatzregen",
+    "spruch": "Es regnet Gold! Bitte Helme aufsetzen.",
+    "text": "Jeder Spieler erzeugt {m/3} Schatz-Spielsteine."
   },
   {
     "art": "chaos",

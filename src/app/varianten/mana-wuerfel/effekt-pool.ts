@@ -82,7 +82,7 @@ export const EFFEKT_POOL: EffektVorlage[] = [
     id: 'p-n-armee',
     name: 'Spontane Rekrutierung',
     art: 'positiv',
-    form: 'normal',
+    form: 'kreatur',
     mana: [4, 6],
     spruch: 'Keine Erfahrung nötig. Helm bringst du selbst mit.',
     text: 'Erzeuge {m/2} 2/2 Krieger-Spielsteine.',
@@ -91,7 +91,7 @@ export const EFFEKT_POOL: EffektVorlage[] = [
     id: 'p-n-drache',
     name: 'Drache aus dem Nichts',
     art: 'positiv',
-    form: 'normal',
+    form: 'kreatur',
     mana: [7, 10],
     spruch: 'Er war die ganze Zeit da. Du hast nur nie nach oben geschaut.',
     text: 'Erzeuge einen {m}/{m} Drachen-Spielstein mit Flugfähigkeit.',
@@ -299,6 +299,17 @@ export const EFFEKT_POOL: EffektVorlage[] = [
     mana: [42, 42],
     spruch: 'Die Antwort auf die Frage nach dem Leben, dem Universum und dem ganzen Rest.',
     text: 'Du gewinnst das Spiel.',
+  },
+
+  // ── Positiv · Artefakt ───────────────────────────────────────────
+  {
+    id: 'p-a-werkzeugkiste',
+    name: 'Werkzeugkiste',
+    art: 'positiv',
+    form: 'artefakt',
+    mana: [1, 10],
+    spruch: 'Hammer, Zange, Gold. Was man halt so braucht.',
+    text: 'Erzeuge {m/3} Schatz-Spielsteine.',
   },
 
   // ── Negativ · Normal ─────────────────────────────────────────────
@@ -525,6 +536,26 @@ export const EFFEKT_POOL: EffektVorlage[] = [
     text: 'Du ziehst zu Beginn deines Zuges keine Karte mehr.',
   },
 
+  // ── Negativ · Kreatur und Artefakt ───────────────────────────────
+  {
+    id: 'n-k-gast',
+    name: 'Ungebetener Gast',
+    art: 'negativ',
+    form: 'kreatur',
+    mana: [1, 10],
+    spruch: 'Er hat bei dir geklingelt. Wohnen tut er aber drüben.',
+    text: 'Ein Gegner deiner Wahl erzeugt einen {m/2}/{m/2} Oger-Kreaturenspielstein.',
+  },
+  {
+    id: 'n-a-spende',
+    name: 'Spendenaktion',
+    art: 'negativ',
+    form: 'artefakt',
+    mana: [1, 10],
+    spruch: 'Danke für deine großzügige Spende! Sie war nicht freiwillig.',
+    text: 'Ein Gegner deiner Wahl erzeugt {m/3} Schatz-Spielsteine.',
+  },
+
   // ── Chaos (trifft alle Spieler) ──────────────────────────────────
   {
     id: 'c-n-rundumschlag',
@@ -597,6 +628,24 @@ export const EFFEKT_POOL: EffektVorlage[] = [
     mana: [11, 20],
     spruch: 'Wer hat das Licht ausgemacht? Und warum für immer?',
     text: 'Kreaturen können nicht blocken.',
+  },
+  {
+    id: 'c-k-zoo',
+    name: 'Der Zoo ist offen',
+    art: 'chaos',
+    form: 'kreatur',
+    mana: [1, 10],
+    spruch: 'Wer hat das Gehege aufgelassen?',
+    text: 'Jeder Spieler erzeugt einen {m/2}/{m/2} Bestien-Kreaturenspielstein.',
+  },
+  {
+    id: 'c-a-schatzregen',
+    name: 'Schatzregen',
+    art: 'chaos',
+    form: 'artefakt',
+    mana: [1, 10],
+    spruch: 'Es regnet Gold! Bitte Helme aufsetzen.',
+    text: 'Jeder Spieler erzeugt {m/3} Schatz-Spielsteine.',
   },
   {
     id: 'c-42',

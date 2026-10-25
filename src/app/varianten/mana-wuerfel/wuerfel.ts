@@ -58,7 +58,7 @@ export function wuerfleArt(z: number, e: WuerfelEinstellungen = STANDARD_WUERFEL
   return ziehe(z, ARTEN, e.arten);
 }
 
-/** Standard: Normal 55 %, Verrückt 20 %, Verzauberung 15 %, Emblem 10 %. */
+/** Standard: Normal 40, Verrückt 15, Kreatur 15, Artefakt 10, Verzauberung 12, Emblem 8 %. */
 export function wuerfleForm(z: number, e: WuerfelEinstellungen = STANDARD_WUERFEL): Form {
   return ziehe(z, FORMEN, e.formen);
 }

@@ -4,12 +4,11 @@
   { "art": "positiv", "form": "normal", "mana_min": 3, "name": "Feuerzunge", "spruch": "Ich hab nur „Hallo“ gesagt.", "text": "Füge einer Kreatur deiner Wahl 3 Schaden zu. Stirbt sie dadurch, ziehst du eine Karte." },
   { "art": "positiv", "form": "normal", "mana_min": 4, "name": "Sperrstunde", "spruch": "Alle nach Hause, die Party ist vorbei.", "text": "Bringe bis zu zwei Kreaturen mit Manawert 3 oder weniger auf die Hand ihrer Besitzer zurück." },
   { "art": "positiv", "form": "normal", "mana_min": 5, "name": "Sauberer Schnitt", "spruch": "Tut mir leid. Nein, eigentlich nicht.", "text": "Zerstöre eine Kreatur mit Manawert 4 oder weniger." },
-  { "art": "positiv", "form": "normal", "mana_min": 6, "name": "Wolfsrudel", "spruch": "Wo einer heult, heulen bald alle.", "text": "Erzeuge drei 2/2 Wolf-Spielsteine." },
-  { "art": "positiv", "form": "normal", "mana_min": 7, "name": "Sturzflug", "spruch": "Majestätisch. Und ziemlich hungrig.", "text": "Erzeuge einen 5/5 Greif-Spielstein mit Flugfähigkeit und Wachsamkeit." },
+  { "art": "positiv", "form": "kreatur", "mana_min": 6, "name": "Wolfsrudel", "spruch": "Wo einer heult, heulen bald alle.", "text": "Erzeuge drei 2/2 Wolf-Spielsteine." },
+  { "art": "positiv", "form": "kreatur", "mana_min": 7, "name": "Sturzflug", "spruch": "Majestätisch. Und ziemlich hungrig.", "text": "Erzeuge einen 5/5 Greif-Spielstein mit Flugfähigkeit und Wachsamkeit." },
   { "art": "positiv", "form": "normal", "mana_min": 8, "name": "Neuer Chef", "spruch": "Neue Leitung, neue Regeln.", "text": "Übernimm dauerhaft die Kontrolle über eine Kreatur mit Manawert 5 oder weniger. Enttappe sie, sie hat in diesem Zug Eile." },
   { "art": "positiv", "form": "normal", "mana_min": 9, "name": "Zeitschleife", "spruch": "Déjà-vu? Nein, nur Vorsprung.", "text": "Nach diesem Zug machst du einen zusätzlichen Zug. Ziehe in diesem Zug eine zusätzliche Karte." },
-  { "art": "positiv", "form": "normal", "mana_min": 10, "name": "Drachenhort", "spruch": "Gold, Feuer und ein sehr großes Ego.", "text": "Erzeuge einen 8/8 Drachen-Spielstein mit Flugfähigkeit. Immer wenn er angreift, erhältst du 2 Leben." },
-
+  { "art": "positiv", "form": "kreatur", "mana_min": 10, "name": "Drachenhort", "spruch": "Gold, Feuer und ein sehr großes Ego.", "text": "Erzeuge einen 8/8 Drachen-Spielstein mit Flugfähigkeit. Immer wenn er angreift, erhältst du 2 Leben." },
   { "art": "positiv", "form": "verrueckt", "mana_min": 1, "name": "Schnüffelnase", "spruch": "Riecht nach Kombo.", "text": "Schau dir die oberste Karte der Bibliothek jedes Gegners an. Du darfst jede davon unter die jeweilige Bibliothek legen." },
   { "art": "positiv", "form": "verrueckt", "mana_min": 2, "name": "Kuhhandel", "spruch": "Fairer Tausch. Für mich.", "text": "Tausche eine Karte aus deiner Hand gegen eine zufällige Karte aus der Hand eines Gegners deiner Wahl." },
   { "art": "positiv", "form": "verrueckt", "mana_min": 3, "name": "Friedhofsführung", "spruch": "Rechts sehen Sie eine ehemalige Bedrohung.", "text": "Nimm eine beliebige Karte aus dem Friedhof eines Gegners auf deine Hand. Du kannst sie wirken, als wäre sie deine eigene." },
@@ -20,7 +19,6 @@
   { "art": "positiv", "form": "verrueckt", "mana_min": 8, "name": "Grabräuber", "spruch": "Die waren eh nicht mehr in Benutzung.", "text": "Bringe bis zu zwei Kreaturen mit Manawert 4 oder weniger aus beliebigen Friedhöfen unter deiner Kontrolle ins Spiel." },
   { "art": "positiv", "form": "verrueckt", "mana_min": 9, "name": "Neue Hand, neues Glück", "spruch": "Ups. War das eure Strategie?", "text": "Jeder Gegner mischt seine Hand in seine Bibliothek und zieht eine Karte weniger, als er hatte. Du ziehst drei Karten." },
   { "art": "positiv", "form": "verrueckt", "mana_min": 10, "name": "Großer Raubzug", "spruch": "Ich nehm das, das und … ach, alles.", "text": "Schau dir die obersten zehn Karten der Bibliothek eines Gegners an. Bringe eine bleibende Karte davon unter deiner Kontrolle ins Spiel, den Rest schickt er ins Exil." },
-
   { "art": "positiv", "form": "verzauberung", "mana_min": 1, "name": "Morgentau", "spruch": "Frisch in den Tag.", "text": "Zu Beginn deines Zuges erhältst du 1 Leben." },
   { "art": "positiv", "form": "verzauberung", "mana_min": 2, "name": "Nadelstiche", "spruch": "Pieks. Pieks. Pieks.", "text": "Zu Beginn deines Zuges fügt diese Verzauberung einem Gegner deiner Wahl 1 Schaden zu." },
   { "art": "positiv", "form": "verzauberung", "mana_min": 3, "name": "Dickes Fell", "spruch": "Dicke Haut, dickes Fell, dicke Rüstung.", "text": "Deine Kreaturen erhalten +0/+2." },
@@ -31,7 +29,6 @@
   { "art": "positiv", "form": "verzauberung", "mana_min": 8, "name": "Kriegsgott", "spruch": "Vorwärts! Immer vorwärts!", "text": "Deine Kreaturen erhalten +2/+1 und Trampelschaden." },
   { "art": "positiv", "form": "verzauberung", "mana_min": 9, "name": "Quelle der Weisheit", "spruch": "Lesen bildet. Und heilt offenbar.", "text": "Zu Beginn deines Zuges ziehst du eine zusätzliche Karte und erhältst 1 Leben." },
   { "art": "positiv", "form": "verzauberung", "mana_min": 10, "name": "Drachennest", "spruch": "Es ist still. Zu still. Und dann: Flügel.", "text": "Zu Beginn deines Zuges erzeugst du einen 4/4 Drachen-Spielstein mit Flugfähigkeit." },
-
   { "art": "positiv", "form": "emblem", "mana_min": 1, "name": "Notgroschen", "spruch": "Für schlechte Zeiten. Die sind jetzt.", "text": "Wenn du zum ersten Mal in diesem Spiel auf 5 oder weniger Leben fällst, erhältst du 5 Leben." },
   { "art": "positiv", "form": "emblem", "mana_min": 2, "name": "Flinke Finger", "spruch": "Weg damit. Her damit.", "text": "Einmal in jedem deiner Züge darfst du eine Karte abwerfen, um eine Karte zu ziehen." },
   { "art": "positiv", "form": "emblem", "mana_min": 3, "name": "Willkommensgruß", "spruch": "Neu hier? Willkommen im Team.", "text": "Die erste Kreatur, die du in jedem deiner Züge wirkst, kommt mit einer zusätzlichen +1/+1-Marke ins Spiel." },
@@ -42,7 +39,6 @@
   { "art": "positiv", "form": "emblem", "mana_min": 8, "name": "Feldherr", "spruch": "Haltung! Und jetzt: Angriff.", "text": "Deine Kreaturen erhalten +1/+0 und Wachsamkeit." },
   { "art": "positiv", "form": "emblem", "mana_min": 9, "name": "Ewiges Archiv", "spruch": "Das Buch hat kein Ende. Wirklich nicht.", "text": "Zu Beginn deines Zuges ziehst du eine zusätzliche Karte." },
   { "art": "positiv", "form": "emblem", "mana_min": 10, "name": "Drachenpakt", "spruch": "Unterschrieben in Feuer. Gültig für immer.", "text": "Zu Beginn deines Zuges erzeugst du einen 2/2 Drachen-Spielstein mit Flugfähigkeit." },
-
   { "art": "negativ", "form": "normal", "mana_min": 1, "name": "Zeh angestoßen", "spruch": "Autsch. AUTSCH.", "text": "Du verlierst 2 Leben." },
   { "art": "negativ", "form": "normal", "mana_min": 2, "name": "Stolperfalle", "spruch": "Wer hat das Kabel da hingelegt?", "text": "Tappe zwei bleibende Karten deiner Wahl, die du kontrollierst." },
   { "art": "negativ", "form": "normal", "mana_min": 3, "name": "Schussel", "spruch": "Wo ist sie hin? Ah. Weg.", "text": "Wirf eine Karte deiner Wahl ab. Du verlierst 2 Leben." },
@@ -53,7 +49,6 @@
   { "art": "negativ", "form": "normal", "mana_min": 8, "name": "Verrat", "spruch": "Sie hat sich bei dir nie wirklich zu Hause gefühlt.", "text": "Der Gegner zu deiner Linken wählt eine Kreatur, die du kontrollierst, und übernimmt dauerhaft die Kontrolle darüber." },
   { "art": "negativ", "form": "normal", "mana_min": 9, "name": "Zwangspause", "spruch": "Du setzt eine Runde aus. Unfreiwillig.", "text": "Überspringe deinen nächsten Zug." },
   { "art": "negativ", "form": "normal", "mana_min": 10, "name": "Freier Fall", "spruch": "Fallschirm? Welcher Fallschirm?", "text": "Du verlierst 10 Leben." },
-
   { "art": "negativ", "form": "verrueckt", "mana_min": 1, "name": "Plaudertasche", "spruch": "Psst, verrat’s keinem. Zu spät.", "text": "Zeige allen die oberste Karte deiner Bibliothek. Deine Gegner entscheiden, ob sie oben bleibt oder unter die Bibliothek kommt." },
   { "art": "negativ", "form": "verrueckt", "mana_min": 2, "name": "Danke für das Geschenk", "spruch": "Wie aufmerksam von dir!", "text": "Ein Gegner deiner Wahl zieht eine zufällige Karte aus deiner Hand und nimmt sie auf seine Hand." },
   { "art": "negativ", "form": "verrueckt", "mana_min": 3, "name": "Friedhofsputz", "spruch": "Wer braucht schon Erinnerungen?", "text": "Schicke deinen gesamten Friedhof ins Exil." },
@@ -64,7 +59,6 @@
   { "art": "negativ", "form": "verrueckt", "mana_min": 8, "name": "Überläufer im Jenseits", "spruch": "Selbst tot will er nicht mehr bei dir sein.", "text": "Ein Gegner deiner Wahl durchsucht deinen Friedhof nach einer Kreatur und bringt sie unter seiner Kontrolle ins Spiel." },
   { "art": "negativ", "form": "verrueckt", "mana_min": 9, "name": "Bibliotheksbrand", "spruch": "Die gute Nachricht: Jetzt ist Platz im Regal.", "text": "Schicke die obersten 15 Karten deiner Bibliothek ins Exil." },
   { "art": "negativ", "form": "verrueckt", "mana_min": 10, "name": "Kompletter Tausch", "spruch": "Ich nehm deine, du nimmst meine. Oh. Oh nein.", "text": "Tausche die Kontrolle über alle Kreaturen, die du kontrollierst, mit allen Kreaturen des Gegners, der die wenigsten Kreaturen kontrolliert." },
-
   { "art": "negativ", "form": "verzauberung", "mana_min": 1, "name": "Müde Arme", "spruch": "Gähn.", "text": "Deine Kreaturen erhalten −1/−0." },
   { "art": "negativ", "form": "verzauberung", "mana_min": 2, "name": "Regenwolke", "spruch": "Sie folgt dir überallhin.", "text": "Zu Beginn deines Zuges tappst du eine bleibende Karte deiner Wahl, die du kontrollierst." },
   { "art": "negativ", "form": "verzauberung", "mana_min": 3, "name": "Zu viel Gepäck", "spruch": "Für einen Sturmangriff bist du eindeutig zu schwer beladen.", "text": "Höchstens zwei Kreaturen können pro Kampf für dich angreifen." },
@@ -75,7 +69,6 @@
   { "art": "negativ", "form": "verzauberung", "mana_min": 8, "name": "Hungernde Erde", "spruch": "Der Boden hat Hunger. Auf deine Sachen.", "text": "Zu Beginn deines Zuges opferst du eine bleibende Karte, die kein Land ist." },
   { "art": "negativ", "form": "verzauberung", "mana_min": 9, "name": "Schweigegelübde", "spruch": "Pssst. Ab jetzt nur noch klassisch.", "text": "Du kannst keine Mana-Würfel-Effekte mehr wirken." },
   { "art": "negativ", "form": "verzauberung", "mana_min": 10, "name": "Nebelwand", "spruch": "Man sieht die Hand vor Augen nicht. Den Gegner auch nicht.", "text": "Deine Kreaturen können nicht angreifen." },
-
   { "art": "negativ", "form": "emblem", "mana_min": 1, "name": "Preis der Magie", "spruch": "Magie hat ihren Preis. Jetzt einen höheren.", "text": "Immer wenn du einen Mana-Würfel-Effekt wirkst, verlierst du 1 Leben." },
   { "art": "negativ", "form": "emblem", "mana_min": 2, "name": "Zu wenig Finger", "spruch": "Zu viele Karten, zu wenig Hände.", "text": "Deine maximale Handkartenzahl ist 5." },
   { "art": "negativ", "form": "emblem", "mana_min": 3, "name": "Erst mal Kaffee", "spruch": "Vor dem ersten Kaffee geht hier gar nichts.", "text": "Die erste Kreatur, die du in jedem deiner Züge wirkst, kommt getappt ins Spiel." },
@@ -86,25 +79,21 @@
   { "art": "negativ", "form": "emblem", "mana_min": 8, "name": "Langsamer Kopf", "spruch": "Moment … wo war ich?", "text": "Du kannst in jedem Zug höchstens zwei Karten ziehen." },
   { "art": "negativ", "form": "emblem", "mana_min": 9, "name": "Schwund", "spruch": "Jeden Tag ein bisschen weniger.", "text": "Zu Beginn deines Zuges schickst du die oberste Karte deiner Bibliothek ins Exil." },
   { "art": "negativ", "form": "emblem", "mana_min": 10, "name": "Schattenpakt", "spruch": "Der Vertrag ist bindend. Das Kleingedruckte auch.", "text": "Du kannst kein Leben mehr erhalten." },
-
   { "art": "chaos", "form": "normal", "mana_min": 2, "name": "Ausverkauf", "spruch": "Alles muss raus!", "text": "Jeder Spieler wirft eine Karte seiner Wahl ab." },
   { "art": "chaos", "form": "normal", "mana_min": 4, "name": "Tribut", "spruch": "Einer für alle. Pro Spieler.", "text": "Jeder Spieler opfert eine Kreatur." },
   { "art": "chaos", "form": "normal", "mana_min": 6, "name": "Bücherregen", "spruch": "Lesestoff für alle!", "text": "Jeder Spieler zieht drei Karten." },
   { "art": "chaos", "form": "normal", "mana_min": 8, "name": "Kleinholz", "spruch": "Die Kleinen hat’s erwischt. Die Großen grinsen.", "text": "Zerstöre alle Kreaturen mit Manawert 4 oder weniger." },
   { "art": "chaos", "form": "normal", "mana_min": 10, "name": "Gleichmacher", "spruch": "Gleiche Chancen für alle. Fast.", "text": "Die Lebenspunkte jedes Spielers werden auf 20 gesetzt." },
-
   { "art": "chaos", "form": "verrueckt", "mana_min": 2, "name": "Wichtelrunde", "spruch": "Überraschung! Für alle.", "text": "Jeder Spieler gibt eine zufällige Karte aus seiner Hand an den Spieler zu seiner Rechten." },
   { "art": "chaos", "form": "verrueckt", "mana_min": 4, "name": "Grabtausch", "spruch": "Umzugskartons für die Toten.", "text": "Jeder Spieler tauscht seinen Friedhof mit dem des Spielers zu seiner Linken." },
   { "art": "chaos", "form": "verrueckt", "mana_min": 6, "name": "Gläserne Runde", "spruch": "Heute wird nicht geblufft.", "text": "Alle Spieler spielen bis zum Ende der Runde mit offener Hand." },
   { "art": "chaos", "form": "verrueckt", "mana_min": 8, "name": "Karussell", "spruch": "Einsteigen, bitte! Die Fahrt geht nach links.", "text": "Jeder Spieler übergibt dauerhaft die Kontrolle über seine Kreatur mit der höchsten Stärke an den Spieler zu seiner Linken. Bei Gleichstand wählt der Besitzer." },
   { "art": "chaos", "form": "verrueckt", "mana_min": 10, "name": "Tabula rasa", "spruch": "Weißes Blatt. Für alle.", "text": "Jeder Spieler mischt alle bleibenden Karten, die keine Länder sind, in die Bibliothek ihrer Besitzer." },
-
   { "art": "chaos", "form": "verzauberung", "mana_min": 2, "name": "Füllhorn", "spruch": "Es ist genug für alle da. Vorerst.", "text": "Zu Beginn jedes Zuges zieht der aktive Spieler eine zusätzliche Karte." },
   { "art": "chaos", "form": "verzauberung", "mana_min": 4, "name": "Kriegsrausch", "spruch": "Alle sind gereizt. Sehr gereizt.", "text": "Alle Kreaturen erhalten +2/+0." },
   { "art": "chaos", "form": "verzauberung", "mana_min": 6, "name": "Magieflut", "spruch": "Die Magie ist heute im Angebot.", "text": "Sprüche kosten für alle Spieler 1 Mana weniger." },
   { "art": "chaos", "form": "verzauberung", "mana_min": 8, "name": "Totenglocke", "spruch": "Für wen sie läutet? Für alle.", "text": "Immer wenn eine Kreatur stirbt, verliert ihr Beherrscher 2 Leben." },
   { "art": "chaos", "form": "verzauberung", "mana_min": 10, "name": "Elementarsturm", "spruch": "Wind, Feuer, Erde – und alle bekommen was ab.", "text": "Zu Beginn jedes Zuges erzeugt der aktive Spieler einen 3/3 Elementar-Spielstein." },
-
   { "art": "chaos", "form": "emblem", "mana_min": 2, "name": "Recycling für alle", "spruch": "Mülltrennung ist Pflicht.", "text": "Jeder Spieler darf einmal in jedem seiner Züge eine Karte abwerfen, um eine Karte zu ziehen." },
   { "art": "chaos", "form": "emblem", "mana_min": 4, "name": "Ewige Hektik", "spruch": "Keiner hat Zeit. Für nichts.", "text": "Alle Kreaturen haben Eile." },
   { "art": "chaos", "form": "emblem", "mana_min": 6, "name": "Langsames Ende", "spruch": "Die Uhr tickt. Für alle.", "text": "Zu Beginn seines Zuges verliert jeder Spieler 1 Leben." },

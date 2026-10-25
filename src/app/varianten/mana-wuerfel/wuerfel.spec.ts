@@ -23,7 +23,7 @@ function mit(aenderung: (e: WuerfelEinstellungen) => void): WuerfelEinstellungen
 }
 
 const ARTEN: Art[] = ['positiv', 'negativ', 'chaos'];
-const FORMEN: Form[] = ['normal', 'verrueckt', 'verzauberung', 'emblem'];
+const FORMEN: Form[] = ['normal', 'verrueckt', 'kreatur', 'artefakt', 'verzauberung', 'emblem'];
 
 describe('Würfel', () => {
   it('teilt die Art an den Grenzen richtig ein', () => {
@@ -35,17 +35,19 @@ describe('Würfel', () => {
   });
 
   it('teilt die Form an den Grenzen richtig ein', () => {
-    expect(wuerfleForm(0.5499)).toBe('normal');
-    expect(wuerfleForm(0.55)).toBe('verrueckt');
-    expect(wuerfleForm(0.75)).toBe('verzauberung');
-    expect(wuerfleForm(0.9)).toBe('emblem');
+    expect(wuerfleForm(0.3999)).toBe('normal');
+    expect(wuerfleForm(0.4)).toBe('verrueckt');
+    expect(wuerfleForm(0.55)).toBe('kreatur');
+    expect(wuerfleForm(0.7)).toBe('artefakt');
+    expect(wuerfleForm(0.8)).toBe('verzauberung');
+    expect(wuerfleForm(0.92)).toBe('emblem');
   });
 
   it('trifft die Wahrscheinlichkeiten über viele Würfe', () => {
     const zufall = zufallMitStartwert(7);
     const wuerfe = 100_000;
     const arten = { positiv: 0, negativ: 0, chaos: 0 };
-    const formen = { normal: 0, verrueckt: 0, verzauberung: 0, emblem: 0 };
+    const formen = { normal: 0, verrueckt: 0, kreatur: 0, artefakt: 0, verzauberung: 0, emblem: 0 };
     for (let i = 0; i < wuerfe; i++) {
       const w = wuerfleEffekt(EFFEKT_POOL, 5, zufall);
       arten[w.art]++;
@@ -54,8 +56,9 @@ describe('Würfel', () => {
     expect(arten.positiv / wuerfe).toBeCloseTo(0.65, 2);
     expect(arten.negativ / wuerfe).toBeCloseTo(0.315, 2);
     expect(arten.chaos / wuerfe).toBeCloseTo(0.035, 2);
-    expect(formen.normal / wuerfe).toBeCloseTo(0.55, 2);
-    expect(formen.emblem / wuerfe).toBeCloseTo(0.1, 2);
+    expect(formen.normal / wuerfe).toBeCloseTo(0.4, 2);
+    expect(formen.kreatur / wuerfe).toBeCloseTo(0.15, 2);
+    expect(formen.emblem / wuerfe).toBeCloseTo(0.08, 2);
   });
 
   it('hat für jede Kombination aus Art und Form mindestens eine Vorlage', () => {
@@ -131,14 +134,14 @@ describe('Würfel', () => {
     });
 
     it('trifft eigene Wahrscheinlichkeiten über viele Würfe', () => {
-      const viertel = mit((e) => {
-        for (const f of Object.values(e.formen)) f.prozent = 25;
+      const gleich = mit((e) => {
+        for (const f of Object.values(e.formen)) f.prozent = 10;
       });
       const zufall = zufallMitStartwert(5);
       let verrueckt = 0;
       for (let i = 0; i < 40_000; i++)
-        if (wuerfleForm(zufall(), viertel) === 'verrueckt') verrueckt++;
-      expect(verrueckt / 40_000).toBeCloseTo(0.25, 2);
+        if (wuerfleForm(zufall(), gleich) === 'verrueckt') verrueckt++;
+      expect(verrueckt / 40_000).toBeCloseTo(1 / 6, 2);
     });
 
     it('ist nicht würfelbar, wenn eine Gruppe nichts mehr übrig hat', () => {

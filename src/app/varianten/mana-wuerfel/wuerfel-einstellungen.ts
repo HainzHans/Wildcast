@@ -14,9 +14,16 @@ export interface WuerfelEinstellungen {
 }
 
 export const ARTEN: Art[] = ['positiv', 'negativ', 'chaos'];
-export const FORMEN: Form[] = ['normal', 'verrueckt', 'verzauberung', 'emblem'];
+export const FORMEN: Form[] = [
+  'normal',
+  'verrueckt',
+  'kreatur',
+  'artefakt',
+  'verzauberung',
+  'emblem',
+];
 
-/** Die Werte aus dem Briefing. */
+/** Die Werte aus dem Briefing, erweitert um Kreaturen und Artefakte. */
 export const STANDARD_WUERFEL: WuerfelEinstellungen = {
   arten: {
     positiv: { prozent: 65, aktiv: true },
@@ -24,10 +31,12 @@ export const STANDARD_WUERFEL: WuerfelEinstellungen = {
     chaos: { prozent: 3.5, aktiv: true },
   },
   formen: {
-    normal: { prozent: 55, aktiv: true },
-    verrueckt: { prozent: 20, aktiv: true },
-    verzauberung: { prozent: 15, aktiv: true },
-    emblem: { prozent: 10, aktiv: true },
+    normal: { prozent: 40, aktiv: true },
+    verrueckt: { prozent: 15, aktiv: true },
+    kreatur: { prozent: 15, aktiv: true },
+    artefakt: { prozent: 10, aktiv: true },
+    verzauberung: { prozent: 12, aktiv: true },
+    emblem: { prozent: 8, aktiv: true },
   },
 };
 
@@ -59,9 +68,13 @@ const SCHLUESSEL = 'wildcast.mana-wuerfel.v1';
 export function letzteWuerfelEinstellungen(): WuerfelEinstellungen {
   const gespeichert = lesen<WuerfelEinstellungen>(SCHLUESSEL);
   if (!gespeichert) return STANDARD_WUERFEL;
+  // Ältere Stände kannten Kreatur und Artefakt noch nicht: Dann gelten die neuen Standardformen.
+  const formenAktuell = 'kreatur' in (gespeichert.formen ?? {});
   return {
     arten: { ...STANDARD_WUERFEL.arten, ...gespeichert.arten },
-    formen: { ...STANDARD_WUERFEL.formen, ...gespeichert.formen },
+    formen: formenAktuell
+      ? { ...STANDARD_WUERFEL.formen, ...gespeichert.formen }
+      : STANDARD_WUERFEL.formen,
   };
 }
 

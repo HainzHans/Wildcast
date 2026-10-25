@@ -28,7 +28,7 @@ export interface Spieler {
 export type Art = 'positiv' | 'negativ' | 'chaos';
 
 /** Würfel 2: wie der Effekt wirkt. */
-export type Form = 'normal' | 'verrueckt' | 'verzauberung' | 'emblem';
+export type Form = 'normal' | 'verrueckt' | 'kreatur' | 'artefakt' | 'verzauberung' | 'emblem';
 
 /** Ein gewürfelter Effekt, so wie er im Spiel gelandet ist. */
 export interface Effekt {

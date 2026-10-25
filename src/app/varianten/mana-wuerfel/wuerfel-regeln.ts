@@ -30,6 +30,8 @@ const HINWEIS: Record<string, string> = {
   chaos: 'trifft alle Spieler',
   normal: 'klassischer Einmaleffekt',
   verrueckt: 'Hände tauschen, Decks zensieren …',
+  kreatur: 'ein Kreaturen-Spielstein kommt ins Spiel',
+  artefakt: 'ein Artefakt-Spielstein kommt ins Spiel',
   verzauberung: 'bleibt liegen, kann zerstört werden',
   emblem: 'bleibt das ganze Spiel',
 };
