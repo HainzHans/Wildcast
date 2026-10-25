@@ -13,6 +13,9 @@ import { Effekt, Spieler } from '../../core/spiel/modell';
 const KRITISCH = 10;
 /** So lange sammelt die Blase schnelle Tipps zu einer Summe (−1 −1 −1 → −3). */
 const SAMMELZEIT = 1500;
+/** Gedrückt halten zählt weiter: erst nach dieser Pause, dann in diesem Takt. */
+const HALTEN_START = 450;
+const HALTEN_TAKT = 90;
 
 @Component({
   selector: 'app-spieler-feld',
@@ -21,24 +24,31 @@ const SAMMELZEIT = 1500;
       <h2 class="name">{{ spieler().name }}</h2>
 
       <div class="leben" [class.kritisch]="spieler().leben <= kritisch">
-        <span class="zahl" aria-live="polite">{{ spieler().leben }}</span>
-        @if (aenderung(); as a) {
-          <span class="blase" aria-hidden="true">{{ a > 0 ? '+' + a : a }}</span>
-        }
-      </div>
-
-      <div class="knoepfe">
         @for (s of schritte; track s) {
           <button
             type="button"
             class="schritt"
             [class.plus]="s > 0"
-            [attr.aria-label]="(s > 0 ? 'Plus ' : 'Minus ') + abs(s) + ' Leben'"
-            (click)="aendern(s)"
+            [style.order]="s > 0 ? 3 : 1"
+            [attr.aria-label]="
+              (s > 0 ? 'Ein Leben mehr für ' : 'Ein Leben weniger für ') + spieler().name
+            "
+            (pointerdown)="halten(s, $event)"
+            (pointerup)="loslassen()"
+            (pointerleave)="loslassen()"
+            (pointercancel)="loslassen()"
+            (contextmenu)="$event.preventDefault()"
+            (click)="tastatur(s, $event)"
           >
-            {{ s > 0 ? '+' + s : '−' + abs(s) }}
+            {{ s > 0 ? '+' : '−' }}
           </button>
         }
+        <div class="anzeige">
+          <span class="zahl" aria-live="polite">{{ spieler().leben }}</span>
+          @if (aenderung(); as a) {
+            <span class="blase" aria-hidden="true">{{ a > 0 ? '+' + a : a }}</span>
+          }
+        </div>
       </div>
 
       @if (effektWuerfel()) {
@@ -74,7 +84,8 @@ const SAMMELZEIT = 1500;
     .feld {
       height: 100%;
       display: grid;
-      grid-template-rows: auto 1fr auto auto auto;
+      grid-template-rows: auto 1fr auto auto;
+      grid-template-columns: minmax(0, 1fr);
       justify-items: center;
       align-items: center;
       gap: 0.4rem;
@@ -96,8 +107,18 @@ const SAMMELZEIT = 1500;
       white-space: nowrap;
     }
     .leben {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(0.35rem, 4cqi, 1.5rem);
+      width: 100%;
+    }
+    .anzeige {
+      order: 2;
       position: relative;
       line-height: 0.9;
+      min-width: 2ch;
+      text-align: center;
     }
     .zahl {
       font-family: var(--schrift-anzeige);
@@ -105,7 +126,8 @@ const SAMMELZEIT = 1500;
         'SOFT' 100,
         'WONK' 1;
       font-weight: 800;
-      font-size: clamp(3.2rem, 32cqmin, 9rem);
+      /* Richtet sich nach der kleineren Seite und der Breite, damit +/− daneben passen */
+      font-size: clamp(2.4rem, min(32cqmin, 24cqi), 9rem);
       font-variant-numeric: tabular-nums;
       transition: color 200ms;
     }
@@ -114,9 +136,9 @@ const SAMMELZEIT = 1500;
     }
     .blase {
       position: absolute;
-      left: 100%;
-      top: 0;
-      margin-left: 0.3rem;
+      left: 50%;
+      bottom: 100%;
+      translate: -50% -0.2rem;
       padding: 0.1rem 0.5rem;
       border-radius: 99px;
       background: var(--filz-tief);
@@ -124,24 +146,23 @@ const SAMMELZEIT = 1500;
       font-size: clamp(0.9rem, 6cqmin, 1.3rem);
       font-variant-numeric: tabular-nums;
     }
-    .knoepfe {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.4rem;
-      width: 100%;
-      max-width: 22rem;
-    }
     .schritt {
-      min-height: var(--tippflaeche);
-      border-radius: var(--radius-klein);
+      flex-shrink: 0;
+      width: clamp(2.75rem, min(20cqmin, 17cqi), 4.75rem);
+      aspect-ratio: 1;
+      border-radius: 50%;
       border: 1px solid var(--feld-rand);
       background: var(--filz);
-      font-size: 1.15rem;
+      font-size: clamp(1.4rem, min(11cqmin, 9cqi), 2.4rem);
       font-weight: 700;
-      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      transition: transform 80ms;
     }
     .schritt:active {
-      transform: scale(0.95);
+      transform: scale(0.92);
     }
     .wirken {
       width: 100%;
@@ -171,12 +192,6 @@ const SAMMELZEIT = 1500;
     .marke[data-art='chaos'] {
       border-color: var(--chaos);
     }
-    /* Kleine Felder (4 Spieler am Handy): Knöpfe in zwei Reihen */
-    @container (max-width: 15rem) {
-      .knoepfe {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -191,11 +206,12 @@ export class SpielerFeld implements OnDestroy {
   readonly wirken = output<void>();
   readonly zeigen = output<number>();
 
-  protected readonly schritte = [-5, -1, 1, 5];
+  protected readonly schritte = [-1, 1];
   protected readonly kritisch = KRITISCH;
   protected readonly aenderung = signal(0);
-  protected readonly abs = Math.abs;
   private zeitgeber?: ReturnType<typeof setTimeout>;
+  private halteStart?: ReturnType<typeof setTimeout>;
+  private halteTakt?: ReturnType<typeof setInterval>;
 
   protected aendern(um: number): void {
     this.leben.emit(um);
@@ -204,7 +220,28 @@ export class SpielerFeld implements OnDestroy {
     this.zeitgeber = setTimeout(() => this.aenderung.set(0), SAMMELZEIT);
   }
 
+  /** Tippen zählt einmal, Gedrückthalten zählt im Takt weiter. */
+  protected halten(um: number, ereignis: PointerEvent): void {
+    if (ereignis.button !== 0) return;
+    this.loslassen();
+    this.aendern(um);
+    this.halteStart = setTimeout(() => {
+      this.halteTakt = setInterval(() => this.aendern(um), HALTEN_TAKT);
+    }, HALTEN_START);
+  }
+
+  protected loslassen(): void {
+    clearTimeout(this.halteStart);
+    clearInterval(this.halteTakt);
+  }
+
+  /** Maus und Finger laufen über pointerdown; nur die Tastatur (Enter/Leertaste) kommt hier an. */
+  protected tastatur(um: number, ereignis: MouseEvent): void {
+    if (ereignis.detail === 0) this.aendern(um);
+  }
+
   ngOnDestroy(): void {
     clearTimeout(this.zeitgeber);
+    this.loslassen();
   }
 }
