@@ -4,6 +4,7 @@ import { Einstellungen, Farbschema } from '../../core/einstellungen';
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { BestaetigenKnopf } from '../../shared/ui/bestaetigen-knopf';
 import { ZurueckLink } from '../../shared/ui/zurueck-link';
+import { EffektArchiv } from '../../varianten/mana-wuerfel/effekt-archiv';
 import { variantenName } from '../../varianten/varianten';
 
 @Component({
@@ -66,6 +67,24 @@ import { variantenName } from '../../varianten/varianten';
             (change)="einstellungen.wachHalten.set($any($event.target).checked)"
           />
         </label>
+      </section>
+
+      <section class="gruppe" aria-labelledby="archiv">
+        <h2 id="archiv">Effekt-Archiv</h2>
+        <div class="zeile">
+          <div>
+            <p class="titel">{{ archivText() }}</p>
+            <p class="hinweis" aria-live="polite">{{ archivHinweis() }}</p>
+          </div>
+          <button
+            type="button"
+            class="knopf"
+            [disabled]="archiv.status() === 'laedt'"
+            (click)="archiv.aktualisieren()"
+          >
+            {{ archiv.status() === 'laedt' ? 'Lädt …' : 'Aktualisieren' }}
+          </button>
+        </div>
       </section>
 
       <section class="gruppe" aria-labelledby="partie">
@@ -176,6 +195,27 @@ import { variantenName } from '../../varianten/varianten';
 export class EinstellungenSeite {
   protected readonly einstellungen = inject(Einstellungen);
   protected readonly store = inject(SpielStore);
+  protected readonly archiv = inject(EffektArchiv);
+
+  protected readonly archivText = computed(() => {
+    const n = this.archiv.anzahl();
+    return n ? `${n} Effekte im Archiv` : 'Noch kein Archiv geladen';
+  });
+
+  protected readonly archivHinweis = computed(() => {
+    if (this.archiv.status() === 'fehler') {
+      return this.archiv.anzahl()
+        ? 'Gerade nicht erreichbar – gewürfelt wird mit dem gespeicherten Stand.'
+        : 'Gerade nicht erreichbar – gewürfelt wird mit der eingebauten Liste.';
+    }
+    const zeit = this.archiv.aktualisiert();
+    if (!zeit) return 'Bis dahin würfelt die App mit der eingebauten Liste.';
+    const datum = new Date(zeit).toLocaleString('de-DE', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    });
+    return `Zuletzt aktualisiert: ${datum}. Funktioniert auch offline.`;
+  });
 
   protected readonly farbschemata: { wert: Farbschema; name: string }[] = [
     { wert: 'system', name: 'Auto' },

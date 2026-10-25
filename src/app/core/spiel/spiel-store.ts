@@ -1,6 +1,6 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 
-import { EFFEKT_POOL } from '../../varianten/mana-wuerfel/effekt-pool';
+import { EffektArchiv } from '../../varianten/mana-wuerfel/effekt-archiv';
 import { wuerfleEffekt } from '../../varianten/mana-wuerfel/wuerfel';
 import { lesen, schreiben } from '../speicher';
 import { ZUFALL } from '../zufall';
@@ -26,6 +26,7 @@ function ladeStand(): Spielstand | null {
 @Injectable({ providedIn: 'root' })
 export class SpielStore {
   private readonly zufall = inject(ZUFALL);
+  private readonly archiv = inject(EffektArchiv);
 
   private readonly _stand = signal<Spielstand | null>(ladeStand());
   private readonly verlauf = signal<Spielstand[]>([]);
@@ -71,7 +72,7 @@ export class SpielStore {
     if (!s) return null;
     const zuletzt = s.effekte.slice(-KEINE_WIEDERHOLUNG).map((e) => e.vorlage);
     const effekt: Effekt = {
-      ...wuerfleEffekt(EFFEKT_POOL, mana, this.zufall, zuletzt, s.optionen?.manaWuerfel),
+      ...wuerfleEffekt(this.archiv.pool(), mana, this.zufall, zuletzt, s.optionen?.manaWuerfel),
       nr: s.effekte.length + 1,
       spielerId,
       zeit: new Date().toISOString(),

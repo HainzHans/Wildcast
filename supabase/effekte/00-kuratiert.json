@@ -1,0 +1,578 @@
+[
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 1,
+    "mana_max": 3,
+    "name": "Kleiner Schluck",
+    "spruch": "Schmeckt nach Erdbeere. Und ein bisschen nach Sieg.",
+    "text": "Du erhältst {2m+1} Leben."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 1,
+    "mana_max": 3,
+    "name": "Funkenschlag",
+    "spruch": "Klein, aber mit Ansage.",
+    "text": "Füge einer Kreatur oder einem Spieler deiner Wahl {m+1} Schaden zu."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 1,
+    "mana_max": 2,
+    "name": "Spontane Muckis",
+    "spruch": "Leg Day? Nie gehört. Arm Day: jetzt.",
+    "text": "Eine Kreatur deiner Wahl erhält +{2m}/+0 bis zum Ende des Zuges."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 1,
+    "mana_max": 2,
+    "name": "Nickerchen",
+    "spruch": "Psst. Der Riese schläft.",
+    "text": "Tappe eine Kreatur oder ein Artefakt deiner Wahl."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 2,
+    "mana_max": 5,
+    "name": "Geistesblitz",
+    "spruch": "Ah! Jetzt weiß ich wieder, wo ich meinen Schlachtplan hingelegt habe.",
+    "text": "Ziehe {m/2} Karten."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 2,
+    "mana_max": 4,
+    "name": "Ab nach Hause",
+    "spruch": "Mama hat angerufen. Du sollst heimkommen.",
+    "text": "Bringe eine Kreatur mit Manawert {m+1} oder weniger auf die Hand ihres Besitzers zurück."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 4,
+    "mana_max": 6,
+    "name": "Fachgerechte Entsorgung",
+    "spruch": "Bitte nach Farbe trennen.",
+    "text": "Zerstöre eine Kreatur oder ein Artefakt mit Manawert {m-1} oder weniger."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 4,
+    "mana_max": 6,
+    "name": "Spontane Rekrutierung",
+    "spruch": "Keine Erfahrung nötig. Helm bringst du selbst mit.",
+    "text": "Erzeuge {m/2} 2/2 Krieger-Spielsteine."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 7,
+    "mana_max": 10,
+    "name": "Drache aus dem Nichts",
+    "spruch": "Er war die ganze Zeit da. Du hast nur nie nach oben geschaut.",
+    "text": "Erzeuge einen {m}/{m} Drachen-Spielstein mit Flugfähigkeit."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 8,
+    "mana_max": 12,
+    "name": "Noch fünf Minuten",
+    "spruch": "Die Uhr ist nur ein Vorschlag.",
+    "text": "Nach diesem Zug machst du einen zusätzlichen Zug."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 7,
+    "mana_max": 12,
+    "name": "Feindliche Übernahme",
+    "spruch": "Die Konditionen bei mir sind einfach besser.",
+    "text": "Übernimm dauerhaft die Kontrolle über eine Kreatur mit Manawert {m-2} oder weniger."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 13,
+    "mana_max": 20,
+    "name": "Großputz",
+    "spruch": "Ich hab mal aufgeräumt. Deine Sachen sind leider weg.",
+    "text": "Zerstöre alle Kreaturen, die du nicht kontrollierst."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 13,
+    "mana_max": 20,
+    "name": "Lebensquell",
+    "spruch": "Ich fühl mich wie neugeboren. Ihr seht eher alt aus.",
+    "text": "Du erhältst {2m} Leben. Jeder Gegner verliert {m} Leben."
+  },
+  {
+    "art": "positiv",
+    "form": "verrueckt",
+    "mana_min": 1,
+    "mana_max": 3,
+    "name": "Spickzettel",
+    "spruch": "Ich schau nur kurz. Ganz kurz.",
+    "text": "Ein Gegner deiner Wahl zeigt dir seine Hand. Benenne eine Karte darin: Er kann sie bis zu deinem nächsten Zug nicht wirken."
+  },
+  {
+    "art": "positiv",
+    "form": "verrueckt",
+    "mana_min": 2,
+    "mana_max": 6,
+    "name": "Langfinger",
+    "spruch": "Das lag da einfach so rum.",
+    "text": "Schau dir die obersten {m+1} Karten der Bibliothek eines Gegners an. Nimm eine davon auf deine Hand, den Rest mischt er zurück."
+  },
+  {
+    "art": "positiv",
+    "form": "verrueckt",
+    "mana_min": 3,
+    "mana_max": 6,
+    "name": "Handtausch",
+    "spruch": "Was deins ist, ist meins. Und umgekehrt, leider.",
+    "text": "Tausche deine Hand mit der Hand eines Gegners deiner Wahl."
+  },
+  {
+    "art": "positiv",
+    "form": "verrueckt",
+    "mana_min": 3,
+    "mana_max": 8,
+    "name": "Friedhofsflohmarkt",
+    "spruch": "Gebraucht, aber gut erhalten.",
+    "text": "Bringe eine Kreatur mit Manawert {m} oder weniger aus einem beliebigen Friedhof unter deiner Kontrolle ins Spiel."
+  },
+  {
+    "art": "positiv",
+    "form": "verrueckt",
+    "mana_min": 5,
+    "mana_max": 9,
+    "name": "Platztausch",
+    "spruch": "Ihr zwei kennt euch noch nicht? Dann wird es Zeit.",
+    "text": "Tausche die Kontrolle über eine deiner Kreaturen mit einer Kreatur eines Gegners."
+  },
+  {
+    "art": "positiv",
+    "form": "verrueckt",
+    "mana_min": 6,
+    "mana_max": 12,
+    "name": "Zensurbehörde",
+    "spruch": "Diese Inhalte sind in deinem Land leider nicht verfügbar.",
+    "text": "Ein Gegner deiner Wahl deckt die obersten {m} Karten seiner Bibliothek auf. Nenne einen Kartentyp: Alle aufgedeckten Karten dieses Typs werden ins Exil geschickt, der Rest wird zurückgemischt."
+  },
+  {
+    "art": "positiv",
+    "form": "verrueckt",
+    "mana_min": 13,
+    "mana_max": 20,
+    "name": "Seelentausch",
+    "spruch": "Freaky Friday, aber mit Lebenspunkten.",
+    "text": "Tausche deine Lebenspunkte mit denen eines Gegners deiner Wahl."
+  },
+  {
+    "art": "positiv",
+    "form": "verzauberung",
+    "mana_min": 1,
+    "mana_max": 3,
+    "name": "Kleiner Glücksbringer",
+    "spruch": "Ein vierblättriges Kleeblatt. Oder Spinat. Egal, es wirkt.",
+    "text": "Zu Beginn deines Zuges erhältst du {m} Leben."
+  },
+  {
+    "art": "positiv",
+    "form": "verzauberung",
+    "mana_min": 3,
+    "mana_max": 6,
+    "name": "Kriegstrommel",
+    "spruch": "Bumm. Bumm. Bumm. Die Nachbarn sind begeistert.",
+    "text": "Deine Kreaturen erhalten +{m/3}/+0."
+  },
+  {
+    "art": "positiv",
+    "form": "verzauberung",
+    "mana_min": 4,
+    "mana_max": 8,
+    "name": "Brutstätte",
+    "spruch": "Wo eins ist, sind bald viele.",
+    "text": "Zu Beginn deines Zuges erzeugst du einen {m/2}/{m/2} Bestien-Spielstein."
+  },
+  {
+    "art": "positiv",
+    "form": "verzauberung",
+    "mana_min": 7,
+    "mana_max": 12,
+    "name": "Fleißiger Bibliothekar",
+    "spruch": "Ich hab dir schon mal was rausgesucht.",
+    "text": "Zu Beginn deines Zuges ziehst du eine zusätzliche Karte."
+  },
+  {
+    "art": "positiv",
+    "form": "verzauberung",
+    "mana_min": 13,
+    "mana_max": 20,
+    "name": "Thron der Übermacht",
+    "spruch": "Bequem. Und sehr, sehr einschüchternd.",
+    "text": "Deine Kreaturen erhalten +2/+2 und Trampelschaden. Zu Beginn deines Zuges erhältst du {m/2} Leben."
+  },
+  {
+    "art": "positiv",
+    "form": "emblem",
+    "mana_min": 1,
+    "mana_max": 2,
+    "name": "Große Taschen",
+    "spruch": "Passt alles rein. Auch noch das Pausenbrot.",
+    "text": "Du hast keine maximale Handkartenzahl."
+  },
+  {
+    "art": "positiv",
+    "form": "emblem",
+    "mana_min": 3,
+    "mana_max": 6,
+    "name": "Zähe Haut",
+    "spruch": "Hat das schon wehgetan? Ich hab nichts gemerkt.",
+    "text": "Wenn eine Quelle dir Schaden zufügen würde, verhindere 1 dieses Schadens."
+  },
+  {
+    "art": "positiv",
+    "form": "emblem",
+    "mana_min": 4,
+    "mana_max": 9,
+    "name": "Ewige Flamme",
+    "spruch": "Brennt ewig. Riecht auch so.",
+    "text": "Immer wenn du einen Spruch wirkst, fügt dieses Emblem einem Gegner deiner Wahl 1 Schaden zu."
+  },
+  {
+    "art": "positiv",
+    "form": "emblem",
+    "mana_min": 8,
+    "mana_max": 12,
+    "name": "Krone der Herde",
+    "spruch": "Alle mal herhören, ich hab jetzt einen Hut.",
+    "text": "Deine Kreaturen erhalten +1/+1."
+  },
+  {
+    "art": "positiv",
+    "form": "emblem",
+    "mana_min": 13,
+    "mana_max": 20,
+    "name": "Fast unsterblich",
+    "spruch": "Ich hab schon viele kommen und gehen sehen.",
+    "text": "Zu Beginn deines Zuges ziehst du eine Karte und erhältst {m/4} Leben."
+  },
+  {
+    "art": "positiv",
+    "form": "normal",
+    "mana_min": 42,
+    "mana_max": 42,
+    "name": "Die Antwort",
+    "spruch": "Die Antwort auf die Frage nach dem Leben, dem Universum und dem ganzen Rest.",
+    "text": "Du gewinnst das Spiel."
+  },
+  {
+    "art": "negativ",
+    "form": "normal",
+    "mana_min": 1,
+    "mana_max": 3,
+    "name": "Sodbrennen",
+    "spruch": "Das war wohl nicht mehr ganz frisch.",
+    "text": "Du verlierst {m+1} Leben."
+  },
+  {
+    "art": "negativ",
+    "form": "normal",
+    "mana_min": 1,
+    "mana_max": 2,
+    "name": "Wackelknie",
+    "spruch": "Wer hat den Boden so rutschig gemacht?",
+    "text": "Tappe eine Kreatur deiner Wahl, die du kontrollierst."
+  },
+  {
+    "art": "negativ",
+    "form": "normal",
+    "mana_min": 2,
+    "mana_max": 5,
+    "name": "Fehlgriff",
+    "spruch": "Butterfinger!",
+    "text": "Wirf {m/2} zufällige Karten aus deiner Hand ab."
+  },
+  {
+    "art": "negativ",
+    "form": "normal",
+    "mana_min": 4,
+    "mana_max": 6,
+    "name": "Eigentor",
+    "spruch": "Falsches Tor, aber schöner Schuss.",
+    "text": "Zerstöre eine zufällige Kreatur mit Manawert {m-1} oder weniger, die du kontrollierst."
+  },
+  {
+    "art": "negativ",
+    "form": "normal",
+    "mana_min": 7,
+    "mana_max": 10,
+    "name": "Bruchlandung",
+    "spruch": "Die Landung war … sagen wir: bodenständig.",
+    "text": "Du verlierst {m} Leben und opferst eine bleibende Karte deiner Wahl."
+  },
+  {
+    "art": "negativ",
+    "form": "normal",
+    "mana_min": 7,
+    "mana_max": 12,
+    "name": "Überläufer",
+    "spruch": "Tut mir leid, die drüben haben Kekse.",
+    "text": "Der Gegner mit den meisten Leben übernimmt dauerhaft die Kontrolle über deine Kreatur mit der höchsten Stärke. Bei Gleichstand entscheidet der Würfel."
+  },
+  {
+    "art": "negativ",
+    "form": "normal",
+    "mana_min": 13,
+    "mana_max": 20,
+    "name": "Kahlschlag",
+    "spruch": "Es war so schön ruhig hier. Jetzt ist es noch ruhiger.",
+    "text": "Opfere alle Kreaturen, die du kontrollierst."
+  },
+  {
+    "art": "negativ",
+    "form": "normal",
+    "mana_min": 13,
+    "mana_max": 20,
+    "name": "Blutzoll",
+    "spruch": "Die Rechnung, bitte. Oh. Oh nein.",
+    "text": "Du verlierst {m} Leben. Jeder Gegner erhält {m/2} Leben."
+  },
+  {
+    "art": "negativ",
+    "form": "normal",
+    "mana_min": 42,
+    "mana_max": 42,
+    "name": "Falsche Frage",
+    "spruch": "Die Antwort war richtig. Nur die Frage war falsch.",
+    "text": "Du verlierst das Spiel."
+  },
+  {
+    "art": "negativ",
+    "form": "verrueckt",
+    "mana_min": 1,
+    "mana_max": 3,
+    "name": "Offene Karten",
+    "spruch": "Ehrlichkeit ist eine Tugend. Eine sehr unpraktische.",
+    "text": "Lege deine Hand offen auf den Tisch. Sie bleibt bis zum Ende deines nächsten Zuges offen."
+  },
+  {
+    "art": "negativ",
+    "form": "verrueckt",
+    "mana_min": 3,
+    "mana_max": 6,
+    "name": "Taschendieb",
+    "spruch": "Hey! Das war meins!",
+    "text": "Ein Gegner deiner Wahl schaut sich die obersten {m} Karten deiner Bibliothek an und nimmt eine davon auf seine Hand. Den Rest mischst du zurück."
+  },
+  {
+    "art": "negativ",
+    "form": "verrueckt",
+    "mana_min": 4,
+    "mana_max": 8,
+    "name": "Bücherverbrennung",
+    "spruch": "Die waren eh langweilig. Hoffentlich.",
+    "text": "Schicke die obersten {2m} Karten deiner Bibliothek ins Exil."
+  },
+  {
+    "art": "negativ",
+    "form": "verrueckt",
+    "mana_min": 5,
+    "mana_max": 10,
+    "name": "Unfreiwillige Leihgabe",
+    "spruch": "Du kriegst sie zurück. Irgendwann. Vielleicht.",
+    "text": "Der Gegner zu deiner Linken wählt eine Karte aus deiner Hand und nimmt sie auf seine Hand."
+  },
+  {
+    "art": "negativ",
+    "form": "verrueckt",
+    "mana_min": 8,
+    "mana_max": 12,
+    "name": "Selbstzensur",
+    "spruch": "Ich darf darüber nicht sprechen.",
+    "text": "Ein Gegner nennt einen Kartentyp. Schicke alle Karten dieses Typs aus deiner Hand ins Exil."
+  },
+  {
+    "art": "negativ",
+    "form": "verrueckt",
+    "mana_min": 13,
+    "mana_max": 20,
+    "name": "Seelentausch, aber falsch",
+    "spruch": "Moment, so war das nicht abgemacht.",
+    "text": "Tausche deine Lebenspunkte mit denen des Gegners, der die wenigsten hat."
+  },
+  {
+    "art": "negativ",
+    "form": "verzauberung",
+    "mana_min": 1,
+    "mana_max": 3,
+    "name": "Juckreiz",
+    "spruch": "Nicht kratzen. NICHT kratzen.",
+    "text": "Zu Beginn deines Zuges verlierst du 1 Leben."
+  },
+  {
+    "art": "negativ",
+    "form": "verzauberung",
+    "mana_min": 3,
+    "mana_max": 6,
+    "name": "Bleierne Glieder",
+    "spruch": "Ich bin nicht faul, ich bin im Energiesparmodus.",
+    "text": "Deine Kreaturen erhalten −{m/3}/−0."
+  },
+  {
+    "art": "negativ",
+    "form": "verzauberung",
+    "mana_min": 5,
+    "mana_max": 9,
+    "name": "Steuereintreiber",
+    "spruch": "Formular 27b, bitte in dreifacher Ausfertigung.",
+    "text": "Jeder Spruch, den du wirkst, kostet {m/4} Mana mehr."
+  },
+  {
+    "art": "negativ",
+    "form": "verzauberung",
+    "mana_min": 7,
+    "mana_max": 12,
+    "name": "Lauscher an der Wand",
+    "spruch": "Wir hören alles. Wirklich alles.",
+    "text": "Du spielst mit offener Hand."
+  },
+  {
+    "art": "negativ",
+    "form": "verzauberung",
+    "mana_min": 13,
+    "mana_max": 20,
+    "name": "Fluch der Schwere",
+    "spruch": "Die Schwerkraft hat dich heute besonders lieb.",
+    "text": "Zu Beginn deines Zuges opferst du eine Kreatur."
+  },
+  {
+    "art": "negativ",
+    "form": "emblem",
+    "mana_min": 1,
+    "mana_max": 4,
+    "name": "Stotterzunge",
+    "spruch": "Ab-ab-abrakadabra.",
+    "text": "Der erste Spruch, den du in jedem Zug wirkst, kostet 1 Mana mehr."
+  },
+  {
+    "art": "negativ",
+    "form": "emblem",
+    "mana_min": 3,
+    "mana_max": 7,
+    "name": "Ewiger Juckreiz",
+    "spruch": "Der Arzt sagt, das bleibt jetzt so.",
+    "text": "Zu Beginn deines Zuges verlierst du 1 Leben."
+  },
+  {
+    "art": "negativ",
+    "form": "emblem",
+    "mana_min": 6,
+    "mana_max": 12,
+    "name": "Verfluchte Krone",
+    "spruch": "Sie steht dir. Leider für immer.",
+    "text": "Deine Kreaturen erhalten −1/−1."
+  },
+  {
+    "art": "negativ",
+    "form": "emblem",
+    "mana_min": 13,
+    "mana_max": 20,
+    "name": "Leere Sanduhr",
+    "spruch": "Die Zeit ist abgelaufen. Für dich jedenfalls.",
+    "text": "Du ziehst zu Beginn deines Zuges keine Karte mehr."
+  },
+  {
+    "art": "chaos",
+    "form": "normal",
+    "mana_min": 1,
+    "mana_max": 6,
+    "name": "Rundumschlag",
+    "spruch": "Keiner hat gesagt, dass es fair wird.",
+    "text": "Jeder Spieler verliert {m} Leben."
+  },
+  {
+    "art": "chaos",
+    "form": "normal",
+    "mana_min": 7,
+    "mana_max": 20,
+    "name": "Weltuntergang",
+    "spruch": "Hat jemand den roten Knopf gedrückt? … Wer drückt denn auf den roten Knopf?!",
+    "text": "Zerstöre alle Kreaturen. Jeder Spieler verliert {m/2} Leben."
+  },
+  {
+    "art": "chaos",
+    "form": "verrueckt",
+    "mana_min": 1,
+    "mana_max": 7,
+    "name": "Bäumchen, wechsel dich",
+    "spruch": "Alle eins nach links! Und keine Widerrede.",
+    "text": "Jeder Spieler gibt seine Hand an den Spieler zu seiner Linken weiter."
+  },
+  {
+    "art": "chaos",
+    "form": "verrueckt",
+    "mana_min": 8,
+    "mana_max": 20,
+    "name": "Großes Mischen",
+    "spruch": "Zurück auf Los. Alle.",
+    "text": "Jeder Spieler mischt Hand und Friedhof in seine Bibliothek und zieht 7 Karten."
+  },
+  {
+    "art": "chaos",
+    "form": "verzauberung",
+    "mana_min": 1,
+    "mana_max": 10,
+    "name": "Wilde Magie",
+    "spruch": "Die Luft knistert. Das ist nie ein gutes Zeichen.",
+    "text": "Zu Beginn jedes Zuges verliert der aktive Spieler 1 Leben."
+  },
+  {
+    "art": "chaos",
+    "form": "verzauberung",
+    "mana_min": 11,
+    "mana_max": 20,
+    "name": "Blutmond",
+    "spruch": "Heute Nacht wird nicht verhandelt.",
+    "text": "Alle Kreaturen haben Trampelschaden und greifen in jedem Kampf an, falls möglich."
+  },
+  {
+    "art": "chaos",
+    "form": "emblem",
+    "mana_min": 1,
+    "mana_max": 10,
+    "name": "Chaosgesetz",
+    "spruch": "Neue Regel: Es gibt keine Regeln. Außer dieser.",
+    "text": "Jeder Spieler zieht zu Beginn seines Zuges eine zusätzliche Karte und verliert 2 Leben."
+  },
+  {
+    "art": "chaos",
+    "form": "emblem",
+    "mana_min": 11,
+    "mana_max": 20,
+    "name": "Ewige Nacht",
+    "spruch": "Wer hat das Licht ausgemacht? Und warum für immer?",
+    "text": "Kreaturen können nicht blocken."
+  },
+  {
+    "art": "chaos",
+    "form": "normal",
+    "mana_min": 42,
+    "mana_max": 42,
+    "name": "Das Universum kündigt",
+    "spruch": "Macht’s gut, und danke für den Fisch.",
+    "text": "Alle Spieler verlieren das Spiel. Niemand gewinnt. Mischt neu."
+  }
+]
