@@ -30,7 +30,44 @@ export const DAEMONENFUERST: BossDefinition = {
   ],
   fragen: fragen('kreaturen', 'grosseKreatur', 'kommandeur', 'handkarten', 'bleibende', 'rache'),
 
+  relikte: [
+    {
+      id: 'blutaltar',
+      name: 'Blutaltar',
+      typ: 'verzauberung',
+      verteidigung: 15,
+      text: 'Wer Leben erhalten würde, verliert stattdessen gleich viele.',
+      zerstoert: 'Mein Altar! Wer hat euch erlaubt, mein Blut zu verschütten?',
+    },
+    {
+      id: 'seelenkaefig',
+      name: 'Seelenkäfig',
+      typ: 'artefakt',
+      verteidigung: 13,
+      text: 'Der Fürst erhält in jedem seiner Züge 5 Leben aus den gefangenen Seelen.',
+      proZug: { heilung: 5 },
+      zerstoert: 'Die Seelen sind frei … ich hole mir neue. Eure.',
+    },
+    {
+      id: 'hoellenpforte',
+      name: 'Höllenpforte',
+      typ: 'verzauberung',
+      verteidigung: 14,
+      text: 'In jedem Boss-Zug stürmt ein Höllenhund heraus.',
+      proZug: { diener: 1, dienerName: 'Höllenhund' },
+      zerstoert: 'Die Pforte ist zu. Ich habe noch viele.',
+    },
+  ],
+
   aktionen: [
+    {
+      id: 'siegel',
+      name: 'Höllensiegel',
+      schlagworte: ['beschwoerung'],
+      gewicht: 2,
+      text: 'Der Fürst zeichnet ein Siegel in die Luft – etwas Höllisches nimmt Gestalt an.',
+      folgen: { relikt: true },
+    },
     {
       id: 'seelenfeuer',
       name: 'Seelenfeuer',

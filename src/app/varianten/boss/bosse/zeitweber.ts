@@ -35,7 +35,46 @@ export const ZEITWEBER: BossDefinition = {
   ],
   fragen: fragen('kreaturen', 'grosseKreatur', 'handkarten', 'bleibende', 'friedhof', 'rache'),
 
+  relikte: [
+    {
+      id: 'sanduhr',
+      name: 'Sanduhr der Äonen',
+      typ: 'artefakt',
+      verteidigung: 14,
+      text: 'Läuft sie ab, dreht der Weber die Zeit zurück und erhält 30 Leben.',
+      countdown: 3,
+      ablauf: { text: 'Die Zeit läuft rückwärts: Der Weber erhält 30 Leben.', heilung: 30 },
+      zerstoert: 'Die Sanduhr … zersprungen. Die Zeit ist gegen mich.',
+    },
+    {
+      id: 'zeitschleife',
+      name: 'Zeitschleife',
+      typ: 'verzauberung',
+      verteidigung: 12,
+      text: 'Jeder Spieler verliert in jedem Boss-Zug 1 Leben.',
+      proZug: { leben: 1 },
+      zerstoert: 'Ihr habt die Schleife durchtrennt? Dann eben ein Knoten.',
+    },
+    {
+      id: 'pendel',
+      name: 'Ewiges Pendel',
+      typ: 'artefakt',
+      verteidigung: 11,
+      text: 'Solange es schwingt, verhindert der Weber in jedem seiner Züge neu die ersten 6 Schaden.',
+      proZug: { schutz: 6 },
+      zerstoert: 'Das Pendel steht. Für einen Augenblick.',
+    },
+  ],
+
   aktionen: [
+    {
+      id: 'zeitfaden',
+      name: 'Faden der Zukunft',
+      schlagworte: ['beschwoerung'],
+      gewicht: 2,
+      text: 'Der Weber zieht einen Faden aus der Zukunft – und etwas nimmt Gestalt an.',
+      folgen: { relikt: true },
+    },
     {
       id: 'zeitriss',
       name: 'Zeitriss',

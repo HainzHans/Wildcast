@@ -40,7 +40,47 @@ export const WELTENFRESSER: BossDefinition = {
   ],
   fragen: fragen(),
 
+  relikte: [
+    {
+      id: 'singularitaetskern',
+      name: 'Singularitätskern',
+      typ: 'artefakt',
+      verteidigung: 18,
+      text: 'Solange er liegt, verhindert der Weltenfresser in jedem seiner Züge neu die ersten 5 Schaden. Läuft er ab, kollabiert er.',
+      proZug: { schutz: 5 },
+      countdown: 4,
+      ablauf: { text: 'Der Kern kollabiert: Jeder Spieler verliert 15 Leben.', leben: 15 },
+      zerstoert: 'Ihr habt den Kern gebrochen? Ihr ahnt nicht, was ihr freigelassen habt.',
+    },
+    {
+      id: 'leerenportal',
+      name: 'Leerenportal',
+      typ: 'verzauberung',
+      verteidigung: 15,
+      text: 'In jedem Boss-Zug quillt ein weiterer Diener aus der Leere.',
+      proZug: { diener: 1 },
+      zerstoert: 'Ein Portal weniger. Es gibt unendlich viele.',
+    },
+    {
+      id: 'entropiefeld',
+      name: 'Entropiefeld',
+      typ: 'verzauberung',
+      verteidigung: 14,
+      text: 'Jeder Spieler verliert in jedem Boss-Zug 2 Leben.',
+      proZug: { leben: 2 },
+      zerstoert: 'Ordnung? Wie langweilig.',
+    },
+  ],
+
   aktionen: [
+    {
+      id: 'schoepfung',
+      name: 'Werk der Leere',
+      schlagworte: ['beschwoerung'],
+      gewicht: 2,
+      text: 'Aus dem Nichts formt der Weltenfresser ein Werk der Leere.',
+      folgen: { relikt: true },
+    },
     {
       id: 'sternensturz',
       name: 'Sternensturz',

@@ -51,6 +51,9 @@ function zug(aenderung: Partial<BossZug> = {}): BossZug {
     ankuendigung: null,
     spezialAngekuendigt: false,
     spezialEingesetzt: false,
+    neuesRelikt: null,
+    reliktEffekte: [],
+    abgelaufen: [],
     ...aenderung,
   };
 }

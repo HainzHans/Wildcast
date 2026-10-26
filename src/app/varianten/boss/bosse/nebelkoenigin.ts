@@ -25,7 +25,26 @@ export const NEBELKOENIGIN: BossDefinition = {
   ],
   fragen: fragen('kreaturen', 'grosseKreatur', 'flieger', 'friedhof', 'handkarten', 'rache'),
 
+  relikte: [
+    {
+      id: 'nebelquelle',
+      name: 'Nebelquelle',
+      typ: 'verzauberung',
+      verteidigung: 8,
+      text: 'Jeder Spieler kann in seinem Zug mit höchstens drei Kreaturen angreifen.',
+      zerstoert: 'Meine Quelle … versiegt? Das vergesse ich euch nicht.',
+    },
+  ],
+
   aktionen: [
+    {
+      id: 'quelle',
+      name: 'Nebelquelle rufen',
+      schlagworte: ['beschwoerung'],
+      gewicht: 2,
+      text: 'Nebel steigt aus dem Boden: Die Königin ruft eine ihrer Quellen.',
+      folgen: { relikt: true },
+    },
     {
       id: 'kalter-hauch',
       name: 'Kalter Hauch',

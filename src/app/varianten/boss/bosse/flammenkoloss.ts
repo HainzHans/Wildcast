@@ -25,7 +25,36 @@ export const FLAMMENKOLOSS: BossDefinition = {
   ],
   fragen: fragen('kreaturen', 'grosseKreatur', 'flieger', 'bleibende', 'handkarten', 'rache'),
 
+  relikte: [
+    {
+      id: 'glutofen',
+      name: 'Glutofen',
+      typ: 'artefakt',
+      verteidigung: 12,
+      text: 'Jeder Spieler verliert in jedem Boss-Zug 1 Leben, und der Koloss erhält 2 Leben.',
+      proZug: { leben: 1, heilung: 2 },
+      zerstoert: 'Mein Ofen erlischt … aber ich nicht.',
+    },
+    {
+      id: 'magmakern',
+      name: 'Magmakern',
+      typ: 'artefakt',
+      verteidigung: 13,
+      text: 'Solange er liegt, verhindert der Koloss in jedem seiner Züge neu die ersten 5 Schaden.',
+      proZug: { schutz: 5 },
+      zerstoert: 'Ihr habt meinen Kern gespalten! Jetzt fließt die Lava frei!',
+    },
+  ],
+
   aktionen: [
+    {
+      id: 'schmiede',
+      name: 'Schmiede',
+      schlagworte: ['beschwoerung'],
+      gewicht: 2,
+      text: 'Der Koloss greift in seine Esse und formt ein glühendes Werkstück.',
+      folgen: { relikt: true },
+    },
     {
       id: 'feuerball',
       name: 'Feuerball',

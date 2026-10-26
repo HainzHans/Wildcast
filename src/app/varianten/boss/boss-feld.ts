@@ -115,6 +115,63 @@ const SAMMELZEIT = 1500;
         <p class="hinweis hinweis--warnung">⚠ {{ b.ankuendigung }}</p>
       }
 
+      @if (relikte().length) {
+        <h3>
+          Artefakte &amp; Verzauberungen <span class="anzahl">{{ relikte().length }}</span>
+        </h3>
+        <ul class="relikte">
+          @for (r of relikte(); track r.id) {
+            <li class="relikt" [attr.data-typ]="r.typ">
+              <p class="relikt-kopf">
+                <strong>{{ r.name }}</strong>
+                <span class="relikt-typ">{{
+                  r.typ === 'artefakt' ? 'Artefakt' : 'Verzauberung'
+                }}</span>
+              </p>
+              <p class="relikt-text">{{ r.text }}</p>
+              @if (r.countdown !== undefined) {
+                <p class="relikt-uhr">
+                  ⏳ Läuft in {{ r.countdown }}
+                  {{ r.countdown === 1 ? 'Boss-Zug' : 'Boss-Zügen' }} ab
+                </p>
+              }
+              <div class="relikt-leiste">
+                <button
+                  type="button"
+                  class="pm pm--klein"
+                  appHalteKnopf
+                  (halte)="reliktTreffen(r.id, 1)"
+                  [attr.aria-label]="'Ein Schaden an ' + r.name"
+                >
+                  −
+                </button>
+                <span class="verteidigung">
+                  <strong>{{ r.rest }}</strong> / {{ r.verteidigung }}
+                  <small>Verteidigung</small>
+                </span>
+                <button
+                  type="button"
+                  class="pm pm--klein"
+                  appHalteKnopf
+                  (halte)="reliktTreffen(r.id, -1)"
+                  [attr.aria-label]="'Einen Schaden auf ' + r.name + ' zurücknehmen'"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  class="zerstoeren"
+                  [class.scharf]="scharfesRelikt() === r.id"
+                  (click)="reliktTippen(r.id)"
+                >
+                  {{ scharfesRelikt() === r.id ? 'Wirklich?' : 'Zerstören' }}
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+
       @if (letzterZug(); as z) {
         <button type="button" class="letzter" (click)="protokoll.emit()">
           <span class="letzter-titel">Letzter Boss-Zug · Runde {{ z.runde }}</span>
@@ -451,6 +508,78 @@ const SAMMELZEIT = 1500;
       font-size: 0.85rem;
       color: var(--text-leise);
     }
+    .relikte {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 0.4rem;
+    }
+    .relikt {
+      display: grid;
+      gap: 0.3rem;
+      padding: 0.5rem 0.6rem;
+      border-radius: var(--radius-klein);
+      border: 1px solid var(--messing);
+      background: var(--filz);
+    }
+    .relikt[data-typ='verzauberung'] {
+      border-color: var(--chaos);
+    }
+    .relikt p {
+      margin: 0;
+    }
+    .relikt-kopf {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .relikt-typ,
+    .verteidigung small {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-leise);
+    }
+    .relikt-text {
+      font-size: 0.82rem;
+    }
+    .relikt-uhr {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--negativ);
+    }
+    .relikt-leiste {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .pm--klein {
+      width: 2.25rem;
+      font-size: 1.2rem;
+    }
+    .verteidigung {
+      display: grid;
+      justify-items: center;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .zerstoeren {
+      margin-left: auto;
+      min-height: 2.25rem;
+      padding: 0.2rem 0.8rem;
+      border-radius: 99px;
+      border: 1px solid var(--negativ);
+      background: transparent;
+      color: var(--negativ);
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+    .zerstoeren.scharf {
+      background: var(--negativ);
+      color: #fff;
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -472,7 +601,16 @@ export class BossFeld implements OnDestroy {
     return z ? { runde: z.runde, aktionen: z.aktionen.map((a) => a.name).join(' + ') } : null;
   });
 
+  /** Die Karten des Bosses auf dem Tisch, mit ihrer Beschreibung. */
+  protected readonly relikte = computed(() =>
+    this.stand().relikte.flatMap((l) => {
+      const r = this.def().relikte.find((x) => x.id === l.id);
+      return r ? [{ ...r, rest: r.verteidigung - l.schaden, countdown: l.countdown }] : [];
+    }),
+  );
+
   protected readonly passivOffen = signal(false);
+  protected readonly scharfesRelikt = signal<string | null>(null);
   protected readonly hinweis = signal<string | null>(null);
   protected readonly aenderung = signal(0);
   protected readonly scharf = signal<number | null>(null);
@@ -510,6 +648,34 @@ export class BossFeld implements OnDestroy {
     }
     this.scharf.set(nr);
     this.scharfZeit = setTimeout(() => this.scharf.set(null), HINWEISZEIT);
+  }
+
+  /** Schaden an der Karte: Minus senkt die Verteidigung, Plus nimmt einen Schaden zurück. */
+  protected reliktTreffen(id: string, schaden: number): void {
+    this.store.reliktTreffen(id, schaden);
+    this.zerstoertMelden(id);
+  }
+
+  /** Wie bei Dienern: erst antippen, dann bestätigen. */
+  protected reliktTippen(id: string): void {
+    clearTimeout(this.scharfZeit);
+    if (this.scharfesRelikt() === id) {
+      this.scharfesRelikt.set(null);
+      this.store.reliktZerstoeren(id);
+      this.zerstoertMelden(id);
+      return;
+    }
+    this.scharfesRelikt.set(id);
+    this.scharfZeit = setTimeout(() => this.scharfesRelikt.set(null), HINWEISZEIT);
+  }
+
+  private zerstoertMelden(id: string): void {
+    // Direkt aus dem Store: Das Input zieht erst beim nächsten Rendern nach.
+    if (this.store.stand()?.boss?.relikte.some((l) => l.id === id)) return;
+    const name = this.def().relikte.find((r) => r.id === id)?.name;
+    this.hinweis.set(`${name} ist zerstört!`);
+    clearTimeout(this.hinweisZeit);
+    this.hinweisZeit = setTimeout(() => this.hinweis.set(null), HINWEISZEIT);
   }
 
   ngOnDestroy(): void {

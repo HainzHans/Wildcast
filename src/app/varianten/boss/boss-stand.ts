@@ -7,9 +7,11 @@ import {
   DienerVorlage,
   FrageId,
   Lage,
+  LiegendesRelikt,
   Stimmung,
   Temperament,
 } from './boss-modell';
+import { bossMitId } from './bosse';
 
 /** So viele vergangene Aktionen und Sprüche merkt sich der Boss, um sich nicht zu wiederholen. */
 const GEDAECHTNIS = 6;
@@ -31,6 +33,8 @@ export interface BossProtokoll {
   angreifer: number;
   ankuendigung: string | null;
   lebenAenderungen: { name: string; um: number }[];
+  /** Neu gelegte Karte und was seine Karten bewirkt haben. Fehlt in älteren Spielständen. */
+  relikte?: string[];
 }
 
 /** Alles, was der Bosskampf über die Leben der Spieler hinaus speichert. */
@@ -60,6 +64,10 @@ export interface BossStand {
   /** Charakterzug und beherrschte Aktionen – pro Partie neu gewürfelt, gleich stark. */
   temperament: Temperament;
   repertoire: string[];
+  /** Seine Artefakte und Verzauberungen auf dem Feld. */
+  relikte: LiegendesRelikt[];
+  /** Seit seinem letzten Zug zerstörte Karte – darauf reagiert er. */
+  verlorenesRelikt: string | null;
 }
 
 function dienerAnlegen(stand: BossStand, vorlagen: DienerVorlage[]): BossStand {
@@ -88,7 +96,13 @@ export function bossStarten(boss: BossDefinition, zufall: Zufall): BossStand {
     protokoll: [],
     temperament: temperamentWaehlen(zufall),
     repertoire: repertoireWaehlen(boss, zufall),
+    relikte: [],
+    verlorenesRelikt: null,
   };
+  const startRelikt = boss.relikte.find((r) => r.id === boss.startRelikt);
+  if (startRelikt) {
+    leer.relikte = [{ id: startRelikt.id, schaden: 0, countdown: startRelikt.countdown }];
+  }
   const start = Array.from(
     { length: boss.startDiener },
     () => boss.diener[Math.floor(zufall() * boss.diener.length)],
@@ -96,13 +110,54 @@ export function bossStarten(boss: BossDefinition, zufall: Zufall): BossStand {
   return dienerAnlegen(leer, start);
 }
 
-/** Schaden durch die Spieler, mit Phasen-Schild. Gibt zusätzlich zurück, wie viel verfallen ist. */
+/**
+ * Schaden durch die Spieler, mit Phasen-Schild. Gibt zusätzlich zurück, wie viel verfallen ist.
+ * Liegt eine Karte, die ihn unsterblich macht, bleibt er bei mindestens 1 Leben.
+ */
 export function bossTreffen(
   stand: BossStand,
   schaden: number,
+  boss: BossDefinition = bossMitId(stand.bossId),
 ): { stand: BossStand; verfallen: number } {
   const { verfallen, ...nach } = schadenAmBoss(stand, schaden);
+  const unsterblich = stand.relikte.some(
+    (l) => boss.relikte.find((r) => r.id === l.id)?.unsterblich,
+  );
+  if (unsterblich && nach.leben < 1) {
+    return { stand: { ...stand, ...nach, leben: 1 }, verfallen: verfallen + 1 - nach.leben };
+  }
   return { stand: { ...stand, ...nach }, verfallen };
+}
+
+function reliktName(bossId: string, id: string): string {
+  return bossMitId(bossId).relikte.find((r) => r.id === id)?.name ?? id;
+}
+
+/** Die Spieler zerstören eine Karte des Bosses, etwa mit einem Entfernungszauber. */
+export function reliktZerstoeren(stand: BossStand, id: string): BossStand {
+  if (!stand.relikte.some((l) => l.id === id)) return stand;
+  return { ...stand, relikte: stand.relikte.filter((l) => l.id !== id), verlorenesRelikt: id };
+}
+
+/**
+ * Schaden an einer Karte des Bosses, etwa von Kreaturen, die sie angreifen (negativ zum
+ * Korrigieren). Fällt ihre Verteidigung auf 0, ist die Karte zerstört.
+ */
+export function reliktTreffen(
+  stand: BossStand,
+  id: string,
+  schaden: number,
+  boss: BossDefinition = bossMitId(stand.bossId),
+): BossStand {
+  const r = boss.relikte.find((x) => x.id === id);
+  const liegend = stand.relikte.find((l) => l.id === id);
+  if (!r || !liegend) return stand;
+  const neu = Math.max(0, liegend.schaden + schaden);
+  if (neu >= r.verteidigung) return reliktZerstoeren(stand, id);
+  return {
+    ...stand,
+    relikte: stand.relikte.map((l) => (l.id === id ? { ...l, schaden: neu } : l)),
+  };
 }
 
 /** Heilung oder Korrektur nach oben, z. B. wenn sich jemand vertippt hat. */
@@ -150,6 +205,8 @@ export function bossLage(
     temperament: stand.temperament ?? 'unberechenbar',
     // Ältere Spielstände kennen kein Repertoire: dann beherrscht er alles.
     repertoire: stand.repertoire?.length ? stand.repertoire : undefined,
+    relikte: stand.relikte,
+    verlorenesRelikt: stand.verlorenesRelikt ?? undefined,
   };
 }
 
@@ -207,6 +264,13 @@ export function bossZugEintragen(
       : angreifen(mitDienern.diener, neueNr);
   // Wer ihm diese Runde am meisten geschadet hat, gilt nur für diese Runde.
   const { rache: _, ...gemerkt } = { ...stand.gemerkteAntworten, ...antworten };
+  // Countdowns laufen weiter, Abgelaufenes verschwindet, Neues kommt dazu.
+  const relikte = [
+    ...stand.relikte
+      .filter((l) => !zug.abgelaufen.includes(l.id))
+      .map((l) => (l.countdown === undefined ? l : { ...l, countdown: l.countdown - 1 })),
+    ...(zug.neuesRelikt ? [zug.neuesRelikt] : []),
+  ];
 
   return {
     ...mitDienern,
@@ -224,6 +288,8 @@ export function bossZugEintragen(
     spezialAngekuendigt: zug.spezialAngekuendigt,
     spezialEingesetzt: !!stand.spezialEingesetzt || zug.spezialEingesetzt,
     ankuendigung: zug.ankuendigung,
+    relikte,
+    verlorenesRelikt: null,
     protokoll: [
       ...stand.protokoll,
       {
@@ -239,6 +305,12 @@ export function bossZugEintragen(
           name: name(l.spielerId) ?? '',
           um: l.um,
         })),
+        relikte: [
+          ...(zug.neuesRelikt
+            ? [`Neu auf dem Feld: ${reliktName(stand.bossId, zug.neuesRelikt.id)}`]
+            : []),
+          ...zug.reliktEffekte,
+        ],
       },
     ],
   };

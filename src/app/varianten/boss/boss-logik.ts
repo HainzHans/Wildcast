@@ -8,7 +8,9 @@ import {
   Frage,
   FrageId,
   Lage,
+  LiegendesRelikt,
   Phase,
+  Relikt,
   Schlagwort,
   SPIELER_FRAGEN,
   Stimmung,
@@ -77,7 +79,22 @@ export function dienerNachschub(runde: number, diener: number): number {
   return 1 + nachschub;
 }
 
+/** So viele Artefakte und Verzauberungen hat der Boss höchstens gleichzeitig auf dem Feld. */
+export const RELIKT_GRENZE = 2;
+
+/** Karten, die der Boss jetzt noch legen kann: nicht schon auf dem Feld und unter der Grenze. */
+export function freieRelikte(boss: BossDefinition, lage: Lage): Relikt[] {
+  const liegend = lage.relikte ?? [];
+  if (liegend.length >= RELIKT_GRENZE) return [];
+  // Die Startkarte (z. B. das Phylakterium) gibt es nur einmal – zerstört ist zerstört.
+  return boss.relikte.filter(
+    (r) => r.id !== boss.startRelikt && !liegend.some((l) => l.id === r.id),
+  );
+}
+
 export function stimmung(lage: Lage): Stimmung {
+  // Eine zerstörte Karte trifft ihn persönlich.
+  if (lage.verlorenesRelikt) return 'wuetend';
   const verlust = lage.lebenVorher - lage.leben;
   const schwach = lage.leben <= lage.maxLeben * 0.3;
   if (schwach && lage.diener <= 1) return 'verzweifelt';
@@ -154,6 +171,8 @@ export function repertoireWaehlen(boss: BossDefinition, zufall: Zufall): string[
       .slice(0, 2)
       .forEach((a) => gewaehlt.add(a.id));
   }
+  // Seine Karten legt er in jeder Partie.
+  gemischt.filter((a) => a.folgen?.relikt).forEach((a) => gewaehlt.add(a.id));
   for (const a of gemischt) {
     if (gewaehlt.size >= ziel) break;
     gewaehlt.add(a.id);
@@ -211,8 +230,9 @@ export function waehleAktion(
   ausschluss: string[] = [],
 ): BossAktion {
   const gesperrt = new Set([...ausschluss, ...lage.letzteAktionen]);
+  const kannLegen = freieRelikte(boss, lage).length > 0;
   const kandidaten = boss.aktionen
-    .filter((a) => !gesperrt.has(a.id) && beherrscht(a, lage))
+    .filter((a) => !gesperrt.has(a.id) && beherrscht(a, lage) && (kannLegen || !a.folgen?.relikt))
     .map((a) => ({ wert: a, gewicht: aktionsGewicht(a, lage, s) }));
   return (
     gewichtetAus(kandidaten, zufall) ??
@@ -275,6 +295,7 @@ export function zielSpieler(lage: Lage, ziel: Ziel, zufall: Zufall): number[] {
   const leben = lage.spieler.map((s) => s.leben);
   const grenze = ziel === 'meisteLeben' ? Math.max(...leben) : Math.min(...leben);
   const kandidaten = lage.spieler.filter((s) => s.leben === grenze);
+  if (!kandidaten.length) return [];
   // Bei Gleichstand entscheidet der Würfel.
   return [kandidaten[Math.floor(zufall() * kandidaten.length)].id];
 }
@@ -346,7 +367,8 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
     );
   }
 
-  const spruch = neuerSpruch(boss.sprueche[s], lage.letzteSprueche, zufall);
+  const verloren = boss.relikte.find((r) => r.id === lage.verlorenesRelikt);
+  const spruch = verloren?.zerstoert ?? neuerSpruch(boss.sprueche[s], lage.letzteSprueche, zufall);
   const lebenAenderungen: BossZug['lebenAenderungen'] = [];
   let heilung = 0;
   let schutz = 0;
@@ -380,6 +402,65 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
     dienerOpfern += f.dienerOpfern ?? 0;
   }
 
+  // Seine Karten auf dem Feld wirken, Countdowns laufen ab.
+  const reliktEffekte: string[] = [];
+  const abgelaufen: string[] = [];
+  const alleVerlieren = (menge: number) => {
+    for (const sp of lage.spieler) lebenAenderungen.push({ spielerId: sp.id, um: -menge });
+  };
+  for (const liegend of lage.relikte ?? []) {
+    const r = boss.relikte.find((x) => x.id === liegend.id);
+    if (!r) continue;
+    if (r.ablauf && liegend.countdown !== undefined && liegend.countdown <= 1) {
+      alleVerlieren(r.ablauf.leben ?? 0);
+      heilung += r.ablauf.heilung ?? 0;
+      abgelaufen.push(r.id);
+      reliktEffekte.push(`${r.name} ist abgelaufen: ${r.ablauf.text}`);
+      continue;
+    }
+    const z = r.proZug;
+    if (z) {
+      const teile: string[] = [];
+      if (z.leben) {
+        alleVerlieren(z.leben);
+        teile.push(`jeder Spieler verliert ${z.leben} Leben`);
+      }
+      const heil = (z.heilung ?? 0) + (z.heilungProDiener ?? 0) * lage.diener;
+      if (heil) {
+        heilung += heil;
+        teile.push(`der Boss erhält ${heil} Leben`);
+      }
+      if (z.schutz) {
+        schutz += z.schutz;
+        teile.push(`er verhindert ${z.schutz} Schaden`);
+      }
+      if (z.diener) {
+        const vorlage = boss.diener.find((d) => d.name === z.dienerName);
+        for (let i = 0; i < z.diener; i++) {
+          if (vorlage) benannteDiener.push(vorlage);
+          else zusatzDiener++;
+        }
+        teile.push(`er ruft ${z.diener}× ${z.dienerName ?? 'Diener'}`);
+      }
+      if (teile.length) reliktEffekte.push(`${r.name}: ${teile.join(', ')}.`);
+    }
+    if (liegend.countdown !== undefined) {
+      const rest = liegend.countdown - 1;
+      reliktEffekte.push(
+        `${r.name}: noch ${rest} ${rest === 1 ? 'Boss-Zug' : 'Boss-Züge'} bis zum Ablauf.`,
+      );
+    }
+  }
+
+  let neuesRelikt: LiegendesRelikt | null = null;
+  if (aktionen.some((a) => a.folgen?.relikt)) {
+    const frei = freieRelikte(boss, lage);
+    if (frei.length) {
+      const r = zufaelligAus(frei, zufall);
+      neuesRelikt = { id: r.id, schaden: 0, countdown: r.countdown };
+    }
+  }
+
   // Runden-Effekt (z. B. Hunger): trifft jeden Spieler in jedem Boss-Zug.
   let rundenEffekt: string | null = null;
   if (boss.rundenEffekt) {
@@ -403,7 +484,7 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
   // Wer schwächelt, wird gejagt; sonst trifft es den Spieler mit den meisten Leben.
   const angriffsziel =
     lage.diener + neueDiener.length > 0
-      ? zielSpieler(lage, s === 'ueberlegen' ? 'wenigsteLeben' : 'meisteLeben', zufall)[0]
+      ? (zielSpieler(lage, s === 'ueberlegen' ? 'wenigsteLeben' : 'meisteLeben', zufall)[0] ?? null)
       : null;
 
   return {
@@ -428,5 +509,8 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
     ankuendigung,
     spezialAngekuendigt,
     spezialEingesetzt: aktionen.includes(boss.spezial),
+    neuesRelikt,
+    reliktEffekte,
+    abgelaufen,
   };
 }

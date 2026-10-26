@@ -72,6 +72,17 @@ const DENKZEIT = 1100;
                 </article>
               }
 
+              @if (neuesRelikt(); as r) {
+                <article class="aktion relikt">
+                  <p class="relikt-typ">
+                    Neu auf dem Feld · {{ r.typ === 'artefakt' ? 'Artefakt' : 'Verzauberung' }} ·
+                    Verteidigung {{ r.verteidigung }}
+                  </p>
+                  <h3>{{ r.name }}</h3>
+                  <p>{{ r.text }}</p>
+                </article>
+              }
+
               @if (z.ankuendigung) {
                 <p class="warnung">⚠ {{ z.ankuendigung }}</p>
               }
@@ -82,6 +93,9 @@ const DENKZEIT = 1100;
                 }
                 @if (z.rundenEffekt) {
                   <li>{{ z.rundenEffekt }}</li>
+                }
+                @for (r of z.reliktEffekte; track $index) {
+                  <li>{{ r }}</li>
                 }
                 @if (z.dienerOpfern) {
                   <li>
@@ -217,6 +231,17 @@ const DENKZEIT = 1100;
       border-left: 4px solid var(--negativ);
       padding: 0.8rem 1rem;
     }
+    .aktion.relikt {
+      border-left-color: var(--messing);
+    }
+    .aktion .relikt-typ {
+      margin-bottom: 0.2rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-leise);
+    }
     .aktion.spezial {
       border-left-color: var(--chaos);
       box-shadow: 0 0 0 2px var(--chaos);
@@ -256,6 +281,10 @@ export class BossZugDialog implements OnDestroy {
   protected readonly bossName = computed(() => bossMitId(this.boss()?.bossId).name);
   protected readonly spezialId = computed(() => bossMitId(this.boss()?.bossId).spezial.id);
   protected readonly runde = computed(() => this.boss()?.runde ?? 1);
+  protected readonly neuesRelikt = computed(() => {
+    const id = this.zug()?.neuesRelikt?.id;
+    return bossMitId(this.boss()?.bossId).relikte.find((r) => r.id === id) ?? null;
+  });
 
   /** Einmal beim Öffnen festgelegt, damit sich die Fragen nicht mitten im Gespräch ändern. */
   protected readonly fragen = signal<Frage[]>(this.store.bossFragen());

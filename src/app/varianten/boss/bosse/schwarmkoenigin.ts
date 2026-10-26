@@ -25,7 +25,36 @@ export const SCHWARMKOENIGIN: BossDefinition = {
   ],
   fragen: fragen('kreaturen', 'grosseKreatur', 'flieger', 'bleibende', 'kommandeur', 'rache'),
 
+  relikte: [
+    {
+      id: 'brutnest',
+      name: 'Brutnest',
+      typ: 'verzauberung',
+      verteidigung: 11,
+      text: 'In jedem Boss-Zug schlüpfen zwei Drohnen.',
+      proZug: { diener: 2, dienerName: 'Drohne' },
+      zerstoert: 'Meine Brut! Meine Eier! Ihr Ungeheuer!',
+    },
+    {
+      id: 'honigwabe',
+      name: 'Honigwabe',
+      typ: 'artefakt',
+      verteidigung: 10,
+      text: 'Die Königin erhält in jedem ihrer Züge 4 Leben.',
+      proZug: { heilung: 4 },
+      zerstoert: 'Mein Gelée! Ihr habt mir das Gelée gestohlen!',
+    },
+  ],
+
   aktionen: [
+    {
+      id: 'nestbau',
+      name: 'Nestbau',
+      schlagworte: ['beschwoerung'],
+      gewicht: 2,
+      text: 'Die Arbeiterinnen bauen: Die Königin legt etwas Neues an.',
+      folgen: { relikt: true },
+    },
     {
       id: 'schwarmwolke',
       name: 'Schwarmwolke',

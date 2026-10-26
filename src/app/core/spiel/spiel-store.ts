@@ -10,6 +10,8 @@ import {
   bossZugEintragen,
   dienerBesiegen,
   dienerTappen,
+  reliktTreffen,
+  reliktZerstoeren,
   schildAufheben,
 } from '../../varianten/boss/boss-stand';
 import { bossMitId } from '../../varianten/boss/bosse';
@@ -41,6 +43,8 @@ function ladeStand(): Spielstand | null {
           letzteFragen: boss.letzteFragen ?? [],
           gemerkteAntworten: boss.gemerkteAntworten ?? {},
           letzteSprueche: boss.letzteSprueche ?? [],
+          relikte: boss.relikte ?? [],
+          verlorenesRelikt: boss.verlorenesRelikt ?? null,
         },
       }
     : mitVarianten;
@@ -144,6 +148,16 @@ export class SpielStore {
 
   schildAufheben(): void {
     this.mitBoss((b) => schildAufheben(b));
+  }
+
+  /** Eine Karte des Bosses ist zerstört, z. B. durch einen Entfernungszauber. */
+  reliktZerstoeren(id: string): void {
+    this.mitBoss((b) => reliktZerstoeren(b, id));
+  }
+
+  /** Schaden an einer Karte des Bosses, z. B. durch Angreifer (negativ zum Korrigieren). */
+  reliktTreffen(id: string, schaden: number): void {
+    this.mitBoss((b) => reliktTreffen(b, id, schaden));
   }
 
   /** Die Fragen, die der Boss zu Beginn seines Zuges stellt. Ändert nichts am Stand. */

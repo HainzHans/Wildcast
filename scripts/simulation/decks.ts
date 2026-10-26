@@ -20,6 +20,8 @@ export interface DeckProfil {
   flieger: number;
   /** Wahrscheinlichkeit pro Zug, einen Boss-Diener gezielt zu entfernen (ab Zug 2). */
   entfernung: number;
+  /** Wahrscheinlichkeit pro Zug, ein Artefakt oder eine Verzauberung des Bosses zu entfernen. */
+  artefaktEntfernung: number;
   /** Wahrscheinlichkeit pro Zug (ab Zug 5), eine Brettlöschung zu haben. */
   wipe: number;
   /** Schaden an den Boss pro Zug ohne Kampf (Zauber, Drain, Planeswalker). */
@@ -49,6 +51,7 @@ export const JACE: DeckProfil = {
   spielsteinGroesse: 1,
   flieger: 0.65,
   entfernung: 0.22, // Path, Swords, Despark, Stroke of Midnight, Teferi's Reproach
+  artefaktEntfernung: 0.2,
   wipe: 0.05, // Sunfall, Martial Coup
   direkt: 1, // Planeswalker
   lebensgewinn: 0.3,
@@ -72,6 +75,7 @@ export const STRIXHAVEN: DeckProfil[] = [
     spielsteinGroesse: 2,
     flieger: 0.35,
     entfernung: 0.18, // Path, Swords, Lorehold Charm
+    artefaktEntfernung: 0.15,
     wipe: 0.04, // Wave of Reckoning, Ceaseless Conflict
     direkt: 1,
     lebensgewinn: 0.2,
@@ -92,6 +96,7 @@ export const STRIXHAVEN: DeckProfil[] = [
     spielsteinGroesse: 3,
     flieger: 0.6,
     entfernung: 0.2, // Abrade, Chaos Warp
+    artefaktEntfernung: 0.15,
     wipe: 0.05, // Blasphemous Act, Volcanic Salvo
     direkt: 3, // Zauber mit Schaden
     lebensgewinn: 0,
@@ -112,6 +117,7 @@ export const STRIXHAVEN: DeckProfil[] = [
     spielsteinGroesse: 1,
     flieger: 0.1,
     entfernung: 0.1, // Beast Within
+    artefaktEntfernung: 0.12,
     wipe: 0.02,
     direkt: 0,
     lebensgewinn: 0.2,
@@ -132,6 +138,7 @@ export const STRIXHAVEN: DeckProfil[] = [
     spielsteinGroesse: 1,
     flieger: 0.4,
     entfernung: 0.24, // Anguished Unmaking, Vanishing Verse, Fracture, Auren auf Gegnern
+    artefaktEntfernung: 0.25,
     wipe: 0.02,
     direkt: 1,
     lebensgewinn: 1,
@@ -152,6 +159,7 @@ export const STRIXHAVEN: DeckProfil[] = [
     spielsteinGroesse: 1,
     flieger: 0.1,
     entfernung: 0.2, // Assassin's Trophy, Infernal Grasp, Mortality Spear
+    artefaktEntfernung: 0.2,
     wipe: 0.04, // Toxic Deluge, Casualties of War
     direkt: 2, // Drain durch Opfern
     lebensgewinn: 2,

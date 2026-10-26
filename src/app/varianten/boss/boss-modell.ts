@@ -86,7 +86,40 @@ export interface BossAktion {
     heilungAusVerlust?: { anteil: number; max: number };
     /** Der Boss handelt in diesem Zug noch ein weiteres Mal. */
     extraAktion?: boolean;
+    /** Der Boss legt eines seiner Artefakte oder eine Verzauberung aufs Feld. */
+    relikt?: boolean;
   };
+}
+
+/**
+ * Ein Artefakt oder eine Verzauberung des Bosses. Liegt offen auf seiner Seite und wirkt,
+ * bis die Spieler es zerstören: mit einem passenden Entfernungszauber sofort oder, wie eine
+ * Belagerung (Battle) in Magic, indem sie es angreifen, bis seine Verteidigung auf 0 fällt.
+ */
+export interface Relikt {
+  id: string;
+  name: string;
+  typ: 'artefakt' | 'verzauberung';
+  verteidigung: number;
+  /** Was die Karte tut – auch das, was die Spieler selbst beachten müssen. */
+  text: string;
+  /** Was die App in jedem Boss-Zug automatisch umsetzt, solange die Karte liegt. */
+  proZug?: {
+    /** Jeder Spieler verliert so viele Leben. */
+    leben?: number;
+    heilung?: number;
+    heilungProDiener?: number;
+    schutz?: number;
+    diener?: number;
+    dienerName?: string;
+  };
+  /** Liegt die Karte so viele Boss-Züge, löst sie `ablauf` aus und verschwindet. */
+  countdown?: number;
+  ablauf?: { text: string; leben?: number; heilung?: number };
+  /** Solange die Karte liegt, fällt der Boss nicht unter 1 Leben. */
+  unsterblich?: boolean;
+  /** Was der Boss sagt, wenn die Spieler die Karte zerstören. */
+  zerstoert: string;
 }
 
 /**
@@ -125,6 +158,19 @@ export interface BossDefinition {
   /** Kurzer Untertitel für die Auswahl. */
   beschreibung: string;
   rundenEffekt?: RundenEffekt;
+  /** Artefakte und Verzauberungen, die der Boss ins Spiel bringen kann. */
+  relikte: Relikt[];
+  /** Liegt schon zu Kampfbeginn (z. B. das Phylakterium des Knochenfürsten). */
+  startRelikt?: string;
+}
+
+/** Eine Karte des Bosses auf dem Tisch. */
+export interface LiegendesRelikt {
+  id: string;
+  /** Schaden, den die Spieler der Karte schon zugefügt haben. */
+  schaden: number;
+  /** Boss-Züge bis zum Ablauf, falls die Karte einen Countdown hat. */
+  countdown?: number;
 }
 
 /** Alles, was der Boss zu Beginn seines Zuges über die Partie weiß. */
@@ -151,6 +197,10 @@ export interface Lage {
   temperament?: Temperament;
   /** Aktionen, die der Boss in dieser Partie beherrscht. Ohne Angabe: alle. */
   repertoire?: string[];
+  /** Seine Karten auf dem Tisch. */
+  relikte?: LiegendesRelikt[];
+  /** Die Karte, die die Spieler seit seinem letzten Zug zerstört haben – das macht ihn wütend. */
+  verlorenesRelikt?: string;
 }
 
 export interface AusgefuehrteAktion {
@@ -182,4 +232,10 @@ export interface BossZug {
   spezialAngekuendigt: boolean;
   /** Ob in diesem Zug der Spezialangriff kam. */
   spezialEingesetzt: boolean;
+  /** Karte, die der Boss in diesem Zug neu legt. */
+  neuesRelikt: LiegendesRelikt | null;
+  /** Was seine liegenden Karten in diesem Zug bewirkt haben (schon eingerechnet). */
+  reliktEffekte: string[];
+  /** Karten, deren Countdown abgelaufen ist – sie haben ausgelöst und verschwinden. */
+  abgelaufen: string[];
 }

@@ -21,6 +21,9 @@ import { STIMMUNG_NAME } from './boss-zug-dialog';
                 <strong>{{ a.name }}:</strong> {{ a.text }}
               </p>
             }
+            @for (r of e.relikte ?? []; track $index) {
+              <p class="aktion">{{ r }}</p>
+            }
             <p class="folgen">
               @for (l of e.lebenAenderungen; track $index) {
                 <span>{{ l.name }} {{ l.um }} Leben</span>

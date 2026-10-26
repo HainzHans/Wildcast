@@ -24,7 +24,27 @@ export const GORVAK: BossDefinition = {
   ],
   fragen: fragen('kreaturen', 'grosseKreatur', 'friedhof', 'bleibende', 'kommandeur', 'rache'),
 
+  relikte: [
+    {
+      id: 'fressnapf',
+      name: 'Fressnapf',
+      typ: 'artefakt',
+      verteidigung: 9,
+      text: 'Gorvak erhält in jedem seiner Züge 1 Leben je Diener.',
+      proZug: { heilungProDiener: 1 },
+      zerstoert: 'MEIN NAPF! Gorvak … HUNGER!',
+    },
+  ],
+
   aktionen: [
+    {
+      id: 'vorratskammer',
+      name: 'Vorratskammer',
+      schlagworte: ['beschwoerung'],
+      gewicht: 2,
+      text: 'Gorvak schleppt etwas aus seiner Vorratskammer heran.',
+      folgen: { relikt: true },
+    },
     {
       id: 'zermalmen',
       name: 'Zermalmen',

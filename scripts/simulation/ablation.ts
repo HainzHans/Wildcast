@@ -17,6 +17,10 @@ const zeilen = boss.aktionen.map((a) => {
 });
 zeilen.push(['(ohne Start-Diener)', quote({ ...boss, startDiener: 0 }) - basis]);
 zeilen.push([
+  '(ohne Artefakte/Verz.)',
+  quote({ ...boss, relikte: [], startRelikt: undefined }) - basis,
+]);
+zeilen.push([
   '(ohne Spezial)',
   quote({ ...boss, spezial: { ...boss.spezial, folgen: {}, text: '' } }) - basis,
 ]);

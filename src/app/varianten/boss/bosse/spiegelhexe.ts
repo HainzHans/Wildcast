@@ -29,7 +29,27 @@ export const SPIEGELHEXE: BossDefinition = {
   ],
   fragen: fragen('kreaturen', 'grosseKreatur', 'flieger', 'handkarten', 'bleibende', 'rache'),
 
+  relikte: [
+    {
+      id: 'zerrspiegel',
+      name: 'Zerrspiegel',
+      typ: 'artefakt',
+      verteidigung: 6,
+      text: 'Solange er liegt, verhindert die Hexe in jedem ihrer Züge neu die ersten 3 Schaden.',
+      proZug: { schutz: 3 },
+      zerstoert: 'Mein Spiegel! Sieben Jahre Pech – für EUCH!',
+    },
+  ],
+
   aktionen: [
+    {
+      id: 'zauberspiegel',
+      name: 'Zauberspiegel',
+      schlagworte: ['beschwoerung'],
+      gewicht: 2,
+      text: 'Die Hexe stellt einen ihrer Zauberspiegel auf.',
+      folgen: { relikt: true },
+    },
     {
       id: 'scherbenregen',
       name: 'Scherbenregen',

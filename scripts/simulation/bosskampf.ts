@@ -15,6 +15,8 @@ import {
   bossTreffen,
   bossZugEintragen,
   dienerBesiegen,
+  reliktTreffen,
+  reliktZerstoeren,
   schildAufheben,
 } from '../../src/app/varianten/boss/boss-stand';
 import { BOSSE } from '../../src/app/varianten/boss/bosse';
@@ -75,7 +77,37 @@ export const MESSUNG = {
   kreaturenWeg: 0,
   dienerAmEnde: 0,
   partien: 0,
+  relikteGelegt: 0,
+  relikteZerstoert: 0,
 };
+
+/** Liegende Karte des Bosses mit diesem Text? (für Wirkungen, die nur im Text stehen) */
+function reliktMitText(stand: BossStand, def: BossDefinition, muster: RegExp): boolean {
+  return stand.relikte.some((l) => muster.test(def.relikte.find((r) => r.id === l.id)?.text ?? ''));
+}
+
+/**
+ * Welche Karte des Bosses die Spieler gerade angehen: eine, deren Countdown bald abläuft, das
+ * Phylakterium, wenn der Boss fast tot ist, sonst die mit der wenigsten restlichen
+ * Verteidigung – aber nur, wenn der mögliche Schaden reicht, um sie zu zerstören.
+ */
+function belagerungsZiel(
+  stand: BossStand,
+  def: BossDefinition,
+  schaden: number,
+): { id: string; rest: number } | null {
+  const kandidaten = stand.relikte.flatMap((l) => {
+    const r = def.relikte.find((x) => x.id === l.id);
+    if (!r) return [];
+    const rest = r.verteidigung - l.schaden;
+    const dringend =
+      (l.countdown !== undefined && l.countdown <= 2) ||
+      (r.unsterblich && stand.leben <= stand.maxLeben * 0.3);
+    return dringend || rest <= schaden ? [{ id: r.id, rest, dringend }] : [];
+  });
+  kandidaten.sort((a, b) => Number(b.dringend) - Number(a.dringend) || a.rest - b.rest);
+  return kandidaten[0] ?? null;
+}
 
 function zahlwort(text: string): number {
   if (/\bdrei\b/.test(text)) return 3;
@@ -419,6 +451,18 @@ function spielerZug(
     notizen.push('Kommandeur');
   }
 
+  // Entfernung gegen ein Artefakt oder eine Verzauberung des Bosses
+  if (stand.relikte.length && mana >= 2 && s.hand > 0 && zufall() < d.artefaktEntfernung) {
+    const ziel = belagerungsZiel(stand, def, Infinity);
+    if (ziel) {
+      stand = reliktZerstoeren(stand, ziel.id);
+      MESSUNG.relikteZerstoert++;
+      mana -= 2;
+      s.hand--;
+      notizen.push(`zerstört ${def.relikte.find((r) => r.id === ziel.id)?.name}`);
+    }
+  }
+
   // Sprüche aus der Hand wirken, bis Mana oder Karten ausgehen
   let wipeGenutzt = false;
   while (mana >= 2 && s.hand > 0) {
@@ -475,7 +519,14 @@ function spielerZug(
     s.hand--;
   }
   s.friedhof += d.friedhof;
-  s.leben += d.lebensgewinn;
+  // Blutaltar: Wer Leben erhalten würde, verliert es stattdessen.
+  s.leben += reliktMitText(stand, def, /stattdessen gleich viele/)
+    ? -d.lebensgewinn
+    : d.lebensgewinn;
+  if (reliktMitText(stand, def, /höchstens drei Kreaturen angreifen/)) {
+    s.maxAngreifer = Math.min(s.maxAngreifer ?? Infinity, 3);
+  }
+  const sturm = reliktMitText(stand, def, /Diener[^.]*haben Flugfähigkeit/);
 
   // Angriff: einige Kreaturen bleiben als Blocker zurück
   const angreifendeDiener = stand.diener.filter((x) => !x.greiftNichtAn).length;
@@ -486,16 +537,42 @@ function spielerZug(
     .slice(0, Math.min(bereit.length - zurueck, s.maxAngreifer ?? Infinity));
   s.maxAngreifer = undefined;
   const bonus = s.kommandeur ? d.kommandeurBonus : 0;
+  const staerke = (k: Kreatur) => Math.max(0, k.staerke + bonus - s.malusStaerke);
+  let direkt = d.direkt + (s.kommandeur && KOMMANDEUR_IST_WALKER.has(d.kurz) ? 2 : 0);
+  const moeglich = angreifer.reduce((x, k) => x + staerke(k), 0);
+
+  // Wie bei einer Belagerung: Beim Deklarieren der Angreifer legen die Spieler fest, wer eine
+  // Karte des Bosses angreift. Reicht der Angriff für den Sieg, geht alles auf den Boss – außer
+  // das Phylakterium hält ihn am Leben.
+  const siegMoeglich =
+    moeglich + direkt >= stand.leben + stand.schutz &&
+    !reliktMitText(stand, def, /nicht unter 1 Leben/);
+  const ziel = siegMoeglich ? null : belagerungsZiel(stand, def, moeglich + direkt);
+  const aufKarte = new Set<Kreatur>();
+  if (ziel) {
+    // Etwas mehr als nötig, weil Diener auch diese Angreifer blocken dürfen.
+    let summe = 0;
+    for (const k of angreifer) {
+      if (summe >= ziel.rest * 1.3) break;
+      aufKarte.add(k);
+      summe += staerke(k);
+    }
+  }
+
   const blocker = stand.diener.filter((x) => !x.getappt);
   let schaden = 0;
+  let karteSchaden = 0;
   let geblockt = 0;
   for (const k of angreifer) {
     k.getappt = true;
-    const st = Math.max(0, k.staerke + bonus - s.malusStaerke);
+    const st = staerke(k);
     // Diener blocken nur sinnvoll: wenn sie den Angreifer töten, überleben oder immer blocken müssen.
     const block = blocker.findIndex(
       (b) =>
-        (!k.flieger || dienerFliegt(b.faehigkeit) || /reichweite/i.test(b.faehigkeit ?? '')) &&
+        (!k.flieger ||
+          sturm ||
+          dienerFliegt(b.faehigkeit) ||
+          /reichweite/i.test(b.faehigkeit ?? '')) &&
         (b.staerke >= k.widerstand ||
           b.widerstand > st ||
           /blockt immer/i.test(b.faehigkeit ?? '')),
@@ -505,13 +582,32 @@ function spielerZug(
       geblockt++;
       if (st >= b.widerstand) stand = dienerBesiegen(stand, b.nr);
       if (b.staerke >= k.widerstand) entfernen(s, k);
-    } else schaden += st;
+    } else if (aufKarte.has(k)) karteSchaden += st;
+    else schaden += st;
   }
   s.malusStaerke = 0;
   s.kreaturen.forEach((k) => (k.gebannt = false));
-  schaden += d.direkt + (s.kommandeur && KOMMANDEUR_IST_WALKER.has(d.kurz) ? 2 : 0);
 
-  const { stand: nach, verfallen } = bossTreffen(stand, schaden);
+  if (ziel) {
+    // Sprüche, die „jedes Ziel“ treffen, dürfen den Rest der Verteidigung übernehmen.
+    const rest = ziel.rest - karteSchaden;
+    if (rest > 0 && rest <= direkt) {
+      karteSchaden += rest;
+      direkt -= rest;
+    }
+    if (karteSchaden > 0) {
+      const vorher = stand.relikte.length;
+      stand = reliktTreffen(stand, ziel.id, karteSchaden, def);
+      if (stand.relikte.length < vorher) MESSUNG.relikteZerstoert++;
+      const name = def.relikte.find((r) => r.id === ziel.id)?.name;
+      notizen.push(
+        `${aufKarte.size} greifen ${name} an (${Math.min(karteSchaden, ziel.rest)} Schaden)`,
+      );
+    }
+  }
+  schaden += direkt;
+
+  const { stand: nach, verfallen } = bossTreffen(stand, schaden, def);
   log(
     `  ${s.name} (${d.kurz}, ${s.laender + s.steine} Mana): ${notizen.join(', ') || 'baut auf'}` +
       ` · greift mit ${angreifer.length} an (${geblockt} geblockt) → ${schaden - verfallen} Schaden` +
@@ -556,6 +652,13 @@ function bossRunde(
   MESSUNG.kreaturenWeg += kreaturenVorher - alle.reduce((x, s) => x + s.kreaturen.length, 0);
   if (zug.ankuendigung) log(`   ⚠ ${zug.ankuendigung}`);
 
+  if (zug.neuesRelikt) {
+    MESSUNG.relikteGelegt++;
+    log(`   🜲 Neu: ${def.relikte.find((r) => r.id === zug.neuesRelikt?.id)?.name}`);
+  }
+  for (const e of zug.reliktEffekte) log(`   🜲 ${e}`);
+  const sturm = reliktMitText(stand, def, /Diener[^.]*haben Flugfähigkeit/);
+
   let neu = bossZugEintragen(stand, zug, sicht, antwort);
 
   // Diener greifen an: wer schon da war oder Eile hat, außer reinen Blockern.
@@ -565,7 +668,7 @@ function bossRunde(
     const blocker = ziel.kreaturen.filter((k) => !k.getappt);
     let durch = 0;
     for (const x of [...angreifer].sort((a, b) => b.staerke - a.staerke)) {
-      const fliegt = dienerFliegt(x.faehigkeit);
+      const fliegt = sturm || dienerFliegt(x.faehigkeit);
       const i = blocker.findIndex(
         (k) =>
           (!fliegt || k.flieger) &&
@@ -638,6 +741,19 @@ export function spiele(
         verfallen: verfallenGesamt,
         lebenUebrig: lebend(spieler).reduce((x, s) => x + s.leben, 0),
         toteSpieler: 2 - lebend(spieler).length,
+      };
+    }
+    if (!lebend(spieler).length) {
+      log(`
+→ Niederlage in Runde ${runde}.`);
+      return {
+        sieg: false,
+        runden: runde,
+        maxPhase,
+        burstRunden,
+        verfallen: verfallenGesamt,
+        lebenUebrig: 0,
+        toteSpieler: 2,
       };
     }
     stand = bossRunde(def, stand, spieler, schadenRunde, zufall, log);

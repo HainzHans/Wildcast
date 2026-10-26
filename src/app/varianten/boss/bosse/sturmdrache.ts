@@ -46,7 +46,35 @@ export const STURMDRACHE: BossDefinition = {
 
   fragen: fragen(),
 
+  relikte: [
+    {
+      id: 'sturmkrone',
+      name: 'Sturmkrone',
+      typ: 'verzauberung',
+      verteidigung: 10,
+      text: 'Alle Diener des Drachen haben Flugfähigkeit.',
+      zerstoert: 'Die Krone der Stürme … Dafür werdet ihr im Regen stehen.',
+    },
+    {
+      id: 'blitzableiter',
+      name: 'Blitzableiter',
+      typ: 'artefakt',
+      verteidigung: 9,
+      text: 'Jeder Spieler verliert in jedem Boss-Zug 1 Leben.',
+      proZug: { leben: 1 },
+      zerstoert: 'Mein Blitzableiter! Dann trifft es euch eben direkt.',
+    },
+  ],
+
   aktionen: [
+    {
+      id: 'hort',
+      name: 'Schatz aus dem Hort',
+      schlagworte: ['beschwoerung'],
+      gewicht: 2,
+      text: 'Der Drache holt einen uralten Schatz aus seinem Hort.',
+      folgen: { relikt: true },
+    },
     {
       id: 'blitzschlag',
       name: 'Blitzschlag',

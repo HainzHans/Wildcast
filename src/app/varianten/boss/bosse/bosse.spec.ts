@@ -81,6 +81,24 @@ describe('Alle Bosse', () => {
         }
       });
 
+      it('hat eigene Artefakte oder Verzauberungen und eine Aktion, die sie legt', () => {
+        const ids = boss.relikte.map((r) => r.id);
+        expect(ids.length).toBeGreaterThanOrEqual(1);
+        expect(new Set(ids).size).toBe(ids.length);
+        expect(boss.aktionen.some((a) => a.folgen?.relikt)).toBe(true);
+        if (boss.startRelikt) expect(ids).toContain(boss.startRelikt);
+        for (const r of boss.relikte) {
+          expect(r.verteidigung, r.id).toBeGreaterThan(0);
+          if (r.proZug?.dienerName) {
+            expect(
+              boss.diener.map((d) => d.name),
+              r.id,
+            ).toContain(r.proZug.dienerName);
+          }
+          if (r.countdown) expect(r.ablauf, r.id).toBeDefined();
+        }
+      });
+
       it('hat für jede Stimmung mindestens fünf Sprüche', () => {
         for (const s of STIMMUNGEN) expect(boss.sprueche[s].length).toBeGreaterThanOrEqual(5);
       });

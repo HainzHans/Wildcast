@@ -30,7 +30,37 @@ export const KNOCHENFUERST: BossDefinition = {
   ],
   fragen: fragen('kreaturen', 'grosseKreatur', 'friedhof', 'handkarten', 'kommandeur', 'rache'),
 
+  relikte: [
+    {
+      id: 'phylakterium',
+      name: 'Phylakterium',
+      typ: 'artefakt',
+      verteidigung: 14,
+      text: 'Hier ruht die Seele des Fürsten: Solange es liegt, fällt er nicht unter 1 Leben.',
+      unsterblich: true,
+      zerstoert: 'NEIN! Meine Seele … ihr habt meine Seele zerbrochen!',
+    },
+    {
+      id: 'totenglocke',
+      name: 'Totenglocke',
+      typ: 'artefakt',
+      verteidigung: 10,
+      text: 'In jedem Boss-Zug erhebt sich ein Skelettkrieger.',
+      proZug: { diener: 1, dienerName: 'Skelettkrieger' },
+      zerstoert: 'Die Glocke schweigt. Die Toten nicht.',
+    },
+  ],
+  startRelikt: 'phylakterium',
+
   aktionen: [
+    {
+      id: 'gruft',
+      name: 'Gruft öffnen',
+      schlagworte: ['beschwoerung'],
+      gewicht: 2,
+      text: 'Der Fürst öffnet eine Gruft und holt hervor, was dort ruht.',
+      folgen: { relikt: true },
+    },
     {
       id: 'knochenhagel',
       name: 'Knochenhagel',
