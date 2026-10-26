@@ -110,7 +110,7 @@ type Dialog =
             [disabled]="!store.kannRueckgaengig()"
             (click)="store.rueckgaengig()"
           >
-            <span aria-hidden="true">↶</span> Rückgängig
+            <span aria-hidden="true">↶</span> <span class="kurz">Rückgängig</span>
           </button>
           @if (effektWuerfel()) {
             <button type="button" class="steuer" (click)="dialog.set({ art: 'liste' })">
@@ -213,8 +213,13 @@ type Dialog =
       grid-template: 'p2 p3' 1fr 'mitte mitte' auto 'p1 p4' 1fr / 1fr 1fr;
     }
     /* Bosskampf: der Boss liegt zwischen den beiden Spielern */
+    /* Die Spieler brauchen nur Name und Leben – der Boss bekommt den meisten Platz. */
     .drehen[data-spieler='2'][data-boss] {
-      grid-template: 'p2' 1fr 'boss' minmax(0, 1.6fr) 'mitte' auto 'p1' 1fr / 1fr;
+      grid-template:
+        'p2' minmax(7rem, 0.7fr)
+        'boss' minmax(0, 2.6fr)
+        'mitte' auto
+        'p1' minmax(7rem, 0.7fr) / 1fr;
     }
     .drehen app-boss-feld {
       grid-area: boss;
@@ -223,7 +228,7 @@ type Dialog =
       grid-area: mitte;
     }
     .zugleiste {
-      flex-basis: 100%;
+      flex: 1 1 14rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -266,10 +271,13 @@ type Dialog =
       opacity: 0.4;
       cursor: not-allowed;
     }
-    /* Schmale Handys: Menü nur als Symbol, damit die Leiste einzeilig bleibt */
+    /* Schmale Handys: Menü und Rückgängig nur als Symbol, damit die Leiste einzeilig bleibt */
     @media (max-width: 479px) {
       .steuer {
-        padding-inline: 0.65rem;
+        justify-content: center;
+        min-width: 2.75rem;
+        padding-inline: 0.5rem;
+        font-size: 1.1rem;
       }
       .kurz {
         position: absolute;

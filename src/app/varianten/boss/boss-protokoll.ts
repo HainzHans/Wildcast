@@ -26,10 +26,10 @@ import { STIMMUNG_NAME } from './boss-zug-dialog';
             }
             <p class="folgen">
               @for (l of e.lebenAenderungen; track $index) {
-                <span>{{ l.name }} {{ l.um }} Leben</span>
+                <span>{{ l.name }} {{ l.um < 0 ? '−' + -l.um : '+' + l.um }} Leben</span>
               }
-              @if (e.neueDiener.length) {
-                <span>+ {{ e.neueDiener.join(', ') }}</span>
+              @if (e.diener) {
+                <span>+ {{ e.diener }}</span>
               }
               @if (e.angriffsziel) {
                 <span>Angriff auf {{ e.angriffsziel }}</span>
@@ -97,7 +97,13 @@ export class BossProtokollListe {
   readonly schliessen = output<void>();
 
   protected readonly stimmung = STIMMUNG_NAME;
+  /** Neueste zuerst; gleiche neue Diener zusammengefasst („4× Skelettkrieger“). */
   protected readonly eintraege = computed(() =>
-    [...(this.store.stand()?.boss?.protokoll ?? [])].reverse(),
+    [...(this.store.stand()?.boss?.protokoll ?? [])].reverse().map((e) => {
+      const anzahl = new Map<string, number>();
+      for (const name of e.neueDiener) anzahl.set(name, (anzahl.get(name) ?? 0) + 1);
+      const diener = [...anzahl].map(([name, n]) => (n > 1 ? `${n}× ${name}` : name)).join(', ');
+      return { ...e, diener };
+    }),
   );
 }

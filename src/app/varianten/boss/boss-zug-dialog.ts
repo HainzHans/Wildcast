@@ -310,9 +310,15 @@ export class BossZugDialog implements OnDestroy {
     );
   });
 
-  protected readonly dienerText = computed(() =>
-    (this.zug()?.neueDiener ?? []).map((d) => `${d.name} ${d.staerke}/${d.widerstand}`).join(', '),
-  );
+  /** Gleiche Diener zusammengefasst: „4× Skelettkrieger 2/2“. */
+  protected readonly dienerText = computed(() => {
+    const anzahl = new Map<string, number>();
+    for (const d of this.zug()?.neueDiener ?? []) {
+      const name = `${d.name} ${d.staerke}/${d.widerstand}`;
+      anzahl.set(name, (anzahl.get(name) ?? 0) + 1);
+    }
+    return [...anzahl].map(([name, n]) => (n > 1 ? `${n}× ${name}` : name)).join(', ');
+  });
 
   /** Aus dem Protokoll, weil erst beim Eintragen feststeht, wer angreifen durfte. */
   protected readonly angriffText = computed(() => {

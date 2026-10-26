@@ -124,14 +124,14 @@ const LEBEN_MAX = 999;
                 }
               </div>
               <section class="boss-info" aria-live="polite">
-                <p class="boss-titel">
-                  {{ b.name }} <span>Level {{ b.level }} · {{ b.leben }} Leben</span>
-                </p>
+                <p class="boss-titel">{{ b.name }}</p>
+                <p class="boss-werte">Level {{ b.level }} · {{ b.leben }} Leben</p>
                 <p class="boss-beschreibung">{{ b.beschreibung }}</p>
                 <p class="boss-passiv"><strong>Passiv:</strong> {{ b.passiv }}</p>
                 @if (b.rundenEffekt) {
                   <p class="boss-passiv"><strong>Jede Runde:</strong> {{ b.rundenEffekt.text }}</p>
                 }
+                <p class="boss-passiv"><strong>Seine Karten:</strong> {{ bossKarten() }}</p>
               </section>
             </fieldset>
           }
@@ -299,8 +299,8 @@ const LEBEN_MAX = 999;
       font-size: 1.3rem;
       font-weight: 800;
     }
-    .boss-titel span {
-      font-family: var(--schrift-text);
+    .boss-werte {
+      margin: 0.1rem 0 0;
       font-size: 0.85rem;
       font-weight: 600;
       color: var(--text-leise);
@@ -361,6 +361,13 @@ export class Einrichten {
   protected readonly boss = computed(() =>
     this.eintrag()?.ids.includes('boss') ? bossMitId(this.bossId()) : null,
   );
+  /** Seine Artefakte und Verzauberungen; die Startkarte liegt schon zu Beginn. */
+  protected readonly bossKarten = computed(() => {
+    const b = this.boss();
+    return (b?.relikte ?? [])
+      .map((r) => (r.id === b?.startRelikt ? `${r.name} (liegt von Anfang an)` : r.name))
+      .join(', ');
+  });
   protected readonly wuerfelAngepasst = computed(
     () => JSON.stringify(this.wuerfel()) !== JSON.stringify(STANDARD_WUERFEL),
   );
