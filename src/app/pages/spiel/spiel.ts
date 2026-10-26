@@ -49,7 +49,8 @@ type Dialog =
     @if (store.stand(); as s) {
       <div
         class="tisch"
-        [class.drehen]="ansicht.drehen()"
+        [class.drehen]="ansicht.drehen() && !bossQuer()"
+        [class.quer]="bossQuer()"
         [attr.data-spieler]="s.spieler.length"
         [attr.data-boss]="s.boss ? '' : null"
       >
@@ -57,7 +58,7 @@ type Dialog =
           <app-spieler-feld
             [style.grid-area]="'p' + (i + 1)"
             [spieler]="p"
-            [gedreht]="ansicht.istGedreht(i, s.spieler.length)"
+            [gedreht]="gedreht(i, s.spieler.length)"
             [effektWuerfel]="effektWuerfel()"
             [bleibende]="bleibendeJeSpieler().get(p.id) ?? []"
             (leben)="store.aendereLeben(p.id, $event)"
@@ -65,14 +66,14 @@ type Dialog =
               dialog.set({
                 art: 'wirken',
                 spielerId: p.id,
-                gedreht: ansicht.istGedreht(i, s.spieler.length),
+                gedreht: gedreht(i, s.spieler.length),
               })
             "
             (zeigen)="
               dialog.set({
                 art: 'effekt',
                 nr: $event,
-                gedreht: ansicht.istGedreht(i, s.spieler.length),
+                gedreht: gedreht(i, s.spieler.length),
               })
             "
           />
@@ -179,18 +180,18 @@ type Dialog =
       grid-auto-rows: minmax(17rem, 1fr);
       overflow-y: auto;
     }
-    .tisch:not(.drehen) > app-spieler-feld {
+    .tisch:not(.drehen, .quer) > app-spieler-feld {
       grid-area: auto !important;
     }
-    .tisch:not(.drehen) .mitte {
+    .tisch:not(.drehen, .quer) .mitte {
       grid-column: 1 / -1;
       order: -2;
     }
     /* Im Bosskampf teilen sich die zwei Spieler die volle Breite unter dem Boss */
-    .tisch[data-boss]:not(.drehen) {
+    .tisch[data-boss]:not(.drehen, .quer) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .tisch:not(.drehen) app-boss-feld {
+    .tisch:not(.drehen, .quer) app-boss-feld {
       grid-column: 1 / -1;
       order: -1;
     }
@@ -220,6 +221,20 @@ type Dialog =
         'boss' minmax(0, 2.6fr)
         'mitte' auto
         'p1' minmax(7rem, 0.7fr) / 1fr;
+    }
+    /* Bosskampf mit dem Handy quer: links die Spieler untereinander, rechts groß der Boss */
+    .quer {
+      overflow: hidden;
+      grid-template:
+        'p1 boss' 1fr
+        'p2 boss' 1fr
+        'mitte boss' auto / minmax(12rem, 0.4fr) minmax(0, 1fr);
+    }
+    .quer app-boss-feld {
+      grid-area: boss;
+    }
+    .quer .mitte {
+      grid-area: mitte;
     }
     .drehen app-boss-feld {
       grid-area: boss;
@@ -315,6 +330,13 @@ export class Spiel implements OnDestroy {
   private readonly wach = inject(WachHalten);
 
   protected readonly dialog = signal<Dialog | null>(null);
+
+  /** Handy quer im Bosskampf: Spieler links, Boss rechts, niemand auf dem Kopf. */
+  protected readonly bossQuer = computed(() => !!this.store.stand()?.boss && this.ansicht.quer());
+
+  protected gedreht(index: number, anzahl: number): boolean {
+    return !this.bossQuer() && this.ansicht.istGedreht(index, anzahl);
+  }
 
   private readonly kombination = computed(() => kombinieren(this.store.stand()?.varianten ?? []));
   protected readonly effektWuerfel = computed(

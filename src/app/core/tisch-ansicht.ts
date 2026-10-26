@@ -4,6 +4,8 @@ import { Einstellungen } from './einstellungen';
 
 /** Ab dieser Breite (Laptop, Tablet quer) schauen alle von einer Seite drauf. */
 const SCHMAL = '(max-width: 899px)';
+/** Ein Handy im Querformat: breiter als hoch, aber niedrig. */
+const HANDY_QUER = '(orientation: landscape) and (max-height: 560px) and (max-width: 1100px)';
 
 /**
  * Entscheidet, ob die Spielerfelder zum jeweiligen Spieler hin gedreht werden –
@@ -13,6 +15,9 @@ const SCHMAL = '(max-width: 899px)';
 export class TischAnsicht {
   private readonly abfrage = typeof matchMedia === 'function' ? matchMedia(SCHMAL) : null;
   private readonly schmal = signal(this.abfrage?.matches ?? true);
+  private readonly querAbfrage = typeof matchMedia === 'function' ? matchMedia(HANDY_QUER) : null;
+  /** Handy quer gedreht – dann schauen alle von der langen Seite drauf. */
+  readonly quer = signal(this.querAbfrage?.matches ?? false);
 
   /** Vom Spieler abschaltbar, z. B. wenn alle auf einer Seite sitzen. */
   readonly tischmodus = inject(Einstellungen).tischmodus;
@@ -20,6 +25,7 @@ export class TischAnsicht {
 
   constructor() {
     this.abfrage?.addEventListener('change', (e) => this.schmal.set(e.matches));
+    this.querAbfrage?.addEventListener('change', (e) => this.quer.set(e.matches));
   }
 
   /**

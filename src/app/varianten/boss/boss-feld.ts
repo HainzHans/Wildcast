@@ -276,7 +276,7 @@ const SAMMELZEIT = 1500;
       gap: 0.55rem;
     }
     /* Breite Bildschirme: links Leben und Karten, rechts die Diener */
-    @container boss (min-width: 46rem) {
+    @container boss (min-width: 33rem) {
       .boss {
         grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
       }
@@ -286,12 +286,14 @@ const SAMMELZEIT = 1500;
     }
     .kopf {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.3rem 0.4rem;
     }
     h2 {
-      flex: 1;
+      flex: 1 1 9rem;
       min-width: 0;
+      overflow-wrap: anywhere;
       font-size: clamp(1.1rem, 5vw, 1.4rem);
       font-weight: 800;
       line-height: 1.15;
