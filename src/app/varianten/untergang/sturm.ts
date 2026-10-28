@@ -96,6 +96,80 @@ export const ABWUERFE: Abwurf[] = [
     name: 'Heimkehr',
     text: 'Wirke deinen Kommandeur das nächste Mal ohne Kommandeurssteuer.',
   },
+  {
+    id: 'sanitaeter',
+    name: 'Sanitäter',
+    text: 'Erhalte 10 Leben.',
+    leben: 10,
+  },
+  {
+    id: 'notration',
+    name: 'Notration',
+    text: 'Erhalte 4 Leben und erzeuge einen Schatz-Spielstein.',
+    leben: 4,
+  },
+  {
+    id: 'bunker',
+    name: 'Bunker',
+    text: 'Der Sturm verschont dich in der nächsten Runde. Erhalte 2 Leben.',
+    leben: 2,
+    schutz: true,
+  },
+  {
+    id: 'spaehdrohne',
+    name: 'Spähdrohne',
+    text: 'Ein Gegner deiner Wahl zeigt dir seine Hand. Ziehe eine Karte.',
+  },
+  {
+    id: 'munitionskiste',
+    name: 'Munitionskiste',
+    text: 'Lege je eine +1/+1-Marke auf bis zu drei Kreaturen deiner Wahl, die du kontrollierst.',
+  },
+  {
+    id: 'kampfhund',
+    name: 'Kampfhund',
+    text: 'Erzeuge einen 3/3 grünen Wolf-Kreaturenspielstein mit Eile.',
+  },
+  {
+    id: 'rettungsseil',
+    name: 'Rettungsseil',
+    text: 'Bringe eine Kreaturenkarte mit Manawert 3 oder weniger aus deinem Friedhof ins Spiel.',
+  },
+  {
+    id: 'tarnnetz',
+    name: 'Tarnnetz',
+    text: 'Bleibende Karten, die du kontrollierst, haben bis zu deinem nächsten Zug Fluchsicherheit.',
+  },
+  {
+    id: 'funkgeraet',
+    name: 'Funkgerät',
+    text: 'Suche in deiner Bibliothek nach einer Kreaturenkarte, zeige sie offen vor, nimm sie auf die Hand und mische danach.',
+  },
+  {
+    id: 'brandsatz',
+    name: 'Brandsatz',
+    text: 'Füge jeder Kreatur, die ein Gegner kontrolliert, 1 Schaden zu.',
+  },
+  {
+    id: 'energiezelle',
+    name: 'Energiezelle',
+    text: 'Erzeuge zwei Schatz-Spielsteine und ziehe eine Karte.',
+  },
+  {
+    id: 'fallschirmjaeger',
+    name: 'Fallschirmjäger',
+    text: 'Erzeuge zwei 1/1 weiße Soldat-Kreaturenspielsteine mit Flugfähigkeit.',
+  },
+  {
+    id: 'werkzeugkasten',
+    name: 'Werkzeugkasten',
+    text: 'Nimm eine Artefaktkarte aus deinem Friedhof auf die Hand.',
+  },
+  {
+    id: 'kommandokapsel',
+    name: 'Kommandokapsel',
+    text: 'Dein Kommandeur erhält bis zum Ende deines nächsten Zugs +3/+3 und Trampelschaden.',
+  },
 ];
 
 export interface SturmStand {
