@@ -84,7 +84,7 @@ export class SpielStore {
       effekte: [],
       optionen,
       boss: varianten.includes('boss')
-        ? bossStarten(bossMitId(optionen.bossId), this.zufall)
+        ? bossStarten(bossMitId(optionen.bossId), this.zufall, optionen.bossPlaner)
         : undefined,
     });
   }

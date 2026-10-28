@@ -1,3 +1,4 @@
+import type { Planerstufe } from '../../varianten/boss/boss-modell';
 import type { BossStand } from '../../varianten/boss/boss-stand';
 import type { WuerfelEinstellungen } from '../../varianten/mana-wuerfel/wuerfel-einstellungen';
 
@@ -63,4 +64,5 @@ export interface Spielstand {
 export interface SpielOptionen {
   manaWuerfel?: WuerfelEinstellungen;
   bossId?: string;
+  bossPlaner?: Planerstufe;
 }

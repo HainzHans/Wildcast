@@ -1,4 +1,5 @@
 import { Zufall } from '../../core/zufall';
+import { planerFaktoren } from './boss-planer';
 import {
   Antwort,
   BossAktion,
@@ -231,9 +232,15 @@ export function waehleAktion(
 ): BossAktion {
   const gesperrt = new Set([...ausschluss, ...lage.letzteAktionen]);
   const kannLegen = freieRelikte(boss, lage).length > 0;
-  const kandidaten = boss.aktionen
-    .filter((a) => !gesperrt.has(a.id) && beherrscht(a, lage) && (kannLegen || !a.folgen?.relikt))
-    .map((a) => ({ wert: a, gewicht: aktionsGewicht(a, lage, s) }));
+  const moeglich = boss.aktionen.filter(
+    (a) => !gesperrt.has(a.id) && beherrscht(a, lage) && (kannLegen || !a.folgen?.relikt),
+  );
+  // Ein vorausdenkender Boss schiebt die Gewichte zu den Zügen, die sich lohnen.
+  const faktoren = planerFaktoren(boss, lage, moeglich, lage.planer);
+  const kandidaten = moeglich.map((a, i) => ({
+    wert: a,
+    gewicht: aktionsGewicht(a, lage, s) * faktoren[i],
+  }));
   return (
     gewichtetAus(kandidaten, zufall) ??
     boss.aktionen.find((a) => !gesperrt.has(a.id)) ??

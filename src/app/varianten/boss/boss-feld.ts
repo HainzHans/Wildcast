@@ -12,6 +12,7 @@ import {
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { HalteKnopf } from '../../shared/ui/halte-knopf';
 import { phase, TEMPERAMENTE } from './boss-logik';
+import { PLANERSTUFEN } from './boss-planer';
 import { BossStand } from './boss-stand';
 import { bossMitId } from './bosse';
 
@@ -56,6 +57,9 @@ const SAMMELZEIT = 1500;
         }
         <p class="laune">
           Heute <strong>{{ laune().name }}</strong> – {{ laune().text }}
+          @if (verstand(); as v) {
+            · <strong>{{ v }}</strong>
+          }
         </p>
 
         <div class="leben">
@@ -689,6 +693,11 @@ export class BossFeld implements OnDestroy {
   protected readonly laune = computed(
     () => TEMPERAMENTE[this.stand().temperament ?? 'unberechenbar'],
   );
+  /** Nur anzeigen, wenn der Boss vorausdenkt. */
+  protected readonly verstand = computed(() => {
+    const p = this.stand().planer ?? 'instinkt';
+    return p === 'instinkt' ? null : PLANERSTUFEN[p].name;
+  });
   protected readonly phase = computed(() => phase(this.stand().leben, this.stand().maxLeben));
   protected readonly prozent = computed(() => (this.stand().leben / this.stand().maxLeben) * 100);
   protected readonly getappt = computed(() => this.stand().diener.filter((d) => d.getappt).length);

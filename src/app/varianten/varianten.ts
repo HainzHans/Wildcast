@@ -30,6 +30,7 @@ export const VARIANTEN: Variante[] = [
     regeln: [
       'Zehn Bosse von Level 1 bis 10, jeder mit eigenen Dienern, Fähigkeiten und Spezialangriff. Je höher das Level, desto mehr Leben und desto härter die Angriffe.',
       'Jeder Boss hat in jeder Partie eine andere Laune (z. B. jähzornig oder listig) und beherrscht nur einen Teil seiner Aktionen. Er spielt sich dadurch jedes Mal anders, bleibt aber gleich stark.',
+      'Beim Einrichten wählt ihr den Boss-Verstand: Mit „Instinkt“ handelt er aus Stimmung und Laune, als „Taktiker“ oder „Gerissen“ rechnet er seine Züge zwei Runden voraus und wird deutlich gefährlicher.',
       'Ihr macht eure Züge, dann startet ihr den Boss-Zug. Danach beginnt die nächste Runde.',
       'Im Boss-Zug stellt der Boss bis zu zwei Fragen zur Lage am Tisch. Je nach Antwort und Verlauf entscheidet er, ob er angreift, aufräumt, Diener ruft oder sich heilt.',
       'Der Boss beschwört jede Runde einen neuen Diener, solange er weniger als sechs hat. Hat er höchstens einen, kommt ein weiterer dazu. Aktionen können zusätzliche Diener rufen.',

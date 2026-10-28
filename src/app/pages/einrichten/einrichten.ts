@@ -19,6 +19,8 @@ import {
 } from '../../varianten/mana-wuerfel/wuerfel-einstellungen';
 import { WuerfelRegeln } from '../../varianten/mana-wuerfel/wuerfel-regeln';
 import { BOSSE, bossMitId } from '../../varianten/boss/bosse';
+import { Planerstufe } from '../../varianten/boss/boss-modell';
+import { PLANERSTUFEN } from '../../varianten/boss/boss-planer';
 import { kombinieren } from '../../varianten/varianten';
 
 const LEBEN_AUSWAHL = [20, 40];
@@ -133,6 +135,25 @@ const LEBEN_MAX = 999;
                 }
                 <p class="boss-passiv"><strong>Seine Karten:</strong> {{ bossKarten() }}</p>
               </section>
+            </fieldset>
+
+            <fieldset>
+              <legend>Boss-Verstand</legend>
+              <div class="auswahl" role="radiogroup" aria-label="Wie weit der Boss vorausdenkt">
+                @for (p of planerStufen; track p.id) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="knopf"
+                    [class.knopf--haupt]="planer() === p.id"
+                    [attr.aria-checked]="planer() === p.id"
+                    (click)="planer.set(p.id)"
+                  >
+                    {{ p.name }}
+                  </button>
+                }
+              </div>
+              <p class="planer-text">{{ planerText() }}</p>
             </fieldset>
           }
 
@@ -299,6 +320,11 @@ const LEBEN_MAX = 999;
       font-size: 1.3rem;
       font-weight: 800;
     }
+    .planer-text {
+      margin: 0.5rem 0 0;
+      font-size: 0.9rem;
+      color: var(--text-leise);
+    }
     .boss-werte {
       margin: 0.1rem 0 0;
       font-size: 0.85rem;
@@ -357,6 +383,15 @@ export class Einrichten {
     () => this.eintrag()?.ids.includes('mana-wuerfel') ?? false,
   );
   protected readonly bosse = BOSSE;
+  protected readonly planerStufen = (Object.keys(PLANERSTUFEN) as Planerstufe[]).map((id) => ({
+    id,
+    ...PLANERSTUFEN[id],
+  }));
+  protected readonly planer = signal<Planerstufe>('instinkt');
+  protected readonly planerText = computed(() => {
+    const p = PLANERSTUFEN[this.planer()];
+    return `${p.name}: Der Boss ${p.text}. ${p.hinweis}`;
+  });
   protected readonly bossId = signal(BOSSE[0].id);
   protected readonly boss = computed(() =>
     this.eintrag()?.ids.includes('boss') ? bossMitId(this.bossId()) : null,
@@ -411,7 +446,7 @@ export class Einrichten {
     const namen = this.plaetze().map((i) => this.namen()[i].trim() || `Spieler ${i + 1}`);
     const optionen = {
       ...(this.mitWuerfel() ? { manaWuerfel: this.wuerfel() } : {}),
-      ...(this.boss() ? { bossId: this.bossId() } : {}),
+      ...(this.boss() ? { bossId: this.bossId(), bossPlaner: this.planer() } : {}),
     };
     if (optionen.manaWuerfel) merkeWuerfelEinstellungen(optionen.manaWuerfel);
     this.store.starten(v.ids, namen, this.startLeben(), optionen);

@@ -8,6 +8,7 @@ import {
   FrageId,
   Lage,
   LiegendesRelikt,
+  Planerstufe,
   Stimmung,
   Temperament,
 } from './boss-modell';
@@ -68,6 +69,8 @@ export interface BossStand {
   relikte: LiegendesRelikt[];
   /** Seit seinem letzten Zug zerstörte Karte – darauf reagiert er. */
   verlorenesRelikt: string | null;
+  /** Wie weit er vorausdenkt. Fehlt in älteren Spielständen (dann Instinkt). */
+  planer?: Planerstufe;
 }
 
 function dienerAnlegen(stand: BossStand, vorlagen: DienerVorlage[]): BossStand {
@@ -75,7 +78,11 @@ function dienerAnlegen(stand: BossStand, vorlagen: DienerVorlage[]): BossStand {
   return { ...stand, diener: [...stand.diener, ...neu], naechsteNr: stand.naechsteNr + neu.length };
 }
 
-export function bossStarten(boss: BossDefinition, zufall: Zufall): BossStand {
+export function bossStarten(
+  boss: BossDefinition,
+  zufall: Zufall,
+  planer: Planerstufe = 'instinkt',
+): BossStand {
   const leer: BossStand = {
     bossId: boss.id,
     leben: boss.leben,
@@ -98,6 +105,7 @@ export function bossStarten(boss: BossDefinition, zufall: Zufall): BossStand {
     repertoire: repertoireWaehlen(boss, zufall),
     relikte: [],
     verlorenesRelikt: null,
+    planer,
   };
   const startRelikt = boss.relikte.find((r) => r.id === boss.startRelikt);
   if (startRelikt) {
@@ -207,6 +215,8 @@ export function bossLage(
     repertoire: stand.repertoire?.length ? stand.repertoire : undefined,
     relikte: stand.relikte,
     verlorenesRelikt: stand.verlorenesRelikt ?? undefined,
+    dienerMacht: stand.diener.filter((d) => !d.greiftNichtAn).reduce((s, d) => s + d.staerke, 0),
+    planer: stand.planer ?? 'instinkt',
   };
 }
 

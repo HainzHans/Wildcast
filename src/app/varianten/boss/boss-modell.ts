@@ -128,6 +128,13 @@ export interface Relikt {
  */
 export type Temperament = 'jaehzornig' | 'listig' | 'bruetend' | 'zaeh' | 'unberechenbar';
 
+/**
+ * Wie weit der Boss vorausdenkt. „Instinkt“ ist das ursprüngliche Verhalten (Stimmung,
+ * Temperament, Antworten). Taktiker und Gerissen rechnen zusätzlich jede Aktion zwei Runden
+ * voraus und bevorzugen, was sich lohnt – ohne dabei berechenbar zu werden.
+ */
+export type Planerstufe = 'instinkt' | 'taktiker' | 'gerissen';
+
 /** Was jede Runde im Boss-Zug automatisch passiert, z. B. Gorvaks Hunger. */
 export interface RundenEffekt {
   text: string;
@@ -201,6 +208,10 @@ export interface Lage {
   relikte?: LiegendesRelikt[];
   /** Die Karte, die die Spieler seit seinem letzten Zug zerstört haben – das macht ihn wütend. */
   verlorenesRelikt?: string;
+  /** Summe der Stärke seiner Diener, die angreifen können. */
+  dienerMacht?: number;
+  /** Wie weit er vorausdenkt. Ohne Angabe: Instinkt. */
+  planer?: Planerstufe;
 }
 
 export interface AusgefuehrteAktion {

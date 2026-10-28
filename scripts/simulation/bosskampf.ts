@@ -4,10 +4,11 @@
  *
  *   node scripts/simulation/start.mjs            → Tabelle über alle Bosse und Deck-Paarungen
  *   node scripts/simulation/start.mjs beispiel   → eine Partie Zug für Zug
+ *   SIM_PLANER=taktiker node scripts/simulation/start.mjs   → mit vorausdenkendem Boss
  */
 import { zufallMitStartwert, Zufall } from '../../src/app/core/zufall';
 import { bossZug, fragenFuerZug, phase } from '../../src/app/varianten/boss/boss-logik';
-import { Antworten, BossDefinition } from '../../src/app/varianten/boss/boss-modell';
+import { Antworten, BossDefinition, Planerstufe } from '../../src/app/varianten/boss/boss-modell';
 import {
   bossLage,
   bossStarten,
@@ -712,7 +713,7 @@ export function spiele(
     malusStaerke: 0,
     malusMana: 0,
   }));
-  let stand = bossStarten(def, zufall);
+  let stand = bossStarten(def, zufall, (process.env['SIM_PLANER'] as Planerstufe) ?? 'instinkt');
   let maxPhase = 1;
   let burstRunden = 0;
   let verfallenGesamt = 0;
