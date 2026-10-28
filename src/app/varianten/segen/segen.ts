@@ -130,6 +130,138 @@ export const SEGEN: Segen[] = [
     text: 'Solange du genau eine Kreatur kontrollierst, erhält sie +3/+3 und Trampelschaden.',
   },
 
+  {
+    id: 'zaehigkeit',
+    name: 'Zähigkeit',
+    text: 'Du startest mit 3 zusätzlichen Leben. Dein Kommandeur erhält +0/+2.',
+    leben: 3,
+  },
+  {
+    id: 'himmelsschwingen',
+    name: 'Himmelsschwingen',
+    text: 'Dein Kommandeur hat Flugfähigkeit.',
+  },
+  {
+    id: 'schildwache',
+    name: 'Schildwache',
+    text: 'Dein Kommandeur hat Fluchsicherheit.',
+  },
+  {
+    id: 'veteran',
+    name: 'Veteran',
+    text: 'Dein Kommandeur kommt für jedes frühere Wirken aus der Kommandozone mit einer zusätzlichen +1/+1-Marke ins Spiel.',
+  },
+  {
+    id: 'dornenhaut',
+    name: 'Dornenhaut',
+    text: 'Immer wenn eine Kreatur dich angreift, verliert ihr Beherrscher 1 Leben.',
+  },
+  {
+    id: 'kunsthandwerk',
+    name: 'Kunsthandwerk',
+    text: 'Artefakt- und Verzauberungszauber, die du wirkst, kosten {1} weniger.',
+  },
+  {
+    id: 'urgewalt',
+    name: 'Urgewalt',
+    text: 'Deine Zaubersprüche mit Manawert 6 oder mehr kosten {2} weniger.',
+  },
+  {
+    id: 'heilkunst',
+    name: 'Heilkunst',
+    text: 'Immer wenn du einen Spontanzauber oder eine Hexerei wirkst, erhältst du 1 Leben.',
+  },
+  {
+    id: 'seelenernte',
+    name: 'Seelenernte',
+    text: 'Immer wenn eine Kreatur eines Gegners stirbt, erhältst du 1 Leben.',
+  },
+  {
+    id: 'friedhofsgaertner',
+    name: 'Friedhofsgärtner',
+    text: 'Einmal in jedem deiner Züge darfst du ein Land aus deinem Friedhof spielen.',
+  },
+  {
+    id: 'wachstum',
+    name: 'Wachstum',
+    text: 'Lege am Ende deines Zugs eine +1/+1-Marke auf eine Kreatur, die du kontrollierst.',
+  },
+  {
+    id: 'brutstaette',
+    name: 'Brutstätte',
+    text: 'Einmal in jedem Zug: Wenn du einen oder mehrere Kreaturenspielsteine erzeugst, erzeuge einen weiteren dieser Spielsteine.',
+  },
+  {
+    id: 'grundsteuer',
+    name: 'Grundsteuer',
+    text: 'Zu Beginn deines Zugs erzeugst du einen Schatz-Spielstein, falls du weniger Länder kontrollierst als ein Gegner.',
+  },
+  {
+    id: 'wissensdurst',
+    name: 'Wissensdurst',
+    text: 'Zu Beginn deines Ziehsegments ziehst du zwei zusätzliche Karten, falls du keine Karten auf der Hand hast.',
+  },
+  {
+    id: 'unbeugsam',
+    name: 'Unbeugsam',
+    text: 'Bleibende Karten, die du kontrollierst, erhalten Unzerstörbarkeit bis zum Ende des Zugs.',
+    einmalig: true,
+  },
+  {
+    id: 'nebelschleier',
+    name: 'Nebelschleier',
+    text: 'Verhindere allen Kampfschaden, der in diesem Zug zugefügt würde.',
+    einmalig: true,
+  },
+  {
+    id: 'wiederbelebung',
+    name: 'Wiederbelebung',
+    text: 'Bringe eine Kreaturenkarte aus deinem Friedhof ins Spiel.',
+    einmalig: true,
+  },
+  {
+    id: 'echo',
+    name: 'Echo',
+    text: 'Kopiere einen Spontanzauber oder eine Hexerei, den oder die du wirkst. Du darfst neue Ziele wählen.',
+    einmalig: true,
+  },
+  {
+    id: 'lehrmeister',
+    name: 'Lehrmeister',
+    text: 'Suche in deiner Bibliothek nach einer Karte, nimm sie auf die Hand und mische danach.',
+    einmalig: true,
+  },
+  {
+    id: 'heilsegen',
+    name: 'Heilsegen',
+    text: 'Erhalte 10 Leben.',
+    einmalig: true,
+  },
+  {
+    id: 'sturmangriff',
+    name: 'Sturmangriff',
+    text: 'Kreaturen, die du kontrollierst, erhalten +2/+0 und Trampelschaden bis zum Ende des Zugs.',
+    einmalig: true,
+  },
+  {
+    id: 'entzauberung',
+    name: 'Entzauberung',
+    text: 'Zerstöre ein Artefakt oder eine Verzauberung deiner Wahl.',
+    einmalig: true,
+  },
+  {
+    id: 'bannender-blick',
+    name: 'Bannender Blick',
+    text: 'Tappe bis zu zwei Kreaturen deiner Wahl. Sie enttappen in ihrem nächsten Enttappsegment nicht.',
+    einmalig: true,
+  },
+  {
+    id: 'tiefer-griff',
+    name: 'Tiefer Griff',
+    text: 'Schau dir die obersten sieben Karten deiner Bibliothek an. Nimm zwei davon auf die Hand und lege den Rest in beliebiger Reihenfolge unter die Bibliothek.',
+    einmalig: true,
+  },
+
   // ── Pakte: stark, aber mit Haken ─────────────────────────────────
   {
     id: 'blutpakt',
@@ -185,6 +317,56 @@ export const SEGEN: Segen[] = [
     id: 'offenes-buch',
     name: 'Offenes Buch',
     text: 'Ziehe in deinem Ziehsegment eine zusätzliche Karte. Du spielst mit offener Hand.',
+    pakt: true,
+  },
+  {
+    id: 'dunkler-handel',
+    name: 'Dunkler Handel',
+    text: 'Zu Beginn deines Zugs erzeugst du einen Schatz-Spielstein und verlierst 1 Leben.',
+    pakt: true,
+  },
+  {
+    id: 'berserker',
+    name: 'Berserker',
+    text: 'Dein Kommandeur erhält +2/+0 und Doppelschlag und greift in jedem Kampf an, falls möglich.',
+    pakt: true,
+  },
+  {
+    id: 'wissen-um-jeden-preis',
+    name: 'Wissen um jeden Preis',
+    text: 'Ziehe in deinem Ziehsegment zwei zusätzliche Karten. Immer wenn du eine Karte außerhalb deines Ziehsegments ziehst, verlierst du 1 Leben.',
+    pakt: true,
+  },
+  {
+    id: 'verfluchte-krone',
+    name: 'Verfluchte Krone',
+    text: 'Du startest mit 10 zusätzlichen Leben, kannst aber keine Leben erhalten.',
+    pakt: true,
+    leben: 10,
+  },
+  {
+    id: 'titanenblut',
+    name: 'Titanenblut',
+    text: 'Kreaturen, die du kontrollierst, erhalten +1/+1. Deine Kreaturenzauber kosten {1} mehr.',
+    pakt: true,
+  },
+  {
+    id: 'bannkreis',
+    name: 'Bannkreis',
+    text: 'Du und bleibende Karten, die du kontrollierst, haben Fluchsicherheit. Du kannst keine Spontanzauber wirken.',
+    pakt: true,
+  },
+  {
+    id: 'feuerseele',
+    name: 'Feuerseele',
+    text: 'Immer wenn du einen Spontanzauber oder eine Hexerei wirkst, verliert jeder Gegner 1 Leben. Du startest mit 5 Leben weniger.',
+    pakt: true,
+    leben: -5,
+  },
+  {
+    id: 'glaeserner-schild',
+    name: 'Gläserner Schild',
+    text: 'Kreaturen, die du kontrollierst, erhalten +0/+3. Sie können nicht angreifen, solange du mehr Leben hast als jeder Gegner.',
     pakt: true,
   },
 ];
