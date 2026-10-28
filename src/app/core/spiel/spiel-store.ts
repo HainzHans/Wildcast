@@ -17,6 +17,13 @@ import {
 import { bossMitId } from '../../varianten/boss/bosse';
 import { EffektArchiv } from '../../varianten/mana-wuerfel/effekt-archiv';
 import { wuerfleEffekt } from '../../varianten/mana-wuerfel/wuerfel';
+import {
+  lebenBeimErscheinen,
+  rundeBeenden,
+  STANDARD_WELTEN,
+  weltenStarten,
+} from '../../varianten/welten/welt-stand';
+import { Welt, weltMitId } from '../../varianten/welten/welten';
 import { lesen, schreiben } from '../speicher';
 import { ZUFALL } from '../zufall';
 import { Effekt, SpielOptionen, Spielstand, VarianteId } from './modell';
@@ -64,6 +71,9 @@ export class SpielStore {
 
   readonly stand = this._stand.asReadonly();
   readonly kannRueckgaengig = computed(() => this.verlauf().length > 0);
+  /** Eine Welt ist gerade erschienen und soll groß aufgedeckt werden. */
+  private readonly _weltAufdecken = signal(false);
+  readonly weltAufdecken = this._weltAufdecken.asReadonly();
 
   constructor() {
     effect(() => schreiben(SCHLUESSEL, this._stand()));
@@ -77,12 +87,18 @@ export class SpielStore {
   ): void {
     this.verlauf.set([]);
     const spieler = namen.map((name, i) => ({ id: i + 1, name, leben: startLeben }));
+    const welt = varianten.includes('welten')
+      ? weltenStarten(optionen.welten ?? STANDARD_WELTEN, spieler.length, this.zufall)
+      : undefined;
+    const erste = welt && weltMitId(welt.aktuell);
+    this._weltAufdecken.set(!!welt);
     this._stand.set({
       varianten,
       gestartet: new Date().toISOString(),
-      spieler,
+      spieler: erste ? lebenBeimErscheinen(erste, spieler) : spieler,
       effekte: [],
       optionen,
+      welt,
       boss: varianten.includes('boss')
         ? bossStarten(bossMitId(optionen.bossId), this.zufall, optionen.bossPlaner)
         : undefined,
@@ -91,6 +107,7 @@ export class SpielStore {
 
   beenden(): void {
     this.verlauf.set([]);
+    this._weltAufdecken.set(false);
     this._stand.set(null);
   }
 
@@ -121,6 +138,35 @@ export class SpielStore {
       ...s,
       effekte: s.effekte.map((e) => (e.nr === nr ? { ...e, zerstoert: true } : e)),
     }));
+  }
+
+  // ── Weltenwandel ──────────────────────────────────────────────
+
+  /** Jeder war einmal dran. Gibt die neue Welt zurück, falls eine erscheint. */
+  rundeBeenden(): Welt | null {
+    if (!this._stand()?.welt) return null;
+    let neu: Welt | null = null;
+    this.aendern((s) => {
+      const r = this.weltWeiter(s);
+      neu = r.neu;
+      return r.stand;
+    });
+    return neu;
+  }
+
+  weltGesehen(): void {
+    this._weltAufdecken.set(false);
+  }
+
+  /** Zählt die Runde der Welten weiter und trägt beim Wechsel die Leben der neuen Welt ein. */
+  private weltWeiter(s: Spielstand): { stand: Spielstand; neu: Welt | null } {
+    if (!s.welt) return { stand: s, neu: null };
+    const { stand: welt, neu } = rundeBeenden(s.welt, s.spieler.length, this.zufall);
+    if (neu) this._weltAufdecken.set(true);
+    return {
+      stand: { ...s, welt, spieler: neu ? lebenBeimErscheinen(neu, s.spieler) : s.spieler },
+      neu,
+    };
   }
 
   // ── Bosskampf ─────────────────────────────────────────────────
@@ -176,16 +222,21 @@ export class SpielStore {
       bossLage(s.boss, s.spieler, antworten),
       this.zufall,
     );
-    this.aendern((alt) => ({
-      ...alt,
-      spieler: alt.spieler.map((p) => ({
-        ...p,
-        leben:
-          p.leben +
-          zug.lebenAenderungen.filter((l) => l.spielerId === p.id).reduce((n, l) => n + l.um, 0),
-      })),
-      boss: alt.boss && bossZugEintragen(alt.boss, zug, alt.spieler, antworten),
-    }));
+    this.aendern(
+      (alt) =>
+        this.weltWeiter({
+          ...alt,
+          spieler: alt.spieler.map((p) => ({
+            ...p,
+            leben:
+              p.leben +
+              zug.lebenAenderungen
+                .filter((l) => l.spielerId === p.id)
+                .reduce((n, l) => n + l.um, 0),
+          })),
+          boss: alt.boss && bossZugEintragen(alt.boss, zug, alt.spieler, antworten),
+        }).stand,
+    );
     return zug;
   }
 
@@ -198,6 +249,7 @@ export class SpielStore {
   rueckgaengig(): void {
     const verlauf = this.verlauf();
     if (!verlauf.length) return;
+    this._weltAufdecken.set(false);
     this._stand.set(verlauf[verlauf.length - 1]);
     this.verlauf.set(verlauf.slice(0, -1));
   }

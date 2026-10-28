@@ -1,12 +1,13 @@
 import type { Planerstufe } from '../../varianten/boss/boss-modell';
 import type { BossStand } from '../../varianten/boss/boss-stand';
 import type { WuerfelEinstellungen } from '../../varianten/mana-wuerfel/wuerfel-einstellungen';
+import type { WeltEinstellungen, WeltStand } from '../../varianten/welten/welt-stand';
 
 /** Kennung einer Spielvariante. Neue Varianten kommen hier dazu. */
-export type VarianteId = 'mana-wuerfel' | 'boss';
+export type VarianteId = 'mana-wuerfel' | 'boss' | 'welten';
 
 /** Werkzeuge, die eine Variante auf dem Spieltisch einblendet. */
-export type Werkzeug = 'leben' | 'effekt-wuerfel' | 'boss';
+export type Werkzeug = 'leben' | 'effekt-wuerfel' | 'boss' | 'welt';
 
 export interface Variante {
   id: VarianteId;
@@ -59,10 +60,13 @@ export interface Spielstand {
   optionen?: SpielOptionen;
   /** Nur im Bosskampf. */
   boss?: BossStand;
+  /** Nur im Weltenwandel. */
+  welt?: WeltStand;
 }
 
 export interface SpielOptionen {
   manaWuerfel?: WuerfelEinstellungen;
   bossId?: string;
   bossPlaner?: Planerstufe;
+  welten?: WeltEinstellungen;
 }

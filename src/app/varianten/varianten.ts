@@ -47,6 +47,25 @@ export const VARIANTEN: Variante[] = [
     werkzeuge: ['leben', 'boss'],
     verfuegbar: true,
   },
+  {
+    id: 'welten',
+    name: 'Weltenwandel',
+    untertitel: 'Alle paar Runden eine neue Welt – mit einer Regel, die für alle gilt.',
+    spieler: { min: 2, max: 4, standard: 3 },
+    startLeben: 40,
+    regeln: [
+      'Zu Beginn erscheint die erste Welt. Ihre Regel gilt für alle Spieler, bis die nächste Welt erscheint.',
+      'Eine Runde ist vorbei, wenn jeder Spieler einmal dran war. Dann tippt ihr auf „Runde beenden“.',
+      'Nach der beim Einrichten gewählten Rundenzahl verschwindet die alte Welt und eine neue erscheint. Die alte Regel endet sofort.',
+      'Manche Welten lösen beim Erscheinen einmalig etwas aus. Lebensänderungen trägt die App selbst ein.',
+      'Normale Welten ändern die Regeln ein wenig, Chaos-Welten bringen große Ausschläge, verrückte Welten seltsame Mechaniken. Ihr wählt eine Art oder alle gemischt.',
+      'Keine Welt kommt zweimal, bevor nicht alle gewählten Welten dran waren.',
+      '„Links“ ist der nächste Spieler in Zugreihenfolge.',
+      'Im Bosskampf beendet der Boss-Zug die Runde. Die Welten gelten dort nur für die Spieler, nicht für den Boss.',
+    ],
+    werkzeuge: ['leben', 'welt'],
+    verfuegbar: true,
+  },
 ];
 
 export function varianteMitId(id: string | undefined): Variante | undefined {

@@ -22,6 +22,10 @@ import { EffektKarte } from '../../varianten/mana-wuerfel/effekt-karte';
 import { EffektListe } from '../../varianten/mana-wuerfel/effekt-liste';
 import { WirkenDialog } from '../../varianten/mana-wuerfel/wirken-dialog';
 import { kombinieren } from '../../varianten/varianten';
+import { rundenBisWechsel } from '../../varianten/welten/welt-stand';
+import { WeltBand } from '../../varianten/welten/welt-band';
+import { WeltKarte } from '../../varianten/welten/welt-karte';
+import { weltMitId } from '../../varianten/welten/welten';
 import { SpielerFeld } from './spieler-feld';
 
 type Dialog =
@@ -29,7 +33,8 @@ type Dialog =
   | { art: 'effekt'; nr: number; gedreht: boolean }
   | { art: 'liste' }
   | { art: 'bosszug' }
-  | { art: 'bossprotokoll' };
+  | { art: 'bossprotokoll' }
+  | { art: 'welt' };
 
 @Component({
   selector: 'app-spiel',
@@ -44,6 +49,8 @@ type Dialog =
     BossFeld,
     BossZugDialog,
     BossProtokollListe,
+    WeltBand,
+    WeltKarte,
   ],
   template: `
     @if (store.stand(); as s) {
@@ -84,6 +91,13 @@ type Dialog =
         }
 
         <nav class="mitte" aria-label="Spielsteuerung">
+          @if (weltInfo(); as w) {
+            <app-welt-band
+              [welt]="w.welt"
+              [hinweis]="w.hinweis"
+              (oeffnen)="dialog.set({ art: 'welt' })"
+            />
+          }
           @if (zugInfo(); as z) {
             <div class="zugleiste" aria-live="polite">
               @if (z.besiegt) {
@@ -100,6 +114,19 @@ type Dialog =
                   Boss-Zug
                 </button>
               }
+            </div>
+          } @else if (weltInfo(); as w) {
+            <div class="zugleiste" aria-live="polite">
+              <span class="zug-text"
+                >Runde <strong>{{ w.runde }}</strong></span
+              >
+              <button
+                type="button"
+                class="knopf knopf--haupt zug-knopf"
+                (click)="store.rundeBeenden()"
+              >
+                Runde beenden
+              </button>
             </div>
           }
           <a class="steuer" routerLink="/"
@@ -164,6 +191,38 @@ type Dialog =
         }
         @case ('bossprotokoll') {
           <app-boss-protokoll (schliessen)="dialog.set(null)" />
+        }
+        @case ('welt') {
+          @if (weltInfo(); as w) {
+            <app-ueberlagerung titel="Aktuelle Welt" (schliessen)="dialog.set(null)">
+              <div class="gezeigt">
+                <app-welt-karte [welt]="w.welt" [hinweis]="w.hinweis" />
+                @if (w.frueher.length) {
+                  <p class="hinweis">Bisher: {{ w.frueher.join(' → ') }}</p>
+                }
+              </div>
+            </app-ueberlagerung>
+          }
+        }
+      }
+
+      @if (store.weltAufdecken() && !dialog()) {
+        @if (weltInfo(); as w) {
+          <app-ueberlagerung titel="Eine neue Welt" (schliessen)="store.weltGesehen()">
+            <div class="gezeigt">
+              <p class="ankuendigung">
+                {{
+                  w.runde === 1
+                    ? 'Die erste Welt erscheint'
+                    : 'Runde ' + w.runde + ' – die Welt wandelt sich'
+                }}
+              </p>
+              <app-welt-karte [welt]="w.welt" [hinweis]="w.hinweis" />
+              <button type="button" class="knopf knopf--haupt" (click)="store.weltGesehen()">
+                Weiter
+              </button>
+            </div>
+          </app-ueberlagerung>
         }
       }
     }
@@ -316,6 +375,15 @@ type Dialog =
       display: grid;
       gap: 0.8rem;
     }
+    .ankuendigung {
+      margin: 0;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--messing);
+    }
     .hinweis {
       margin: 0;
       color: var(--text-leise);
@@ -379,6 +447,20 @@ export class Spiel implements OnDestroy {
     const b = this.store.stand()?.boss;
     if (!b) return null;
     return { runde: b.runde, bossName: bossMitId(b.bossId).name, besiegt: b.leben <= 0 };
+  });
+
+  /** Weltenwandel: aktuelle Welt, Runde und wann die nächste kommt. */
+  protected readonly weltInfo = computed(() => {
+    const w = this.store.stand()?.welt;
+    const welt = w && weltMitId(w.aktuell);
+    if (!w || !welt) return null;
+    const bis = rundenBisWechsel(w);
+    return {
+      welt,
+      runde: w.runde,
+      hinweis: bis <= 1 ? 'Neue Welt nach dieser Runde' : `Neue Welt in ${bis} Runden`,
+      frueher: w.verlauf.slice(0, -1).map((v) => weltMitId(v.id)?.name ?? v.id),
+    };
   });
 
   constructor() {

@@ -22,6 +22,13 @@ import { BOSSE, bossMitId } from '../../varianten/boss/bosse';
 import { Planerstufe } from '../../varianten/boss/boss-modell';
 import { PLANERSTUFEN } from '../../varianten/boss/boss-planer';
 import { kombinieren } from '../../varianten/varianten';
+import {
+  INTERVALLE,
+  STANDARD_WELTEN,
+  WeltEinstellungen,
+  weltenFuer,
+} from '../../varianten/welten/welt-stand';
+import { WELT_ARTEN, WeltAuswahl } from '../../varianten/welten/welten';
 
 const LEBEN_AUSWAHL = [20, 40];
 const LEBEN_MAX = 999;
@@ -157,6 +164,58 @@ const LEBEN_MAX = 999;
             </fieldset>
           }
 
+          @if (mitWelten()) {
+            <fieldset>
+              <legend>Welten</legend>
+              <div class="auswahl umbruch" role="radiogroup" aria-label="Welche Welten erscheinen">
+                @for (a of weltArten; track a.id) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="knopf"
+                    [class.knopf--haupt]="welten().auswahl === a.id"
+                    [attr.aria-checked]="welten().auswahl === a.id"
+                    (click)="welten.set({ auswahl: a.id, intervall: welten().intervall })"
+                  >
+                    {{ a.name }}
+                  </button>
+                }
+              </div>
+              <p class="planer-text">{{ weltenText() }}</p>
+            </fieldset>
+
+            <fieldset>
+              <legend>Neue Welt alle … Runden</legend>
+              <div
+                class="auswahl umbruch"
+                role="radiogroup"
+                aria-label="Runden bis zur nächsten Welt"
+              >
+                @for (n of intervalle; track n) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="knopf"
+                    [class.knopf--haupt]="welten().intervall === n"
+                    [attr.aria-checked]="welten().intervall === n"
+                    (click)="welten.set({ auswahl: welten().auswahl, intervall: n })"
+                  >
+                    {{ n }}
+                  </button>
+                }
+              </div>
+              <p class="planer-text">
+                {{
+                  welten().intervall === 1
+                    ? 'Jede Runde erscheint eine neue Welt.'
+                    : 'Eine Welt gilt ' +
+                      welten().intervall +
+                      ' Runden lang, dann erscheint die nächste.'
+                }}
+              </p>
+            </fieldset>
+          }
+
           @if (mitWuerfel()) {
             <details class="hausregeln">
               <summary>
@@ -221,6 +280,9 @@ const LEBEN_MAX = 999;
     .auswahl {
       display: flex;
       gap: 0.5rem;
+    }
+    .auswahl.umbruch {
+      flex-wrap: wrap;
     }
     .auswahl .knopf {
       min-width: 3.5rem;
@@ -382,6 +444,18 @@ export class Einrichten {
   protected readonly mitWuerfel = computed(
     () => this.eintrag()?.ids.includes('mana-wuerfel') ?? false,
   );
+  protected readonly mitWelten = computed(() => this.eintrag()?.ids.includes('welten') ?? false);
+  protected readonly weltArten = (Object.keys(WELT_ARTEN) as WeltAuswahl[]).map((id) => ({
+    id,
+    ...WELT_ARTEN[id],
+  }));
+  protected readonly intervalle = INTERVALLE;
+  protected readonly welten = signal<WeltEinstellungen>(STANDARD_WELTEN);
+  protected readonly weltenText = computed(() => {
+    const auswahl = this.welten().auswahl;
+    const anzahl = weltenFuer(auswahl, this.anzahl()).length;
+    return `${WELT_ARTEN[auswahl].text} ${anzahl} Welten.`;
+  });
   protected readonly bosse = BOSSE;
   protected readonly planerStufen = (Object.keys(PLANERSTUFEN) as Planerstufe[]).map((id) => ({
     id,
@@ -447,6 +521,7 @@ export class Einrichten {
     const optionen = {
       ...(this.mitWuerfel() ? { manaWuerfel: this.wuerfel() } : {}),
       ...(this.boss() ? { bossId: this.bossId(), bossPlaner: this.planer() } : {}),
+      ...(this.mitWelten() ? { welten: this.welten() } : {}),
     };
     if (optionen.manaWuerfel) merkeWuerfelEinstellungen(optionen.manaWuerfel);
     this.store.starten(v.ids, namen, this.startLeben(), optionen);
