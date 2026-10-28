@@ -9,9 +9,38 @@ export const WELTENFRESSER: BossDefinition = {
   id: 'weltenfresser',
   name: 'Der Weltenfresser',
   level: 10,
-  leben: 300,
+  leben: 270,
   beschreibung:
     'Das Ende aller Dinge. Saugt jede Runde Leben ab, verschlingt eure Besten und wächst ohne Ende.',
+  merkmal: {
+    name: 'Drei Körperteile',
+    text: 'Klauen, Kern und Kopf haben eigene Leben. Solange die Klauen leben, verliert jeder Spieler in jedem seiner Züge 1 Leben. Solange der Kern lebt, heilt er sich jeden Zug um 6. Nur wenn der Kopf fällt, ist er besiegt. Nach 22 Boss-Zügen ist das Weltende da – dann verliert ihr.',
+    art: 'koerper',
+    teile: [
+      {
+        id: 'klauen',
+        name: 'Klauen',
+        anteil: 0.25,
+        schaden: 1,
+        wirkung: 'Solange sie leben, verliert jeder Spieler in jedem seiner Züge 1 Leben.',
+      },
+      {
+        id: 'kern',
+        name: 'Kern',
+        anteil: 0.25,
+        heilung: 6,
+        wirkung: 'Solange er lebt, heilt er sich jeden Zug um 6.',
+      },
+      {
+        id: 'kopf',
+        name: 'Kopf',
+        anteil: 0.5,
+        haupt: true,
+        wirkung: 'Fällt der Kopf, ist er besiegt.',
+      },
+    ],
+    weltende: 22,
+  },
   passiv:
     'Leere: Kreaturen, die die Spieler in einem Zug wirken, in dem der Weltenfresser Schaden erhalten hat, kosten 1 Mana mehr.',
   rundenEffekt: {

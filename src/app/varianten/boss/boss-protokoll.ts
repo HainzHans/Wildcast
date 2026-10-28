@@ -21,6 +21,9 @@ import { STIMMUNG_NAME } from './boss-zug-dialog';
                 <strong>{{ a.name }}:</strong> {{ a.text }}
               </p>
             }
+            @for (m of e.merkmal ?? []; track $index) {
+              <li>{{ m }}</li>
+            }
             @for (r of e.relikte ?? []; track $index) {
               <p class="aktion">{{ r }}</p>
             }

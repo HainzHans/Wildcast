@@ -20,7 +20,9 @@ export type FrageId =
   | 'handkarten'
   | 'kommandeur'
   | 'friedhof'
-  | 'rache';
+  | 'rache'
+  | 'beute'
+  | 'gestorben';
 
 /** Fragen, deren Antworten die Spieler selbst sind. */
 export const SPIELER_FRAGEN: FrageId[] = ['handkarten', 'rache'];
@@ -146,6 +148,67 @@ export interface RundenEffekt {
   max?: number;
 }
 
+/** Ein Körper eines Bosses mit mehreren Gestalten oder Teilen, z. B. Morwens Spiegelbild. */
+export interface KoerperDef {
+  id: string;
+  name: string;
+  /** Anteil an den Gesamtleben des Bosses. */
+  anteil: number;
+  /** Fällt dieser Teil, ist der Boss besiegt. */
+  haupt?: boolean;
+  /** Solange er lebt: Der Boss handelt einmal mehr pro Zug. */
+  extraAktion?: boolean;
+  /** Solange er lebt: So viel heilt der Boss in jedem seiner Züge. */
+  heilung?: number;
+  /** Solange er lebt: So viele Leben verliert jeder Spieler in jedem Boss-Zug. */
+  schaden?: number;
+  /** Was der Teil bewirkt – steht auf seiner Karte. */
+  wirkung: string;
+}
+
+/** Ein Teufelspakt des Dämonenfürsten: sofort ein Vorteil, dafür bekommt er eine Seele. */
+export interface Pakt {
+  id: string;
+  name: string;
+  text: string;
+  /** Leben, die die App beim Annehmen einträgt. */
+  leben?: number;
+}
+
+/**
+ * Das eigene Merkmal eines Bosses – was ihn von allen anderen unterscheidet. Die App setzt es um
+ * und zeigt es als Leiste, Zustand, mehrere Körper oder eigene Ziele (Eier) an.
+ */
+export type MerkmalRegel =
+  | {
+      art: 'koerper';
+      teile: KoerperDef[];
+      /** Fällt ein Teil, holt ihn der andere nach so vielen Boss-Zügen zurück. */
+      wiederkehr?: { zuege: number; anteil: number };
+      /** Nach so vielen Boss-Zügen verlieren die Spieler. */
+      weltende?: number;
+    }
+  | { art: 'nebel'; max: number; halbierenAb: number; hinterhalt: number }
+  | { art: 'hunger'; max: number; heilung: number }
+  | { art: 'flug'; himmel: number; feueratem: number }
+  | { art: 'totenarmee'; dienerName: string; max: number }
+  | { art: 'brut'; schluepfen: number; drohnen: number; dienerName: string; schildMax: number }
+  | {
+      art: 'hitze';
+      proZug: number;
+      ausbruchAb: number;
+      schadenProKuehlung: number;
+      ausbruch: number;
+    }
+  | { art: 'zeitschleife'; alle: number; zurueck: number; reissenAnteil: number }
+  | { art: 'pakte'; pakte: Pakt[]; heilungProSeele: number; stufe: number };
+
+export type Merkmal = MerkmalRegel & {
+  name: string;
+  /** Kurz erklärt für die Boss-Karte und das Einrichten. */
+  text: string;
+};
+
 export interface BossDefinition {
   id: string;
   name: string;
@@ -169,6 +232,34 @@ export interface BossDefinition {
   relikte: Relikt[];
   /** Liegt schon zu Kampfbeginn (z. B. das Phylakterium des Knochenfürsten). */
   startRelikt?: string;
+  /** Was diesen Boss einzigartig macht. */
+  merkmal?: Merkmal;
+}
+
+/**
+ * Laufender Zustand des Merkmals. Ein gemeinsames Format für alle Bosse; jeder nutzt die Felder,
+ * die er braucht.
+ */
+export interface MerkmalStand {
+  /** Leiste: Nebel, Hunger, Hitze, Seelen, Zähler der Zeitschleife oder Weltende-Countdown. */
+  wert: number;
+  /** Zustand, z. B. 'himmel' oder 'boden' beim Sturmdrachen, 'ausgehungert' bei Gorvak. */
+  zustand?: string;
+  /** Boss-Züge bis zum nächsten Zustandswechsel. */
+  zuege?: number;
+  /** Mehrere Körper mit eigenen Leben. */
+  teile?: { id: string; leben: number; max: number }[];
+  /** Ein gefallener Körper, der zurückkehrt. */
+  wiederkehr?: { id: string; zuege: number } | null;
+  /** Eier der Schwarmkönigin. */
+  eier?: { nr: number; countdown: number }[];
+  naechstesEi?: number;
+  /** Leben zu Beginn der letzten Boss-Züge (Zeitschleife). */
+  verlauf?: number[];
+  /** Pakte, die die Spieler noch annehmen oder ablehnen. */
+  offen?: { spielerId: number; pakt: string }[];
+  /** Erreichte Seelenstufen, damit jede Stufe nur einmal wirkt. */
+  stufen?: number;
 }
 
 /** Eine Karte des Bosses auf dem Tisch. */
@@ -212,6 +303,8 @@ export interface Lage {
   dienerMacht?: number;
   /** Wie weit er vorausdenkt. Ohne Angabe: Instinkt. */
   planer?: Planerstufe;
+  /** Zustand seines Merkmals. */
+  merkmal?: MerkmalStand;
 }
 
 export interface AusgefuehrteAktion {
@@ -249,4 +342,18 @@ export interface BossZug {
   reliktEffekte: string[];
   /** Karten, deren Countdown abgelaufen ist – sie haben ausgelöst und verschwinden. */
   abgelaufen: string[];
+  /** Was das Merkmal in diesem Zug getan hat und sein neuer Zustand. */
+  merkmal?: MerkmalZug | null;
+}
+
+export interface MerkmalZug {
+  stand: MerkmalStand;
+  /** Was passiert ist, für Dialog und Protokoll. */
+  texte: string[];
+  /** Wirkungen auf Kreaturen der Spieler, die nur im Text stehen (wie bei Aktionen). */
+  wirkungen: string[];
+  /** Leben, die direkt dazukommen (Wiederkehr eines Körpers) – ohne Phasen-Deckel. */
+  wiederbelebung: number;
+  /** Der Boss frisst so viele eigene Diener (die stärksten zuerst). */
+  dienerFressen: number;
 }

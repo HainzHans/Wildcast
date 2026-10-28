@@ -199,6 +199,11 @@ const SCHRITT_TITEL: Record<Schritt, string> = {
                   <p class="karte-titel">{{ b.name }}</p>
                   <p class="werte">Level {{ b.level }} · {{ b.leben }} Leben</p>
                   <p>{{ b.beschreibung }}</p>
+                  @if (b.merkmal; as m) {
+                    <p class="merkmal">
+                      <strong>{{ m.name }}:</strong> {{ m.text }}
+                    </p>
+                  }
                   <p class="leise"><strong>Passiv:</strong> {{ b.passiv }}</p>
                   @if (b.rundenEffekt) {
                     <p class="leise"><strong>Jede Runde:</strong> {{ b.rundenEffekt.text }}</p>
@@ -698,6 +703,12 @@ const SCHRITT_TITEL: Record<Schritt, string> = {
     .leise {
       font-size: 0.9rem;
       color: var(--text-leise);
+    }
+    .merkmal {
+      padding: 0.5rem 0.7rem;
+      border-radius: 0.6rem;
+      background: var(--filz-tief);
+      font-size: 0.9rem;
     }
 
     .uebersicht {

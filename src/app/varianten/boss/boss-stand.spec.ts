@@ -69,17 +69,19 @@ function mitDienern(...diener: DienerVorlage[]): BossStand {
 describe('Boss-Stand', () => {
   it('startet mit vollen Leben und Startdienern', () => {
     const stand = bossStarten(STURMDRACHE, () => 0);
-    expect(stand.leben).toBe(160);
+    expect(stand.leben).toBe(STURMDRACHE.leben);
     expect(stand.diener.length).toBe(STURMDRACHE.startDiener);
     expect(stand.diener.every((d) => !d.getappt)).toBe(true);
   });
 
   it('hält den Phasen-Schild, bis jemand ihn für den nächsten Zug aufhebt', () => {
-    let stand = bossTreffen({ ...bossStarten(STURMDRACHE, () => 0), leben: 100 }, 10).stand;
+    const grenze = Math.floor(STURMDRACHE.leben * 0.6);
+    let stand = bossTreffen({ ...bossStarten(STURMDRACHE, () => 0), leben: grenze + 4 }, 10).stand;
+    expect(stand.leben).toBe(grenze);
     expect(stand.schild).toBe(true);
     expect(bossTreffen(stand, 5).verfallen).toBe(5);
     stand = schildAufheben(stand);
-    expect(bossTreffen(stand, 5).stand.leben).toBe(91);
+    expect(bossTreffen(stand, 5).stand.leben).toBe(grenze - 5);
   });
 
   it('entfernt besiegte Diener gezielt und tappt sie auf Wunsch', () => {

@@ -31,7 +31,12 @@ function lage(leben: number, maxLeben: number, aenderung: Partial<Lage> = {}): L
  * Grobe Bedrohung pro Boss-Zug: direkter Lebensverlust der Spieler, Stärke neuer Diener,
  * Heilung/Schutz und Kontrolle. Nur ein Vergleichsmaß zwischen Bossen und Temperamenten.
  */
-function bedrohung(boss: BossDefinition, seed: number, temperament?: Temperament): number {
+/**
+ * Grobes Maß für die Gefahr eines Boss-Zugs. Ohne Merkmal: Was ein Merkmal wert ist (zwei
+ * Gestalten, Nebel, Hitze …), misst nur die Bosskampf-Simulation sinnvoll.
+ */
+function bedrohung(def: BossDefinition, seed: number, temperament?: Temperament): number {
+  const boss = { ...def, merkmal: undefined };
   const zufall = zufallMitStartwert(seed);
   let summe = 0;
   const zuege = 1500;

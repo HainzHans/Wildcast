@@ -8,6 +8,15 @@ export const SCHWARMKOENIGIN: BossDefinition = {
   level: 6,
   leben: 200,
   beschreibung: 'Überflutet den Tisch mit Insekten, die sich häuten und immer stärker werden.',
+  merkmal: {
+    name: 'Brut',
+    text: 'Jeden Zug legt sie ein Ei, in Phase 3 zwei. Nach zwei Boss-Zügen schlüpft aus jedem Ei eine Drohne. Ein Ei zerschlagt ihr mit 2 Schaden oder einem Entfernungszauber. Schwarmschild: Pro Diener verhindert sie 1 Schaden bis zu ihrem nächsten Zug, höchstens 3.',
+    art: 'brut',
+    schluepfen: 2,
+    drohnen: 1,
+    dienerName: 'Drohne',
+    schildMax: 3,
+  },
   passiv:
     'Schwarmbewusstsein: Solange die Königin sechs oder mehr Diener hat, erhalten alle ihre Diener +1/+0.',
   startDiener: 1,

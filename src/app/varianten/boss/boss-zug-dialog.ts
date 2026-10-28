@@ -83,6 +83,44 @@ const DENKZEIT = 1100;
                 </article>
               }
 
+              @if (z.merkmal; as m) {
+                @if (m.texte.length || m.wirkungen.length) {
+                  <article class="aktion merkmal">
+                    <h3>{{ merkmalName() }}</h3>
+                    @for (t of m.texte; track $index) {
+                      <p>{{ t }}</p>
+                    }
+                    @for (t of m.wirkungen; track $index) {
+                      <p class="wirkung">{{ t }}</p>
+                    }
+                  </article>
+                }
+              }
+
+              @for (o of pakte(); track o.spielerId) {
+                <article class="aktion pakt">
+                  <p class="relikt-typ">Pakt für {{ o.spieler }}</p>
+                  <h3>{{ o.name }}</h3>
+                  <p>{{ o.text }} Dafür bekommt Azgaroth deine Seele.</p>
+                  <div class="pakt-knoepfe">
+                    <button
+                      type="button"
+                      class="knopf"
+                      (click)="store.paktEntscheiden(o.spielerId, false)"
+                    >
+                      Ablehnen
+                    </button>
+                    <button
+                      type="button"
+                      class="knopf knopf--haupt"
+                      (click)="store.paktEntscheiden(o.spielerId, true)"
+                    >
+                      Annehmen
+                    </button>
+                  </div>
+                </article>
+              }
+
               @if (z.ankuendigung) {
                 <p class="warnung">⚠ {{ z.ankuendigung }}</p>
               }
@@ -234,6 +272,24 @@ const DENKZEIT = 1100;
     .aktion.relikt {
       border-left-color: var(--messing);
     }
+    .aktion.merkmal {
+      border-left-color: var(--himmel);
+    }
+    .aktion.merkmal p + p {
+      margin-top: 0.3rem;
+    }
+    .aktion .wirkung {
+      font-weight: 700;
+    }
+    .aktion.pakt {
+      border-left-color: var(--chaos);
+    }
+    .pakt-knoepfe {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+    }
     .aktion .relikt-typ {
       margin-bottom: 0.2rem;
       font-size: 0.72rem;
@@ -274,13 +330,27 @@ const DENKZEIT = 1100;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BossZugDialog implements OnDestroy {
-  private readonly store = inject(SpielStore);
+  protected readonly store = inject(SpielStore);
   readonly fertig = output<void>();
 
   private readonly boss = computed(() => this.store.stand()?.boss ?? null);
   protected readonly bossName = computed(() => bossMitId(this.boss()?.bossId).name);
   protected readonly spezialId = computed(() => bossMitId(this.boss()?.bossId).spezial.id);
   protected readonly runde = computed(() => this.boss()?.runde ?? 1);
+  protected readonly merkmalName = computed(
+    () => bossMitId(this.boss()?.bossId).merkmal?.name ?? '',
+  );
+  /** Offene Pakte des Dämonenfürsten – verschwinden, sobald jemand entschieden hat. */
+  protected readonly pakte = computed(() => {
+    const regel = bossMitId(this.boss()?.bossId).merkmal;
+    if (regel?.art !== 'pakte' || !this.zug()) return [];
+    return (this.boss()?.merkmal?.offen ?? []).flatMap((o) => {
+      const p = regel.pakte.find((x) => x.id === o.pakt);
+      return p
+        ? [{ spielerId: o.spielerId, spieler: this.namen().get(o.spielerId) ?? '', ...p }]
+        : [];
+    });
+  });
   protected readonly neuesRelikt = computed(() => {
     const id = this.zug()?.neuesRelikt?.id;
     return bossMitId(this.boss()?.bossId).relikte.find((r) => r.id === id) ?? null;

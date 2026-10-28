@@ -29,6 +29,7 @@ export const VARIANTEN: Variante[] = [
     startLeben: 40,
     regeln: [
       'Zehn Bosse von Level 1 bis 10, jeder mit eigenen Dienern, Fähigkeiten und Spezialangriff. Je höher das Level, desto mehr Leben und desto härter die Angriffe.',
+      'Jeder Boss hat ein eigenes Merkmal, das ihn von allen anderen unterscheidet – etwa zwei Gestalten, Nebel, Hunger, Hitze oder Teufelspakte. Es steht auf seiner Karte (ⓘ) und wird von der App mitgezählt.',
       'Jeder Boss hat in jeder Partie eine andere Laune (z. B. jähzornig oder listig) und beherrscht nur einen Teil seiner Aktionen. Er spielt sich dadurch jedes Mal anders, bleibt aber gleich stark.',
       'Beim Einrichten wählt ihr den Boss-Verstand: Mit „Instinkt“ handelt er aus Stimmung und Laune, als „Taktiker“ oder „Gerissen“ rechnet er seine Züge zwei Runden voraus und wird deutlich gefährlicher.',
       'Ihr macht eure Züge, dann startet ihr den Boss-Zug. Danach beginnt die nächste Runde.',

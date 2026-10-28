@@ -9,8 +9,15 @@ export const STURMDRACHE: BossDefinition = {
   id: 'sturmdrache',
   name: 'Sturmdrache',
   level: 4,
-  leben: 160,
+  leben: 150,
   beschreibung: 'Kreist über dem Schlachtfeld, ruft fliegende Diener und schlägt mit Blitzen zu.',
+  merkmal: {
+    name: 'Himmel und Boden',
+    text: 'Am Himmel halbiert sich der Kampfschaden von Kreaturen ohne Flugfähigkeit oder Reichweite – Sprüche treffen ihn voll. Er wechselt Zug um Zug: Ein Boss-Zug am Himmel, dann landet er, trifft alle eure Kreaturen mit seinem Feueratem und erleidet bis zu seinem nächsten Zug doppelten Schaden.',
+    art: 'flug',
+    himmel: 1,
+    feueratem: 1,
+  },
   passiv:
     'Rückenwind: Kreaturen der Spieler mit Flugfähigkeit erhalten −1/−0, solange sie den Sturmdrachen angreifen.',
   startDiener: 1,

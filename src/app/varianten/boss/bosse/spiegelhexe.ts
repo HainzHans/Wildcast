@@ -8,6 +8,22 @@ export const SPIEGELHEXE: BossDefinition = {
   level: 1,
   leben: 100,
   beschreibung: 'Zeigt euch euer eigenes Spiegelbild – und lässt es zurückschlagen.',
+  merkmal: {
+    name: 'Zwei Gestalten',
+    text: 'Morwen und ihr Spiegelbild haben eigene Leben. Solange das Spiegelbild steht, handelt die Hexe zweimal. Fällt eine Gestalt, holt die andere sie nach zwei Boss-Zügen mit halben Leben zurück – besiegt beide kurz nacheinander.',
+    art: 'koerper',
+    teile: [
+      { id: 'morwen', name: 'Morwen', anteil: 0.6, wirkung: 'Die echte Hexe.' },
+      {
+        id: 'spiegelbild',
+        name: 'Spiegelbild',
+        anteil: 0.4,
+        extraAktion: true,
+        wirkung: 'Solange es steht, handelt die Hexe zweimal.',
+      },
+    ],
+    wiederkehr: { zuege: 2, anteil: 0.5 },
+  },
   passiv:
     'Zerrbild: Immer wenn ein Spieler einen Spruch mit Manawert 5 oder mehr wirkt, verliert er 2 Leben.',
   startDiener: 1,

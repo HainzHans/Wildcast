@@ -6,8 +6,15 @@ export const KNOCHENFUERST: BossDefinition = {
   id: 'knochenfuerst',
   name: 'Knochenfürst Mortheus',
   level: 5,
-  leben: 180,
+  leben: 195,
   beschreibung: 'Erhebt seine Toten immer wieder und nährt sich von euren Friedhöfen.',
+  merkmal: {
+    name: 'Totenarmee',
+    text: 'Jede eurer Kreaturen (keine Spielsteine), die stirbt, steht als Skelettkrieger auf seiner Seite wieder auf – höchstens zwei pro Zug. Was ins Exil geht, bleibt weg.',
+    art: 'totenarmee',
+    dienerName: 'Skelettkrieger',
+    max: 2,
+  },
   passiv:
     'Untot: Immer wenn einer seiner Diener stirbt, würfelt der Fürst einen W6. Bei 5–6 kehrt der Diener getappt zurück (Diener nicht als besiegt markieren, sondern tappen).',
   startDiener: 2,

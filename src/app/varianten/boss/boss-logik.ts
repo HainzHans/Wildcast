@@ -1,5 +1,7 @@
 import { Zufall } from '../../core/zufall';
+import { merkmalZug, pflichtFrage } from './boss-merkmale';
 import { planerFaktoren } from './boss-planer';
+import { frageMitId } from './bosse/fragen';
 import {
   Antwort,
   BossAktion,
@@ -281,8 +283,11 @@ export function fragenFuerZug(
     if (!naechste) break;
     gewaehlt.push(naechste);
   }
-  return gewaehlt
-    .map((id) => boss.fragen.find((f) => f.id === id))
+  // Manche Merkmale brauchen jedes Mal eine bestimmte Antwort (z. B. Gorvaks Beute).
+  const pflicht = pflichtFrage(boss, lage);
+  const ids = pflicht ? [...gewaehlt.filter((id) => id !== pflicht), pflicht] : gewaehlt;
+  return ids
+    .map((id) => boss.fragen.find((f) => f.id === id) ?? (id === pflicht ? frageMitId(id) : null))
     .filter((f): f is Frage => !!f)
     .map((f) => (SPIELER_FRAGEN.includes(f.id) ? mitSpielern(f, lage) : f));
 }
@@ -334,6 +339,7 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
   const s = stimmung(lage);
   const verlust = Math.max(0, lage.lebenVorher - lage.leben);
 
+  const merkmal = merkmalZug(boss, lage, zufall);
   const aktionen: BossAktion[] = [];
   let ankuendigung: string | null = null;
   let spezialAngekuendigt = false;
@@ -344,7 +350,8 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
     ankuendigung = boss.ankuendigung;
     spezialAngekuendigt = true;
   }
-  let anzahl = p === 3 ? 2 : 1;
+  // Merkmale wie Morwens Spiegelbild lassen ihn öfter handeln – höchstens dreimal pro Zug.
+  let anzahl = Math.min(3, (p === 3 ? 2 : 1) + (merkmal?.extraAktionen ?? 0));
   let extra = false;
   while (aktionen.length < anzahl) {
     aktionen.push(
@@ -376,12 +383,12 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
 
   const verloren = boss.relikte.find((r) => r.id === lage.verlorenesRelikt);
   const spruch = verloren?.zerstoert ?? neuerSpruch(boss.sprueche[s], lage.letzteSprueche, zufall);
-  const lebenAenderungen: BossZug['lebenAenderungen'] = [];
-  let heilung = 0;
-  let schutz = 0;
+  const lebenAenderungen: BossZug['lebenAenderungen'] = [...(merkmal?.lebenAenderungen ?? [])];
+  let heilung = merkmal?.heilung ?? 0;
+  let schutz = merkmal?.schutz ?? 0;
   let zusatzDiener = 0;
-  const benannteDiener: DienerVorlage[] = [];
-  const dienerBonus = { staerke: 0, widerstand: 0 };
+  const benannteDiener: DienerVorlage[] = [...(merkmal?.diener ?? [])];
+  const dienerBonus = { ...(merkmal?.dienerBonus ?? { staerke: 0, widerstand: 0 }) };
   let dienerOpfern = 0;
   for (const a of aktionen) {
     const f = a.folgen ?? {};
@@ -513,11 +520,12 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
     dienerOpfern,
     rundenEffekt,
     angriffsziel,
-    ankuendigung,
+    ankuendigung: ankuendigung ?? merkmal?.ankuendigung ?? null,
     spezialAngekuendigt,
     spezialEingesetzt: aktionen.includes(boss.spezial),
     neuesRelikt,
     reliktEffekte,
     abgelaufen,
+    merkmal: merkmal?.zug ?? null,
   };
 }

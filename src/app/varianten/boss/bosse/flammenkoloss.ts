@@ -8,6 +8,15 @@ export const FLAMMENKOLOSS: BossDefinition = {
   level: 7,
   leben: 220,
   beschreibung: 'Ein wandelnder Vulkan. Verbrennt Kreaturen, Artefakte und Geduld.',
+  merkmal: {
+    name: 'Hitze',
+    text: 'Seine Hitze steigt jeden Zug um 2. Steht sie bei 10, bricht er im nächsten Zug aus: Jeder Spieler verliert 5 Leben und jede Kreatur erhält 5 Schaden. Je 5 Schaden, die ihr ihm in einer Runde zufügt, kühlen ihn um 1 ab.',
+    art: 'hitze',
+    proZug: 2,
+    ausbruchAb: 10,
+    schadenProKuehlung: 5,
+    ausbruch: 5,
+  },
   passiv:
     'Glühende Haut: Immer wenn eine Kreatur dem Koloss Kampfschaden zufügt, erhält sie danach 1 Schaden.',
   startDiener: 1,

@@ -39,9 +39,9 @@ export interface DeckProfil {
   friedhof: number;
 }
 
-/** Zersplitterte Realität – „Ein neues Multiversum“ (Jace, Multiverse Architect). */
+/** Reality Fracture – „Multiverse Reforged“ (FRC, Jace, Multiverse Architect). */
 export const JACE: DeckProfil = {
-  name: 'Ein neues Multiversum (Jace, 4 Farben)',
+  name: 'Multiverse Reforged (Jace, 4 Farben)',
   kurz: 'Jace',
   ramp: 0.45, // elf Mana-Steine, Sol Ring
   kreaturAnteil: 0.55,
@@ -169,4 +169,150 @@ export const STRIXHAVEN: DeckProfil[] = [
     kartenziehen: 0.35,
     friedhof: 0.8,
   },
+];
+
+/**
+ * Die Precons für die Merkmal-Simulation: Multiverse Reforged (FRC), die vier Final-Fantasy-Decks
+ * (FIC) und die zwei aus Lorwyn Eclipsed (ECC). Werte geschätzt aus den offiziellen Decklisten.
+ */
+export const REVIVAL_TRANCE: DeckProfil = {
+  name: 'Revival Trance (Terra, Mardu)',
+  kurz: 'Terra',
+  ramp: 0.35, // Sol Ring, Signet, Talismane, Solemn, Millikin
+  kreaturAnteil: 0.65, // 35 Kreaturen
+  staerkeProMana: 0.85, // Sun Titan, Sepulchral Primordial, Angel of the Ruins
+  spielsteine: 0.15,
+  spielsteinAnzahl: 1,
+  spielsteinGroesse: 2,
+  flieger: 0.15,
+  entfernung: 0.22, // Mortify, Bedevil, Crackling Doom, Palace Jailer
+  artefaktEntfernung: 0.15,
+  wipe: 0.04, // Tragic Arrogance, Ruinous Ultimatum
+  direkt: 1,
+  lebensgewinn: 0.2,
+  kommandeurBonus: 0,
+  kommandeurMana: 3,
+  bleibende: 0.35,
+  kartenziehen: 0.3,
+  friedhof: 0.8, // Reanimation
+};
+
+export const LIMIT_BREAK: DeckProfil = {
+  name: 'Limit Break (Cloud, Naya)',
+  kurz: 'Cloud',
+  ramp: 0.35, // Cultivate, Nature's Lore, Rampant Growth, Rocks
+  kreaturAnteil: 0.5, // 24 Kreaturen, viel Ausrüstung
+  staerkeProMana: 0.9,
+  spielsteine: 0.2,
+  spielsteinAnzahl: 2,
+  spielsteinGroesse: 1,
+  flieger: 0.1,
+  entfernung: 0.15, // Chaos Warp, Dispatch, Decimate
+  artefaktEntfernung: 0.18, // Vandalblast, Decimate
+  wipe: 0.03, // Austere Command
+  direkt: 1.5,
+  lebensgewinn: 0.3,
+  kommandeurBonus: 2, // Ausrüstung auf Cloud und Co.
+  kommandeurMana: 4,
+  bleibende: 0.6,
+  kartenziehen: 0.3,
+  friedhof: 0.3,
+};
+
+export const COUNTER_BLITZ: DeckProfil = {
+  name: 'Counter Blitz (Tidus, Bant)',
+  kurz: 'Tidus',
+  ramp: 0.4, // Farseek, Three Visits, Incubation Druid
+  kreaturAnteil: 0.7, // 34 Kreaturen mit +1/+1-Marken
+  staerkeProMana: 1.0,
+  spielsteine: 0.1,
+  spielsteinAnzahl: 2,
+  spielsteinGroesse: 1,
+  flieger: 0.15,
+  entfernung: 0.12, // Path, Destroy Evil
+  artefaktEntfernung: 0.05,
+  wipe: 0.03, // Farewell, Damning Verdict
+  direkt: 0.5, // Walking Ballista
+  lebensgewinn: 0.2,
+  kommandeurBonus: 1, // Marken wandern und wachsen
+  kommandeurMana: 3,
+  bleibende: 0.4,
+  kartenziehen: 0.45,
+  friedhof: 0.3,
+};
+
+export const SCIONS_SPELLCRAFT: DeckProfil = {
+  name: 'Scions & Spellcraft (Y’shtola, Esper)',
+  kurz: 'Yshtola',
+  ramp: 0.45, // viele Mana-Steine
+  kreaturAnteil: 0.4, // Kontrolle, 22 Kreaturen
+  staerkeProMana: 0.8,
+  spielsteine: 0.25, // Lingering Souls
+  spielsteinAnzahl: 3,
+  spielsteinGroesse: 1,
+  flieger: 0.5,
+  entfernung: 0.26, // Swords, Murderous Rider, Snuff Out, Vindicate
+  artefaktEntfernung: 0.12,
+  wipe: 0.06, // Crux of Fate, Final Judgment, Cleansing Nova
+  direkt: 2, // Y'shtola und Exsanguinate
+  lebensgewinn: 1.5,
+  kommandeurBonus: 0,
+  kommandeurMana: 4,
+  bleibende: 0.55,
+  kartenziehen: 0.55,
+  friedhof: 0.4,
+};
+
+export const DANCE_OF_ELEMENTS: DeckProfil = {
+  name: 'Dance of the Elements (Ashling, 5 Farben)',
+  kurz: 'Ashling',
+  ramp: 0.5, // elf Ramp-Karten
+  kreaturAnteil: 0.65, // 35 große Elementare
+  staerkeProMana: 1.0,
+  spielsteine: 0.3, // Avenger of Zendikar, Elemental Spectacle
+  spielsteinAnzahl: 3,
+  spielsteinGroesse: 1,
+  flieger: 0.1,
+  entfernung: 0.16, // Path, Reality Shift, Crib Swap, Shriekmaw
+  artefaktEntfernung: 0.03,
+  wipe: 0.04, // Shatter the Sky, Blasphemous Act
+  direkt: 1.5, // Omnath, Fury, Ingot Chewer
+  lebensgewinn: 0.1,
+  kommandeurBonus: 0,
+  kommandeurMana: 3,
+  bleibende: 0.3,
+  kartenziehen: 0.35,
+  friedhof: 0.5,
+};
+
+export const BLIGHT_CURSE: DeckProfil = {
+  name: 'Blight Curse (Auntie Ool, Jund)',
+  kurz: 'Ool',
+  ramp: 0.3,
+  kreaturAnteil: 0.55, // 27 Kreaturen
+  staerkeProMana: 0.8, // Grave Titan, Archfiend of Ifnir
+  spielsteine: 0.2,
+  spielsteinAnzahl: 2,
+  spielsteinGroesse: 2,
+  flieger: 0.3,
+  entfernung: 0.26, // Infernal Grasp, Terminate, Putrefy, Assassin's Trophy
+  artefaktEntfernung: 0.15,
+  wipe: 0.07, // Black Sun's Zenith, Chain Reaction, Massacre Girl
+  direkt: 1.5, // −1/−1-Drain
+  lebensgewinn: 0.3,
+  kommandeurBonus: 0,
+  kommandeurMana: 4,
+  bleibende: 0.3,
+  kartenziehen: 0.4,
+  friedhof: 0.6,
+};
+
+export const PRECONS: DeckProfil[] = [
+  JACE,
+  REVIVAL_TRANCE,
+  LIMIT_BREAK,
+  COUNTER_BLITZ,
+  SCIONS_SPELLCRAFT,
+  DANCE_OF_ELEMENTS,
+  BLIGHT_CURSE,
 ];

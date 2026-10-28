@@ -9,6 +9,14 @@ export const NEBELKOENIGIN: BossDefinition = {
   leben: 120,
   beschreibung:
     'Verschwindet im Nebel, heilt sich an ihren Dienern und lässt euch ins Leere greifen.',
+  merkmal: {
+    name: 'Im Nebel',
+    text: 'Jeden Zug wird ihr Nebel dichter. Ab 3 Nebel halbiert sich jeder Schaden an ihr und ihre Leben sind verborgen. Bei 5 folgt ein Hinterhalt. Vertreibt den Nebel: −1 für jede angreifende Kreatur mit Flugfähigkeit oder für {2}.',
+    art: 'nebel',
+    max: 5,
+    halbierenAb: 3,
+    hinterhalt: 5,
+  },
   passiv:
     'Nebelschleier: Alle Diener der Königin haben Flugfähigkeit. Immer wenn einer ihrer Diener stirbt, erhält sie 2 Leben (mit „+“ eintragen).',
   startDiener: 2,

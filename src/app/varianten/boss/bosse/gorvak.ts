@@ -9,6 +9,13 @@ export const GORVAK: BossDefinition = {
   leben: 140,
   beschreibung:
     'Frisst alles – auch seine eigenen Diener. Je mehr er hat, desto hungriger seid ihr.',
+  merkmal: {
+    name: 'Hunger',
+    text: 'Seine Hungerleiste füllt sich jeden Zug. Ist sie voll, frisst er eure stärkste Kreatur (Stärke 4+) oder seinen stärksten Diener und heilt sich. Findet er nichts, ist er ausgehungert und erleidet doppelten Schaden, bis er wieder frisst.',
+    art: 'hunger',
+    max: 2,
+    heilung: 20,
+  },
   passiv:
     'Unersättlich: Immer wenn eine Kreatur der Spieler stirbt, erhält Gorvak 1 Leben (mit „+“ eintragen).',
   rundenEffekt: {

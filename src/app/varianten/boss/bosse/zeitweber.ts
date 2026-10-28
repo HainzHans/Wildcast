@@ -8,6 +8,14 @@ export const ZEITWEBER: BossDefinition = {
   level: 8,
   leben: 240,
   beschreibung: 'Dreht euren Schaden zurück, handelt doppelt und lässt eure Züge zäh werden.',
+  merkmal: {
+    name: 'Zeitschleife',
+    text: 'Jeden dritten Zug spult er die Zeit zurück: Seine Leben springen auf den Stand von vor zwei Zügen. Macht ihr ihm in der Runde davor genug Schaden, reißt die Schleife und der Schaden bleibt.',
+    art: 'zeitschleife',
+    alle: 3,
+    zurueck: 2,
+    reissenAnteil: 0.14,
+  },
   passiv: 'Verzerrte Zeit: Jeder Spieler kann in jedem Zug höchstens drei Sprüche wirken.',
   rundenEffekt: {
     text: 'Die Zeit nagt: Solange der Weber drei oder mehr Diener hat, verliert jeder Spieler 1 Leben.',

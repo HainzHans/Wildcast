@@ -10,6 +10,9 @@ import {
   bossZugEintragen,
   dienerBesiegen,
   dienerTappen,
+  eiZerschlagen,
+  nebelVertreiben,
+  paktEntscheiden,
   reliktTreffen,
   reliktZerstoeren,
   schildAufheben,
@@ -232,17 +235,43 @@ export class SpielStore {
 
   // ── Bosskampf ─────────────────────────────────────────────────
 
-  /** Schaden am Boss; gibt zurück, wie viel am Phasen-Schild verfallen ist. */
-  bossTreffen(schaden: number): number {
+  /**
+   * Schaden am Boss (bei mehreren Körpern am gewählten Teil). Gibt zurück, wie viel am
+   * Phasen-Schild verfallen ist und wie viel wirklich ankam (Nebel, Hunger …).
+   */
+  bossTreffen(schaden: number, teilId?: string): { verfallen: number; wirkung: number } {
     const boss = this._stand()?.boss;
-    if (!boss) return 0;
-    const { stand, verfallen } = bossTreffen(boss, schaden);
+    if (!boss) return { verfallen: 0, wirkung: 0 };
+    const { stand, verfallen, wirkung } = bossTreffen(boss, schaden, undefined, teilId);
     this.aendern((s) => ({ ...s, boss: stand }));
-    return verfallen;
+    return { verfallen, wirkung };
   }
 
-  bossKorrigieren(um: number): void {
-    this.mitBoss((b) => bossKorrigieren(b, um));
+  bossKorrigieren(um: number, teilId?: string): void {
+    this.mitBoss((b) => bossKorrigieren(b, um, teilId));
+  }
+
+  nebelVertreiben(): void {
+    this.mitBoss((b) => nebelVertreiben(b));
+  }
+
+  eiZerschlagen(nr: number): void {
+    this.mitBoss((b) => eiZerschlagen(b, nr));
+  }
+
+  /** Ein Spieler nimmt den Pakt des Dämonenfürsten an oder lehnt ihn ab. */
+  paktEntscheiden(spielerId: number, annehmen: boolean): void {
+    this.aendern((s) => {
+      if (!s.boss) return s;
+      const r = paktEntscheiden(s.boss, spielerId, annehmen);
+      return {
+        ...s,
+        boss: r.stand,
+        spieler: s.spieler.map((p) =>
+          p.id === spielerId ? { ...p, leben: p.leben + r.leben } : p,
+        ),
+      };
+    });
   }
 
   dienerBesiegen(nr: number): void {

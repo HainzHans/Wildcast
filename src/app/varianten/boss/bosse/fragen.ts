@@ -62,6 +62,24 @@ const FRAGEN: Record<FrageId, Frage> = {
       { wert: 'viele', label: '7 oder mehr' },
     ],
   },
+  beute: {
+    id: 'beute',
+    text: 'Habt ihr eine Kreatur mit Stärke 4 oder mehr?',
+    antworten: [
+      { wert: 'ja', label: 'Ja' },
+      { wert: 'nein', label: 'Nein' },
+    ],
+  },
+  gestorben: {
+    id: 'gestorben',
+    text: 'Wie viele eurer Kreaturen (keine Spielsteine) sind seit seinem letzten Zug gestorben?',
+    antworten: [
+      { wert: '0', label: 'Keine' },
+      { wert: '1', label: '1' },
+      { wert: '2', label: '2' },
+      { wert: '3', label: '3 oder mehr' },
+    ],
+  },
   rache: {
     id: 'rache',
     text: 'Wer von euch hat dem Boss in dieser Runde am meisten Schaden gemacht?',
@@ -72,4 +90,8 @@ const FRAGEN: Record<FrageId, Frage> = {
 /** Ohne Angabe alle Fragen, sonst die genannten. */
 export function fragen(...ids: FrageId[]): Frage[] {
   return (ids.length ? ids : (Object.keys(FRAGEN) as FrageId[])).map((id) => FRAGEN[id]);
+}
+
+export function frageMitId(id: FrageId): Frage {
+  return FRAGEN[id];
 }

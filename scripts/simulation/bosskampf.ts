@@ -16,12 +16,15 @@ import {
   bossTreffen,
   bossZugEintragen,
   dienerBesiegen,
+  eiZerschlagen,
+  nebelVertreiben,
+  paktEntscheiden,
   reliktTreffen,
   reliktZerstoeren,
   schildAufheben,
 } from '../../src/app/varianten/boss/boss-stand';
 import { BOSSE } from '../../src/app/varianten/boss/bosse';
-import { DeckProfil, JACE, STRIXHAVEN } from './decks';
+import { DeckProfil, JACE, PRECONS, STRIXHAVEN } from './decks';
 
 const MAX_RUNDEN = 25;
 const KOMMANDEUR_IST_WALKER = new Set(['Jace', 'Lorehold']);
@@ -35,6 +38,8 @@ interface Kreatur {
   neu: boolean;
   /** Durch eine Boss-Aktion bis zum nächsten eigenen Zug am Angreifen gehindert. */
   gebannt: boolean;
+  /** Spielsteine zählen beim Knochenfürsten nicht als gestorbene Kreaturen. */
+  spielstein?: boolean;
 }
 
 interface Spieler {
@@ -56,6 +61,8 @@ interface Spieler {
   /** Malus aus Boss-Aktionen für den nächsten eigenen Zug. */
   malusStaerke: number;
   malusMana: number;
+  /** Kreaturen (keine Spielsteine), die seit dem letzten Boss-Zug gestorben sind. */
+  gestorben: number;
 }
 
 export interface Ergebnis {
@@ -134,7 +141,10 @@ function entfernen(s: Spieler, k: Kreatur): void {
     // Der Kommandeur geht in die Kommandozone und wird später neu gewirkt.
     s.kommandeur = false;
     s.kommandeurKreatur = undefined;
-  } else s.friedhof++;
+  } else {
+    s.friedhof++;
+    if (!k.spielstein) s.gestorben++;
+  }
 }
 
 function staerksteVon(s: Spieler): Kreatur | undefined {
@@ -185,6 +195,14 @@ function antworten(
       case 'handkarten': {
         const [x, y] = alle;
         a.handkarten = !y || x.hand === y.hand ? 'gleich' : String(x.hand > y.hand ? x.id : y.id);
+        break;
+      }
+      case 'beute':
+        a.beute = kreaturen.some((k) => k.staerke >= 4) ? 'ja' : 'nein';
+        break;
+      case 'gestorben': {
+        const n = alle.reduce((x, s) => x + s.gestorben, 0);
+        a.gestorben = String(Math.min(3, n));
         break;
       }
       case 'rache': {
@@ -407,6 +425,50 @@ export function textWirkung(text: string, spieler: Spieler[], log: Log): void {
   }
 }
 
+/**
+ * Hat der Boss mehrere Körper, wählen die Spieler ihr Ziel: den Kopf, sobald er fällt; sonst
+ * zuerst, was den Boss stärker macht (Klauen, Spiegelbild), dann was ihn heilt (Kern).
+ * Überzähliger Schaden geht an den nächsten Teil.
+ */
+function schadenVerteilen(
+  stand: BossStand,
+  schaden: number,
+  def: BossDefinition,
+): { stand: BossStand; verfallen: number } {
+  const regel = def.merkmal;
+  if (regel?.art !== 'koerper') {
+    const { stand: nach, verfallen } = bossTreffen(stand, schaden, def);
+    return { stand: nach, verfallen };
+  }
+  let rest = schaden;
+  let verfallen = 0;
+  while (rest > 0 && stand.leben > 0) {
+    const teile = stand.merkmal?.teile?.filter((t) => t.leben > 0) ?? [];
+    if (!teile.length) break;
+    const haupt = teile.find((t) => regel.teile.find((x) => x.id === t.id)?.haupt);
+    const wirkt = (id: string) => regel.teile.find((x) => x.id === id);
+    const weltende = stand.merkmal?.wert ?? 99;
+    // Den Kopf direkt angehen, wenn er in etwa zwei solchen Angriffen fällt.
+    let ziel = haupt && haupt.leben <= rest * 2 ? haupt : undefined;
+    // Was ihn öfter handeln lässt, zuerst; was nur Leben kostet, nur wenn es schnell fällt.
+    ziel ??= teile.find((t) => wirkt(t.id)?.extraAktion);
+    ziel ??= weltende > 6 ? teile.find((t) => wirkt(t.id)?.heilung) : undefined;
+    ziel ??= teile.find((t) => wirkt(t.id)?.schaden && t.leben <= rest);
+    ziel ??= haupt ?? [...teile].sort((a, b) => a.leben - b.leben)[0];
+    const anteil = Math.min(rest, ziel.leben);
+    const r = bossTreffen(stand, anteil, def, ziel.id);
+    stand = r.stand;
+    verfallen += r.verfallen;
+    rest -= anteil;
+    // Nur der Phasen-Schild schluckt alles Weitere; Schutz ist irgendwann aufgebraucht.
+    if (stand.schild) {
+      verfallen += rest;
+      break;
+    }
+  }
+  return { stand, verfallen };
+}
+
 function spielerZug(
   s: Spieler,
   partner: Spieler[],
@@ -431,7 +493,7 @@ function spielerZug(
   let mana = Math.max(0, s.laender + s.steine - s.malusMana);
   s.malusMana = 0;
   const notizen: string[] = [];
-  const neueKreatur = (st: number, flieger = zufall() < d.flieger) =>
+  const neueKreatur = (st: number, flieger = zufall() < d.flieger, spielstein = false) =>
     s.kreaturen.push({
       staerke: st,
       widerstand: st,
@@ -439,6 +501,7 @@ function spielerZug(
       getappt: false,
       neu: true,
       gebannt: false,
+      spielstein,
     });
 
   // Kommandeur zuerst, sobald er bezahlbar ist
@@ -462,6 +525,14 @@ function spielerZug(
       s.hand--;
       notizen.push(`zerstört ${def.relikte.find((r) => r.id === ziel.id)?.name}`);
     }
+  }
+
+  // Nebelkönigin: Wer Mana übrig hat, vertreibt dichten Nebel ({2} je Punkt).
+  const nebel = def.merkmal?.art === 'nebel' ? def.merkmal : null;
+  while (nebel && (stand.merkmal?.wert ?? 0) >= nebel.halbierenAb && mana >= 2) {
+    stand = nebelVertreiben(stand);
+    mana -= 2;
+    notizen.push('vertreibt Nebel');
   }
 
   // Sprüche aus der Hand wirken, bis Mana oder Karten ausgehen
@@ -501,7 +572,7 @@ function spielerZug(
       const kosten = Math.min(mana, 2 + Math.floor(zufall() * 5));
       if (zufall() < d.spielsteine) {
         for (let i = 0; i < d.spielsteinAnzahl + Math.floor(kosten / 4); i++)
-          neueKreatur(d.spielsteinGroesse);
+          neueKreatur(d.spielsteinGroesse, zufall() < d.flieger, true);
         notizen.push(`Spielsteine ${d.spielsteinGroesse}/${d.spielsteinGroesse}`);
       } else {
         const st = Math.max(1, Math.round(kosten * d.staerkeProMana));
@@ -531,6 +602,7 @@ function spielerZug(
 
   // Angriff: einige Kreaturen bleiben als Blocker zurück
   const angreifendeDiener = stand.diener.filter((x) => !x.greiftNichtAn).length;
+  const amHimmel = def.merkmal?.art === 'flug' && stand.merkmal?.zustand === 'himmel';
   const bereit = s.kreaturen.filter((k) => !k.neu && !k.getappt && !k.gebannt);
   const zurueck = Math.min(Math.ceil(angreifendeDiener / 2), Math.floor(bereit.length / 3));
   const angreifer = [...bereit]
@@ -538,7 +610,9 @@ function spielerZug(
     .slice(0, Math.min(bereit.length - zurueck, s.maxAngreifer ?? Infinity));
   s.maxAngreifer = undefined;
   const bonus = s.kommandeur ? d.kommandeurBonus : 0;
-  const staerke = (k: Kreatur) => Math.max(0, k.staerke + bonus - s.malusStaerke);
+  // Am Himmel kommt bei Kreaturen ohne Flugfähigkeit nur die Hälfte an.
+  const staerke = (k: Kreatur) =>
+    Math.max(0, k.staerke + bonus - s.malusStaerke) * (amHimmel && !k.flieger ? 0.5 : 1);
   let direkt = d.direkt + (s.kommandeur && KOMMANDEUR_IST_WALKER.has(d.kurz) ? 2 : 0);
   const moeglich = angreifer.reduce((x, k) => x + staerke(k), 0);
 
@@ -550,6 +624,23 @@ function spielerZug(
     !reliktMitText(stand, def, /nicht unter 1 Leben/);
   const ziel = siegMoeglich ? null : belagerungsZiel(stand, def, moeglich + direkt);
   const aufKarte = new Set<Kreatur>();
+
+  // Schwarmkönigin: Eier, die bald schlüpfen, zuerst zerschlagen (2 Schaden je Ei).
+  const aufEi = new Set<Kreatur>();
+  for (const ei of [...(stand.merkmal?.eier ?? [])].sort((a, b) => a.countdown - b.countdown)) {
+    const k = [...angreifer]
+      .filter((x) => !aufEi.has(x) && staerke(x) >= 2)
+      .sort((x, y) => staerke(x) - staerke(y))[0];
+    if (!k) break;
+    aufEi.add(k);
+    k.getappt = true;
+    stand = eiZerschlagen(stand, ei.nr);
+    notizen.push('zerschlägt ein Ei');
+  }
+  // Flieger, die angreifen, vertreiben Nebel.
+  if (nebel) {
+    for (const k of angreifer) if (k.flieger && !aufEi.has(k)) stand = nebelVertreiben(stand);
+  }
   if (ziel) {
     // Etwas mehr als nötig, weil Diener auch diese Angreifer blocken dürfen.
     let summe = 0;
@@ -565,6 +656,7 @@ function spielerZug(
   let karteSchaden = 0;
   let geblockt = 0;
   for (const k of angreifer) {
+    if (aufEi.has(k)) continue;
     k.getappt = true;
     const st = staerke(k);
     // Diener blocken nur sinnvoll: wenn sie den Angreifer töten, überleben oder immer blocken müssen.
@@ -608,7 +700,7 @@ function spielerZug(
   }
   schaden += direkt;
 
-  const { stand: nach, verfallen } = bossTreffen(stand, schaden, def);
+  const { stand: nach, verfallen } = schadenVerteilen(stand, schaden, def);
   log(
     `  ${s.name} (${d.kurz}, ${s.laender + s.steine} Mana): ${notizen.join(', ') || 'baut auf'}` +
       ` · greift mit ${angreifer.length} an (${geblockt} geblockt) → ${schaden - verfallen} Schaden` +
@@ -649,6 +741,11 @@ function bossRunde(
     log(`   ⚡ ${a.name}: ${a.text}`);
     textWirkung(a.text, spieler, log);
   }
+  for (const t of zug.merkmal?.texte ?? []) log(`   ★ ${t}`);
+  for (const w of zug.merkmal?.wirkungen ?? []) {
+    log(`   ★ ${w}`);
+    textWirkung(w, spieler, log);
+  }
   MESSUNG.aktionsSchaden += lebenVorher - alle.reduce((x, s) => x + s.leben, 0);
   MESSUNG.kreaturenWeg += kreaturenVorher - alle.reduce((x, s) => x + s.kreaturen.length, 0);
   if (zug.ankuendigung) log(`   ⚠ ${zug.ankuendigung}`);
@@ -661,6 +758,36 @@ function bossRunde(
   const sturm = reliktMitText(stand, def, /Diener[^.]*haben Flugfähigkeit/);
 
   let neu = bossZugEintragen(stand, zug, sicht, antwort);
+  for (const s of spieler) s.gestorben = 0;
+  // „Jede Kreatur“ trifft auch seine eigenen Diener.
+  const ausbruch = (zug.merkmal?.wirkungen ?? [])
+    .map((w) => /jede kreatur erhält (\d+) schaden/i.exec(w))
+    .find((m) => m);
+  if (ausbruch) {
+    for (const d of neu.diener)
+      if (d.widerstand <= Number(ausbruch[1])) neu = dienerBesiegen(neu, d.nr);
+  }
+  // Teufelspakte: Wer genug Leben hat, nimmt meist an – solange Azgaroth nicht zu viele Seelen hat.
+  for (const o of neu.merkmal?.offen ?? []) {
+    const s = spieler.find((x) => x.id === o.spielerId);
+    if (!s) continue;
+    const seelen = neu.merkmal?.wert ?? 0;
+    const annehmen =
+      (o.pakt === 'blut' && s.leben < 20) || (s.leben >= 15 && seelen < 6 && zufall() < 0.6);
+    const r = paktEntscheiden(neu, o.spielerId, annehmen, def);
+    neu = r.stand;
+    if (!annehmen) continue;
+    s.leben += r.leben;
+    if (o.pakt === 'wissen') s.hand += 2;
+    if (o.pakt === 'gold') s.malusMana -= 3;
+    if (o.pakt === 'macht') s.malusStaerke -= 2;
+    if (o.pakt === 'rueckkehr') s.hand += 1;
+    if (o.pakt === 'zorn' && neu.diener.length) {
+      const staerkster = [...neu.diener].sort((a, b) => b.staerke - a.staerke)[0];
+      neu = dienerBesiegen(neu, staerkster.nr);
+    }
+    log(`   ☠ ${s.name} nimmt den Pakt „${o.pakt}“ an.`);
+  }
 
   // Diener greifen an: wer schon da war oder Eile hat, außer reinen Blockern.
   const ziel = spieler.find((s) => s.id === zug.angriffsziel && s.leben > 0);
@@ -697,6 +824,8 @@ export function spiele(
   seed: number,
   log: Log = () => {},
 ): Ergebnis {
+  // Zum Vergleich: SIM_OHNE_MERKMAL=1 spielt die Bosse ohne ihr Merkmal.
+  if (process.env['SIM_OHNE_MERKMAL']) def = { ...def, merkmal: undefined };
   const zufall = zufallMitStartwert(seed);
   const spieler: Spieler[] = decks.map((deck, i) => ({
     id: i + 1,
@@ -712,6 +841,7 @@ export function spiele(
     hand: 7,
     malusStaerke: 0,
     malusMana: 0,
+    gestorben: 0,
   }));
   let stand = bossStarten(def, zufall, (process.env['SIM_PLANER'] as Planerstufe) ?? 'instinkt');
   let maxPhase = 1;
@@ -784,32 +914,39 @@ export function spiele(
   };
 }
 
+/** Alle Paarungen aus zwei verschiedenen Decks. */
+function paarungenAus(decks: DeckProfil[]): [DeckProfil, DeckProfil][] {
+  return decks.flatMap((x, i) => decks.slice(i + 1).map((y) => [x, y] as [DeckProfil, DeckProfil]));
+}
+
 function auswertung(spiele_: number): void {
-  const paarungen = STRIXHAVEN.map((s) => [s, JACE] as [DeckProfil, DeckProfil]);
+  const decks = process.env['SIM_DECKS'] === 'strixhaven' ? [...STRIXHAVEN, JACE] : PRECONS;
+  const paarungen = paarungenAus(decks);
   console.log(
-    `Simulation: ${spiele_} Partien je Boss und Deck-Paarung (2 gegen Boss, 40 Leben).\n`,
+    `Simulation: ${spiele_} Partien je Boss und Paarung, ${paarungen.length} Paarungen ` +
+      `(2 gegen Boss, 40 Leben, Boss-Verstand ${process.env['SIM_PLANER'] ?? 'instinkt'}).\n`,
   );
   const kopf = [
     'Lvl',
     'Boss'.padEnd(26),
-    ...paarungen.map((p) => `${p[0].kurz}+Jace`.padEnd(17)),
-    'Schnitt',
-    'Ø Runden',
-    'Phase 3',
-    'Burst',
+    'Sieg',
+    ...decks.map((d) => d.kurz.padEnd(7)),
+    'Schwächste'.padEnd(16),
+    'Ø Rd',
+    'Ph. 3',
   ];
   console.log(kopf.join(' | '));
   for (const boss of BOSSE) {
-    const zellen: string[] = [];
+    const proDeck = new Map<string, { s: number; n: number }>();
+    const proPaar: { name: string; quote: number }[] = [];
     let runden = 0;
     let siege = 0;
     let phase3 = 0;
-    let burst = 0;
     let n = 0;
     for (const p of paarungen) {
       let s = 0;
       for (let i = 0; i < spiele_; i++) {
-        const e = spiele(boss, p, i * 7919 + boss.level * 31);
+        const e = spiele(boss, p, i * 7919 + boss.level * 31 + p[0].kurz.length * 13);
         n++;
         if (e.sieg) {
           s++;
@@ -817,27 +954,31 @@ function auswertung(spiele_: number): void {
           runden += e.runden;
         }
         if (e.maxPhase === 3) phase3++;
-        burst += e.burstRunden;
       }
-      zellen.push(`${Math.round((s / spiele_) * 100)} %`.padEnd(17));
+      for (const d of p) {
+        const x = proDeck.get(d.kurz) ?? { s: 0, n: 0 };
+        proDeck.set(d.kurz, { s: x.s + s, n: x.n + spiele_ });
+      }
+      proPaar.push({ name: `${p[0].kurz}+${p[1].kurz}`, quote: s / spiele_ });
     }
+    const schwach = [...proPaar].sort((a, b) => a.quote - b.quote)[0];
     console.log(
       [
         String(boss.level).padStart(3),
         boss.name.padEnd(26),
-        ...zellen,
-        `${Math.round((siege / n) * 100)} %`.padEnd(7),
-        (siege ? (runden / siege).toFixed(1) : '–').padEnd(8),
-        `${Math.round((phase3 / n) * 100)} %`.padEnd(7),
-        (burst / n).toFixed(2),
+        `${Math.round((siege / n) * 100)}%`.padStart(4),
+        ...decks.map((d) => {
+          const x = proDeck.get(d.kurz)!;
+          return `${Math.round((x.s / x.n) * 100)}%`.padEnd(7);
+        }),
+        `${schwach.name} ${Math.round(schwach.quote * 100)}%`.padEnd(16),
+        (siege ? (runden / siege).toFixed(1) : '–').padStart(4),
+        `${Math.round((phase3 / n) * 100)}%`.padStart(5),
       ].join(' | '),
     );
   }
   console.log(
-    '\nZellen: Siegquote der Spieler. Ø Runden: bis zum Sieg. Phase 3: wie oft Phase 3 erreicht wurde.',
-  );
-  console.log(
-    'Burst: Runden pro Partie, in denen die Spieler mehr als 30 % der Boss-Leben auf einmal abzogen.',
+    '\nSieg: Siegquote der Spieler über alle Paarungen. Deck-Spalten: Siegquote aller Paarungen mit diesem Deck.',
   );
 }
 
@@ -846,8 +987,7 @@ if (!process.env['SIM_EINSTIEG']) {
   const modus = process.argv[2];
   if (modus === 'beispiel') {
     const level = Number(process.argv[3] ?? 4);
-    const deck =
-      STRIXHAVEN.find((d) => d.kurz === (process.argv[4] ?? 'Lorehold')) ?? STRIXHAVEN[0];
+    const deck = PRECONS.find((d) => d.kurz === (process.argv[4] ?? 'Terra')) ?? PRECONS[1];
     spiele(BOSSE[level - 1], [deck, JACE], Number(process.argv[5] ?? 42), (z) => console.log(z));
   } else {
     auswertung(Number(modus ?? 200) || 200);

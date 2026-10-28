@@ -12,6 +12,7 @@ import {
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { HalteKnopf } from '../../shared/ui/halte-knopf';
 import { phase, TEMPERAMENTE } from './boss-logik';
+import { merkmalAnzeige } from './boss-merkmale';
 import { PLANERSTUFEN } from './boss-planer';
 import { BossStand } from './boss-stand';
 import { bossMitId } from './bosse';
@@ -49,6 +50,11 @@ const SAMMELZEIT = 1500;
         </header>
         @if (passivOffen()) {
           <div class="passiv">
+            @if (def().merkmal; as m) {
+              <p>
+                <strong>{{ m.name }}:</strong> {{ m.text }}
+              </p>
+            }
             <p><strong>Passiv:</strong> {{ def().passiv }}</p>
             @if (def().rundenEffekt; as r) {
               <p><strong>Jede Runde:</strong> {{ r.text }}</p>
@@ -62,6 +68,40 @@ const SAMMELZEIT = 1500;
           }
         </p>
 
+        @if (merkmal()?.teile; as teile) {
+          <div class="teile" role="radiogroup" aria-label="Welchen Teil trefft ihr?">
+            @for (t of teile; track t.id) {
+              <button
+                type="button"
+                role="radio"
+                class="teil"
+                [class.aktiv]="zielTeil() === t.id"
+                [class.tot]="t.leben <= 0"
+                [attr.aria-checked]="zielTeil() === t.id"
+                [disabled]="t.leben <= 0"
+                (click)="teilWahl.set(t.id)"
+              >
+                <span class="teil-kopf">
+                  <span class="teil-name">{{ t.name }}{{ t.haupt ? ' ★' : '' }}</span>
+                  <span class="teil-zahl">
+                    @if (t.leben > 0) {
+                      {{ t.leben }}/{{ t.max }}
+                    } @else if (t.wiederkehr !== null) {
+                      kehrt in {{ t.wiederkehr }} zurück
+                    } @else {
+                      gefallen
+                    }
+                  </span>
+                </span>
+                <span class="teil-balken"
+                  ><span [style.width.%]="(t.leben / (t.max || 1)) * 100"></span
+                ></span>
+                <span class="teil-text">{{ t.wirkung }}</span>
+              </button>
+            }
+          </div>
+        }
+
         <div class="leben">
           <button
             type="button"
@@ -74,7 +114,9 @@ const SAMMELZEIT = 1500;
           </button>
           <div class="mitte">
             <p class="zahl">
-              @if (b.leben > 0) {
+              @if (b.leben > 0 && merkmal()?.lebenVerborgen) {
+                <strong>{{ lebenUngefaehr() }}</strong>
+              } @else if (b.leben > 0) {
                 <strong>{{ b.leben }}</strong
                 >&nbsp;/&nbsp;{{ b.maxLeben }}
               } @else {
@@ -92,7 +134,11 @@ const SAMMELZEIT = 1500;
               [attr.aria-valuemax]="b.maxLeben"
               aria-label="Leben des Bosses"
             >
-              <div class="fuellung" [style.width.%]="prozent()"></div>
+              <div
+                class="fuellung"
+                [class.verborgen]="merkmal()?.lebenVerborgen"
+                [style.width.%]="prozent()"
+              ></div>
               <span class="grenze" [style.left.%]="60"></span>
               <span class="grenze" [style.left.%]="30"></span>
             </div>
@@ -107,6 +153,37 @@ const SAMMELZEIT = 1500;
             +
           </button>
         </div>
+
+        @if (merkmal(); as m) {
+          @if (m.leiste || m.zustand || m.aktion) {
+            <div class="merkmal">
+              @if (m.leiste; as l) {
+                <div class="leiste" [class.gefahr]="l.gefahr">
+                  <span class="leiste-name">{{ l.name }}</span>
+                  <span class="pips" aria-hidden="true">
+                    @for (i of pips(l.max); track i) {
+                      <span class="pip" [class.voll]="i < l.wert"></span>
+                    }
+                  </span>
+                  <span class="leiste-wert">{{ l.wert }}/{{ l.max }}</span>
+                </div>
+                <p class="merkmal-hinweis">{{ l.hinweis }}</p>
+              }
+              @if (m.zustand; as z) {
+                <p class="zustand" [class.gefahr]="z.gefahr">{{ z.text }}</p>
+              }
+              @if (m.aktion) {
+                <button
+                  type="button"
+                  class="pille pille--messing"
+                  (click)="store.nebelVertreiben()"
+                >
+                  {{ m.aktion }} −1
+                </button>
+              }
+            </div>
+          }
+        }
 
         @if (hinweis(); as h) {
           <p class="hinweis hinweis--schild" aria-live="assertive">{{ h }}</p>
@@ -124,6 +201,32 @@ const SAMMELZEIT = 1500;
         }
         @if (b.ankuendigung) {
           <p class="hinweis hinweis--warnung">⚠ {{ b.ankuendigung }}</p>
+        }
+
+        @if (merkmal()?.eier?.length) {
+          <h3>
+            Eier <span class="anzahl">{{ merkmal()!.eier!.length }}</span>
+          </h3>
+          <ul class="eier">
+            @for (e of merkmal()!.eier!; track e.nr) {
+              <li class="ei" [class.bald]="e.countdown <= 1">
+                <span class="ei-text">
+                  {{
+                    e.countdown <= 1
+                      ? 'Schlüpft im nächsten Zug!'
+                      : 'Schlüpft in ' + e.countdown + ' Zügen'
+                  }}
+                </span>
+                <button
+                  type="button"
+                  class="pille pille--gefahr"
+                  (click)="store.eiZerschlagen(e.nr)"
+                >
+                  Zerschlagen
+                </button>
+              </li>
+            }
+          </ul>
         }
 
         @if (relikte().length) {
@@ -660,6 +763,132 @@ const SAMMELZEIT = 1500;
       font-size: 0.88rem;
       color: var(--text-leise);
     }
+    .teile {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+      gap: 0.4rem;
+      margin-bottom: 0.4rem;
+    }
+    .teil {
+      display: grid;
+      gap: 0.25rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: var(--radius-klein);
+      border: 2px solid transparent;
+      background: var(--filz-tief);
+      text-align: start;
+    }
+    .teil.aktiv {
+      border-color: var(--negativ);
+    }
+    .teil.tot {
+      opacity: 0.5;
+    }
+    .teil-kopf {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .teil-zahl {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .teil-balken {
+      height: 0.3rem;
+      border-radius: 99px;
+      background: var(--feld-rand);
+      overflow: hidden;
+    }
+    .teil-balken span {
+      display: block;
+      height: 100%;
+      background: var(--negativ);
+    }
+    .teil-text {
+      font-size: 0.72rem;
+      line-height: 1.25;
+      color: var(--text-leise);
+    }
+    .fuellung.verborgen {
+      filter: blur(3px);
+    }
+    .merkmal {
+      display: grid;
+      gap: 0.3rem;
+      padding: 0.5rem 0.7rem;
+      border-radius: var(--radius-klein);
+      background: var(--filz-tief);
+    }
+    .leiste {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .leiste-name {
+      min-width: 4.2rem;
+    }
+    .pips {
+      flex: 1;
+      display: flex;
+      gap: 0.15rem;
+    }
+    .pip {
+      flex: 1;
+      height: 0.55rem;
+      border-radius: 2px;
+      background: var(--feld-rand);
+    }
+    .pip.voll {
+      background: var(--messing);
+    }
+    .leiste.gefahr .pip.voll {
+      background: var(--negativ);
+    }
+    .leiste-wert {
+      font-variant-numeric: tabular-nums;
+    }
+    .merkmal-hinweis,
+    .zustand {
+      margin: 0;
+      font-size: 0.78rem;
+      color: var(--text-leise);
+    }
+    .zustand {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .zustand.gefahr {
+      color: var(--negativ);
+    }
+    .merkmal .pille {
+      justify-self: start;
+    }
+    .eier {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.3rem;
+    }
+    .ei {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.35rem 0.4rem 0.35rem 0.7rem;
+      border-radius: var(--radius-klein);
+      background: var(--filz-tief);
+      font-size: 0.85rem;
+    }
+    .ei.bald .ei-text {
+      color: var(--negativ);
+      font-weight: 700;
+    }
     .letzter {
       display: grid;
       text-align: start;
@@ -699,6 +928,24 @@ export class BossFeld implements OnDestroy {
     return p === 'instinkt' ? null : PLANERSTUFEN[p].name;
   });
   protected readonly phase = computed(() => phase(this.stand().leben, this.stand().maxLeben));
+  protected readonly merkmal = computed(() =>
+    merkmalAnzeige(this.def(), this.stand().merkmal, this.stand().maxLeben),
+  );
+  /** Gewählter Körper als Ziel für −/+; ohne Wahl der erste, der noch lebt. */
+  protected readonly teilWahl = signal<string | null>(null);
+  protected readonly zielTeil = computed(() => {
+    const teile = this.merkmal()?.teile;
+    if (!teile) return null;
+    const gewaehlt = teile.find((t) => t.id === this.teilWahl() && t.leben > 0);
+    return (gewaehlt ?? teile.find((t) => t.leben > 0))?.id ?? null;
+  });
+  /** Im Nebel sieht man nur ungefähr, wie es um sie steht. */
+  protected readonly lebenUngefaehr = computed(() => {
+    const anteil = this.stand().leben / this.stand().maxLeben;
+    if (anteil > 0.6) return 'kaum verletzt';
+    if (anteil > 0.3) return 'angeschlagen';
+    return 'schwer verwundet';
+  });
   protected readonly prozent = computed(() => (this.stand().leben / this.stand().maxLeben) * 100);
   protected readonly getappt = computed(() => this.stand().diener.filter((d) => d.getappt).length);
   protected readonly letzterZug = computed(() => {
@@ -723,19 +970,24 @@ export class BossFeld implements OnDestroy {
   private sammelZeit?: ReturnType<typeof setTimeout>;
   private scharfZeit?: ReturnType<typeof setTimeout>;
 
+  protected pips(max: number): number[] {
+    return Array.from({ length: max }, (_, i) => i);
+  }
+
   /** Minus geht durch den Phasen-Schild, Plus korrigiert direkt. */
   protected aendern(um: number): void {
     let wirksam = um;
+    const teil = this.zielTeil() ?? undefined;
     if (um < 0) {
-      const verfallen = this.store.bossTreffen(-um);
-      wirksam = um + verfallen;
+      const { verfallen, wirkung } = this.store.bossTreffen(-um, teil);
+      wirksam = -wirkung;
       if (verfallen > 0) {
         this.hinweis.set('Phasen-Schild! Der Schaden verfällt.');
         clearTimeout(this.hinweisZeit);
         this.hinweisZeit = setTimeout(() => this.hinweis.set(null), HINWEISZEIT);
       }
     } else {
-      this.store.bossKorrigieren(um);
+      this.store.bossKorrigieren(um, teil);
     }
     if (!wirksam) return;
     this.aenderung.update((a) => a + wirksam);

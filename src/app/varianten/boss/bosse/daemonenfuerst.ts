@@ -9,6 +9,29 @@ export const DAEMONENFUERST: BossDefinition = {
   leben: 260,
   beschreibung:
     'Bietet euch Pakte an, bei denen ihr nur verlieren könnt – und opfert seine Diener für Macht.',
+  merkmal: {
+    name: 'Teufelspakte',
+    text: 'In jedem seiner Züge bietet er jedem Spieler einen Pakt an. Wer annimmt, bekommt sofort den Vorteil – und Azgaroth eine Seele: Er erhält 12 Leben, und alle zwei Seelen werden seine Diener dauerhaft +1/+1 stärker.',
+    art: 'pakte',
+    heilungProSeele: 12,
+    stufe: 2,
+    pakte: [
+      { id: 'wissen', name: 'Verbotenes Wissen', text: 'Ziehe zwei Karten.' },
+      { id: 'gold', name: 'Höllengold', text: 'Erzeuge drei Schatz-Spielsteine.' },
+      { id: 'blut', name: 'Blutopfer', text: 'Erhalte 8 Leben.', leben: 8 },
+      {
+        id: 'macht',
+        name: 'Dämonenkraft',
+        text: 'Kreaturen, die du kontrollierst, erhalten bis zum Ende deines nächsten Zugs +2/+0 und Trampelschaden.',
+      },
+      {
+        id: 'rueckkehr',
+        name: 'Seelentausch',
+        text: 'Nimm eine Kreaturenkarte aus deinem Friedhof auf die Hand.',
+      },
+      { id: 'zorn', name: 'Höllenzorn', text: 'Zerstöre einen Diener deiner Wahl.' },
+    ],
+  },
   passiv: 'Höllenpakt: Immer wenn ein Spieler Leben erhält, verliert jeder andere Spieler 1 Leben.',
   startDiener: 1,
   diener: [
