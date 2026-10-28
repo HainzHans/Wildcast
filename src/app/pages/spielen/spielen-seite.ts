@@ -3,69 +3,84 @@ import { Router, RouterLink } from '@angular/router';
 
 import { VarianteId } from '../../core/spiel/modell';
 import { SpielStore } from '../../core/spiel/spiel-store';
-import { ZurueckLink } from '../../shared/ui/zurueck-link';
+import { Seitenkopf } from '../../shared/ui/seitenkopf';
+import { SymbolBild } from '../../shared/ui/symbol';
+import { VARIANTEN_AUSSEHEN } from '../../varianten/aussehen';
 import { kombinieren, VARIANTEN, variantenName } from '../../varianten/varianten';
 
 /**
- * „Jetzt spielen“: eine oder mehrere Varianten antippen und gemeinsam starten –
- * oder die laufende Partie fortsetzen.
+ * Startseite: die laufende Partie fortsetzen oder Varianten antippen und eine neue einrichten.
  */
 @Component({
   selector: 'app-spielen-seite',
-  imports: [RouterLink, ZurueckLink],
+  imports: [RouterLink, Seitenkopf, SymbolBild],
   template: `
-    <div class="seite" [class.mit-leiste]="auswahl().length">
-      <app-zurueck-link />
-      <h1>Was spielt ihr?</h1>
-      <p class="hinweis">Tippe eine oder mehrere Varianten an.</p>
+    <app-seitenkopf titel="Wildcast" [gross]="true" />
 
+    <div class="seite" [class.mit-aktion]="auswahl().length">
       @if (laufend(); as l) {
         <a class="laufend" routerLink="/spiel">
-          <span class="etikett">Laufende Partie</span>
-          <span class="name">{{ l.name }} fortsetzen</span>
-          <span class="text">{{ l.spieler }}</span>
+          <span class="symbole" aria-hidden="true">
+            @for (id of l.ids; track id) {
+              <span class="rund" [style.--farbe]="aussehen[id].farbe">
+                <app-symbol [name]="aussehen[id].symbol" />
+              </span>
+            }
+          </span>
+          <span class="laufend-text">
+            <span class="etikett">Laufende Partie{{ l.runde ? ' · Runde ' + l.runde : '' }}</span>
+            <span class="laufend-name">{{ l.name }}</span>
+            <span class="laufend-spieler">{{ l.spieler }}</span>
+          </span>
+          <span class="weiter" aria-hidden="true"><app-symbol name="spielen" /></span>
+          <span class="sr-only">Fortsetzen</span>
         </a>
       }
 
-      <ul class="raster">
-        @for (v of varianten; track v.id) {
-          <li>
-            @if (v.verfuegbar) {
+      <section aria-labelledby="neu">
+        <h2 id="neu" class="abschnitt">Neue Partie</h2>
+        <p class="hinweis">Tippe eine oder mehrere Varianten an – sie lassen sich kombinieren.</p>
+
+        <ul class="raster">
+          @for (v of varianten; track v.id) {
+            <li>
               <button
                 type="button"
                 class="karte"
                 [class.gewaehlt]="istGewaehlt(v.id)"
                 [attr.aria-pressed]="istGewaehlt(v.id)"
+                [style.--farbe]="aussehen[v.id].farbe"
                 (click)="umschalten(v.id)"
               >
-                <span class="marke" aria-hidden="true">✓</span>
+                <span class="karte-kopf">
+                  <span class="rund"><app-symbol [name]="aussehen[v.id].symbol" /></span>
+                  <span class="marke" aria-hidden="true"><app-symbol name="haken" /></span>
+                </span>
                 <span class="name">{{ v.name }}</span>
                 <span class="text">{{ v.untertitel }}</span>
                 <span class="spieler">{{ spielerText(v.spieler.min, v.spieler.max) }}</span>
               </button>
-            } @else {
-              <div class="karte karte--bald" aria-disabled="true">
-                <span class="name">{{ v.name }}</span>
-                <span class="text">{{ v.untertitel }}</span>
-                <span class="spieler">Kommt bald</span>
-              </div>
-            }
-          </li>
-        }
-      </ul>
+            </li>
+          }
+        </ul>
+      </section>
     </div>
 
     @if (auswahl().length) {
-      <div class="leiste">
+      <div class="aktion">
         <button
           type="button"
-          class="knopf knopf--haupt spielen"
+          class="knopf knopf--haupt los"
           [disabled]="!kombination()"
           (click)="spielen()"
         >
-          Spielen
+          <span>{{ kombination() ? 'Weiter' : 'Passt nicht zusammen' }}</span>
           <span class="auswahl-name">
-            {{ kombination() ? kombination()!.name : 'Die Spielerzahlen passen nicht zusammen' }}
+            {{
+              kombination()
+                ? kombination()!.name
+                : 'Die Spielerzahlen dieser Varianten überschneiden sich nicht.'
+            }}
           </span>
         </button>
       </div>
@@ -75,98 +90,170 @@ import { kombinieren, VARIANTEN, variantenName } from '../../varianten/varianten
     .seite {
       max-width: 40rem;
       margin-inline: auto;
-      padding: 1.25rem 1rem 3rem;
+      padding: 1rem 1rem 1.5rem;
       display: grid;
-      gap: 0.9rem;
+      gap: 1.4rem;
     }
-    .mit-leiste {
-      padding-bottom: 8rem;
+    .mit-aktion {
+      padding-bottom: 6.5rem;
     }
-    h1 {
-      font-size: clamp(2.2rem, 9vw, 3rem);
+    .abschnitt {
+      font-size: 1.3rem;
       font-weight: 800;
     }
     .hinweis {
-      margin: -0.4rem 0 0;
+      margin: 0.25rem 0 0.8rem;
+      font-size: 0.9rem;
       color: var(--text-leise);
     }
+    .rund {
+      --farbe: var(--messing);
+      display: grid;
+      place-items: center;
+      width: 2.6rem;
+      height: 2.6rem;
+      border-radius: 0.8rem;
+      background: color-mix(in srgb, var(--farbe) 20%, transparent);
+      color: var(--farbe);
+      font-size: 1.05rem;
+    }
+
+    .laufend {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 1rem;
+      border-radius: 1.1rem;
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--messing) 22%, var(--feld)),
+        var(--feld)
+      );
+      border: 1px solid color-mix(in srgb, var(--messing) 55%, transparent);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: var(--schatten);
+      transition: transform 90ms ease;
+    }
+    .laufend:active {
+      transform: scale(0.98);
+    }
+    .symbole {
+      display: grid;
+      gap: 0.3rem;
+    }
+    .symbole .rund {
+      width: 2.2rem;
+      height: 2.2rem;
+      font-size: 0.9rem;
+    }
+    .laufend-text {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      gap: 0.1rem;
+    }
+    .etikett {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--messing);
+    }
+    .laufend-name {
+      font-family: var(--schrift-anzeige);
+      font-size: 1.25rem;
+      font-weight: 800;
+      line-height: 1.15;
+    }
+    .laufend-spieler {
+      font-size: 0.85rem;
+      color: var(--text-leise);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .weiter {
+      display: grid;
+      place-items: center;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: var(--messing);
+      color: var(--messing-text);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
     .raster {
       list-style: none;
       padding: 0;
       margin: 0;
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      /* Alle Karten gleich hoch, egal wie lang der Text ist */
       grid-auto-rows: 1fr;
-      gap: 0.6rem;
+      gap: 0.65rem;
     }
     .raster li {
       display: grid;
     }
     .karte {
-      position: relative;
       display: flex;
       flex-direction: column;
-      gap: 0.3rem;
-      min-height: 10rem;
-      padding: 0.9rem 0.9rem 0.8rem;
-      border-radius: var(--radius);
+      gap: 0.35rem;
+      padding: 0.85rem;
+      border-radius: 1.1rem;
       background: var(--feld);
-      border: 2px solid var(--feld-rand);
+      border: 2px solid transparent;
       color: inherit;
       text-align: start;
       box-shadow: var(--schatten);
       transition:
-        transform 120ms ease,
-        border-color 120ms;
+        transform 90ms ease,
+        border-color 150ms,
+        background 150ms;
     }
-    button.karte:active {
+    .karte:active {
       transform: scale(0.97);
     }
     .gewaehlt {
-      border-color: var(--messing);
+      border-color: var(--farbe);
+      background: color-mix(in srgb, var(--farbe) 10%, var(--feld));
+    }
+    .karte-kopf {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.2rem;
     }
     .marke {
-      position: absolute;
-      top: 0.55rem;
-      right: 0.55rem;
-      width: 1.6rem;
-      height: 1.6rem;
       display: grid;
       place-items: center;
+      width: 1.6rem;
+      height: 1.6rem;
       border-radius: 50%;
       border: 2px solid var(--feld-rand);
       color: transparent;
-      font-size: 0.9rem;
-      font-weight: 900;
+      font-size: 0.75rem;
       transition:
-        background 120ms,
-        color 120ms,
-        scale 120ms;
+        background 150ms,
+        scale 150ms;
     }
     .gewaehlt .marke {
-      background: var(--messing);
-      border-color: var(--messing);
-      color: var(--messing-text);
+      background: var(--farbe);
+      border-color: var(--farbe);
+      color: var(--filz-tief);
       scale: 1.1;
-    }
-    .karte--bald {
-      opacity: 0.55;
-      box-shadow: none;
-      border-style: dashed;
     }
     .name {
       font-family: var(--schrift-anzeige);
-      font-variation-settings:
-        'SOFT' 100,
-        'WONK' 1;
-      font-size: 1.15rem;
-      font-weight: 700;
+      font-size: 1.1rem;
+      font-weight: 800;
       line-height: 1.15;
-      padding-right: 1.8rem;
     }
     .text {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
+      line-height: 1.35;
       color: var(--text-leise);
       display: -webkit-box;
       -webkit-box-orient: vertical;
@@ -175,57 +262,41 @@ import { kombinieren, VARIANTEN, variantenName } from '../../varianten/varianten
     }
     .spieler {
       margin-top: auto;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--messing);
-    }
-    .laufend {
-      display: grid;
-      gap: 0.2rem;
-      padding: 0.9rem 1.1rem;
-      border-radius: var(--radius);
-      background: var(--feld);
-      border: 2px solid var(--messing);
-      color: inherit;
-      text-decoration: none;
-      box-shadow: var(--schatten);
-    }
-    .laufend .name {
-      font-size: 1.3rem;
-      padding: 0;
-    }
-    .etikett {
+      padding-top: 0.2rem;
       font-size: 0.75rem;
       font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--messing);
+      color: var(--text-leise);
     }
-    .leiste {
+
+    /* Klebt über der Tab-Leiste */
+    .aktion {
       position: fixed;
-      inset: auto 0 0;
-      padding: 0.75rem 1rem max(0.75rem, env(safe-area-inset-bottom));
-      background: linear-gradient(transparent, var(--filz) 35%);
+      inset: auto 0 calc(4.2rem + env(safe-area-inset-bottom));
+      z-index: 4;
+      padding: 0.75rem 1rem 0.6rem;
+      background: linear-gradient(transparent, var(--filz) 30%);
       display: grid;
       justify-items: center;
       animation: hochfahren 200ms ease-out;
     }
-    .spielen {
+    .los {
       width: min(100%, 38rem);
-      min-height: 3.75rem;
+      min-height: 3.6rem;
       display: grid;
-      gap: 0.1rem;
-      font-size: 1.25rem;
+      gap: 0.05rem;
+      border-radius: 1rem;
+      font-size: 1.15rem;
       box-shadow: var(--schatten);
     }
     .auswahl-name {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 500;
       opacity: 0.85;
     }
     @keyframes hochfahren {
       from {
         transform: translateY(100%);
+        opacity: 0;
       }
     }
   `,
@@ -235,7 +306,8 @@ export class SpielenSeite {
   private readonly store = inject(SpielStore);
   private readonly router = inject(Router);
 
-  protected readonly varianten = VARIANTEN;
+  protected readonly varianten = VARIANTEN.filter((v) => v.verfuegbar);
+  protected readonly aussehen = VARIANTEN_AUSSEHEN;
   protected readonly auswahl = signal<VarianteId[]>([]);
   protected readonly kombination = computed(() => kombinieren(this.auswahl()));
 
@@ -243,7 +315,9 @@ export class SpielenSeite {
     const s = this.store.stand();
     if (!s) return null;
     return {
+      ids: s.varianten,
       name: variantenName(s.varianten),
+      runde: s.boss?.runde ?? s.runde ?? null,
       spieler: s.spieler.map((p) => `${p.name} ${p.leben}`).join(' · '),
     };
   });

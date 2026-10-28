@@ -3,17 +3,46 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { Einstellungen, Farbschema } from '../../core/einstellungen';
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { BestaetigenKnopf } from '../../shared/ui/bestaetigen-knopf';
-import { ZurueckLink } from '../../shared/ui/zurueck-link';
+import { Installieren } from '../../core/installieren';
+import { Seitenkopf } from '../../shared/ui/seitenkopf';
 import { EffektArchiv } from '../../varianten/mana-wuerfel/effekt-archiv';
 import { variantenName } from '../../varianten/varianten';
 
 @Component({
   selector: 'app-einstellungen-seite',
-  imports: [BestaetigenKnopf, ZurueckLink],
+  imports: [BestaetigenKnopf, Seitenkopf],
   template: `
+    <app-seitenkopf titel="Einstellungen" [gross]="true" />
+
     <div class="seite">
-      <app-zurueck-link />
-      <h1>Einstellungen</h1>
+      @if (!installieren.installiert()) {
+        <section class="gruppe" aria-labelledby="app">
+          <h2 id="app">App</h2>
+          <div class="zeile">
+            <div>
+              <p class="titel">Auf den Startbildschirm</p>
+              <p class="hinweis">
+                @if (installieren.moeglich()) {
+                  Wildcast als App installieren – startet im Vollbild, ohne Browserleiste.
+                } @else if (installieren.iphone) {
+                  In Safari unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.
+                } @else {
+                  Im Browsermenü „App installieren“ oder „Zum Startbildschirm hinzufügen“ wählen.
+                }
+              </p>
+            </div>
+            @if (installieren.moeglich()) {
+              <button
+                type="button"
+                class="knopf knopf--haupt"
+                (click)="installieren.installieren()"
+              >
+                Installieren
+              </button>
+            }
+          </div>
+        </section>
+      }
 
       <section class="gruppe" aria-labelledby="anzeige">
         <h2 id="anzeige">Anzeige</h2>
@@ -23,12 +52,12 @@ import { variantenName } from '../../varianten/varianten';
             <p class="titel">Farbschema</p>
             <p class="hinweis">Ohne Auswahl folgt die App deinem Gerät.</p>
           </div>
-          <div class="auswahl" role="group" aria-label="Farbschema">
+          <div class="segmente" role="group" aria-label="Farbschema">
             @for (f of farbschemata; track f.wert) {
               <button
                 type="button"
-                class="knopf"
-                [class.knopf--haupt]="einstellungen.farbschema() === f.wert"
+                class="segment"
+                [class.aktiv]="einstellungen.farbschema() === f.wert"
                 [attr.aria-pressed]="einstellungen.farbschema() === f.wert"
                 (click)="einstellungen.farbschema.set(f.wert)"
               >
@@ -109,13 +138,30 @@ import { variantenName } from '../../varianten/varianten';
     .seite {
       max-width: 36rem;
       margin-inline: auto;
-      padding: 1.25rem 1rem 3rem;
+      padding: 1rem 1rem 2rem;
       display: grid;
-      gap: 1.25rem;
+      gap: 1.4rem;
     }
-    h1 {
-      font-size: clamp(2.2rem, 9vw, 3rem);
-      font-weight: 800;
+    .segmente {
+      display: flex;
+      padding: 0.2rem;
+      border-radius: 0.8rem;
+      background: var(--filz-tief);
+    }
+    .segment {
+      min-height: 2.4rem;
+      padding: 0.3rem 0.9rem;
+      border: 0;
+      border-radius: 0.6rem;
+      background: transparent;
+      font-weight: 600;
+      color: var(--text-leise);
+      transition: background 150ms;
+    }
+    .segment.aktiv {
+      background: var(--feld);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
     }
     .gruppe {
       display: grid;
@@ -137,7 +183,7 @@ import { variantenName } from '../../varianten/varianten';
       gap: 0.75rem 1rem;
       padding: 0.9rem 1rem;
       background: var(--feld);
-      border-radius: var(--radius);
+      border-radius: 1.1rem;
       box-shadow: var(--schatten);
     }
     label.zeile {
@@ -196,6 +242,7 @@ export class EinstellungenSeite {
   protected readonly einstellungen = inject(Einstellungen);
   protected readonly store = inject(SpielStore);
   protected readonly archiv = inject(EffektArchiv);
+  protected readonly installieren = inject(Installieren);
 
   protected readonly archivText = computed(() => {
     const n = this.archiv.anzahl();

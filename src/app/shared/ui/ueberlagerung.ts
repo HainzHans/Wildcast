@@ -1,4 +1,5 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   ElementRef,
@@ -6,15 +7,18 @@ import {
   linkedSignal,
   output,
   viewChild,
-  afterNextRender,
 } from '@angular/core';
 
+import { SymbolBild } from './symbol';
+
 /**
- * Vollbild-Ebene für Dialoge am Spieltisch. Sie öffnet sich zum auslösenden Spieler hin
- * gedreht und lässt sich umdrehen, damit die anderen mitlesen können.
+ * Bottom Sheet für Dialoge am Spieltisch: fährt von unten herein wie in einer nativen App.
+ * Gedreht öffnet es sich von der anderen Tischseite, damit der Spieler gegenüber es lesen kann.
  */
 @Component({
   selector: 'app-ueberlagerung',
+  imports: [SymbolBild],
+  host: { '[class.oben]': 'gedrehtJetzt()' },
   template: `
     <div class="hintergrund" (click)="schliessen.emit()"></div>
     <div
@@ -27,12 +31,19 @@ import {
       tabindex="-1"
       (keydown.escape)="schliessen.emit()"
     >
+      <div class="griff" aria-hidden="true"></div>
       <div class="leiste">
-        <button type="button" class="symbol" (click)="gedrehtJetzt.set(!gedrehtJetzt())">
-          <span aria-hidden="true">⟲</span> Drehen
+        <button
+          type="button"
+          class="symbol"
+          aria-label="Zum anderen Spieler drehen"
+          (click)="gedrehtJetzt.set(!gedrehtJetzt())"
+        >
+          <app-symbol name="drehen" />
         </button>
-        <button type="button" class="symbol" (click)="schliessen.emit()">
-          <span aria-hidden="true">✕</span> <span class="sr-only">Schließen</span>
+        <p class="titel">{{ titel() }}</p>
+        <button type="button" class="symbol" aria-label="Schließen" (click)="schliessen.emit()">
+          <app-symbol name="schliessen" />
         </button>
       </div>
       <div class="inhalt">
@@ -46,59 +57,92 @@ import {
       inset: 0;
       z-index: 10;
       display: grid;
-      place-items: center;
-      padding: 0.75rem;
+      align-items: end;
+      justify-items: center;
+    }
+    :host(.oben) {
+      align-items: start;
     }
     .hintergrund {
       position: absolute;
       inset: 0;
-      background: rgb(4 14 12 / 0.6);
-      animation: einblenden 160ms ease-out;
+      background: rgb(4 14 12 / 0.55);
+      animation: einblenden 180ms ease-out;
     }
     .rahmen {
       position: relative;
-      width: min(100%, 30rem);
-      max-height: calc(100dvh - 1.5rem);
+      width: min(100%, 34rem);
+      max-height: calc(100dvh - 2.5rem - env(safe-area-inset-top));
       display: grid;
-      grid-template-rows: auto 1fr;
+      grid-template-rows: auto auto 1fr;
+      padding-bottom: env(safe-area-inset-bottom);
       background: var(--filz-tief);
-      border-radius: var(--radius);
-      box-shadow: var(--schatten);
+      border-radius: 1.4rem 1.4rem 0 0;
+      box-shadow: 0 -0.5rem 2rem rgb(0 0 0 / 0.35);
       outline: none;
-      animation: auftauchen 200ms ease-out;
-      transition: transform 250ms ease;
+      animation: hochfahren 260ms cubic-bezier(0.2, 0.9, 0.3, 1);
     }
     .rahmen.gedreht {
       transform: rotate(180deg);
+      animation-name: herunterfahren;
+    }
+    .griff {
+      justify-self: center;
+      width: 2.5rem;
+      height: 0.3rem;
+      margin-top: 0.5rem;
+      border-radius: 99px;
+      background: var(--feld-rand);
     }
     .leiste {
       display: flex;
-      justify-content: space-between;
-      padding: 0.4rem;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.2rem 0.4rem 0.3rem;
+    }
+    .titel {
+      flex: 1;
+      margin: 0;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-leise);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .symbol {
-      min-height: 2.75rem;
-      min-width: 2.75rem;
-      padding: 0.4rem 0.8rem;
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
       border: 0;
-      border-radius: var(--radius-klein);
+      border-radius: 50%;
       background: transparent;
       color: var(--text-leise);
-      font-weight: 600;
+      font-size: 1rem;
+    }
+    .symbol:active {
+      background: var(--feld);
     }
     .inhalt {
       overflow-y: auto;
-      padding: 0 1rem 1rem;
+      overscroll-behavior: contain;
+      padding: 0 1rem 1.1rem;
     }
     @keyframes einblenden {
       from {
         opacity: 0;
       }
     }
-    @keyframes auftauchen {
+    @keyframes hochfahren {
       from {
-        opacity: 0;
-        scale: 0.96;
+        transform: translateY(100%);
+      }
+    }
+    @keyframes herunterfahren {
+      from {
+        transform: rotate(180deg) translateY(100%);
       }
     }
   `,

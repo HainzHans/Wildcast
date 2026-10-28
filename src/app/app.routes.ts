@@ -6,14 +6,10 @@ import { SpielStore } from './core/spiel/spiel-store';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./pages/start/start').then((m) => m.Start),
+    loadComponent: () => import('./pages/spielen/spielen-seite').then((m) => m.SpielenSeite),
     title: 'Wildcast',
   },
-  {
-    path: 'spielen',
-    loadComponent: () => import('./pages/spielen/spielen-seite').then((m) => m.SpielenSeite),
-    title: 'Jetzt spielen · Wildcast',
-  },
+  { path: 'spielen', redirectTo: '' },
   {
     path: 'varianten',
     loadComponent: () => import('./pages/varianten/varianten-seite').then((m) => m.VariantenSeite),

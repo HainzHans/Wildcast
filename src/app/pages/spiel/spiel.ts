@@ -6,13 +6,16 @@ import {
   OnDestroy,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 
 import { Effekt } from '../../core/spiel/modell';
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { TischAnsicht } from '../../core/tisch-ansicht';
 import { WachHalten } from '../../core/wach-halten';
+import { Einstellungen } from '../../core/einstellungen';
 import { BestaetigenKnopf } from '../../shared/ui/bestaetigen-knopf';
+import { SymbolBild } from '../../shared/ui/symbol';
 import { Ueberlagerung } from '../../shared/ui/ueberlagerung';
 import { BossFeld } from '../../varianten/boss/boss-feld';
 import { BossProtokollListe } from '../../varianten/boss/boss-protokoll';
@@ -21,7 +24,7 @@ import { bossMitId } from '../../varianten/boss/bosse';
 import { EffektKarte } from '../../varianten/mana-wuerfel/effekt-karte';
 import { EffektListe } from '../../varianten/mana-wuerfel/effekt-liste';
 import { WirkenDialog } from '../../varianten/mana-wuerfel/wirken-dialog';
-import { kombinieren } from '../../varianten/varianten';
+import { kombinieren, variantenName } from '../../varianten/varianten';
 import { rundenBisWechsel } from '../../varianten/welten/welt-stand';
 import { WeltBand } from '../../varianten/welten/welt-band';
 import { WeltKarte } from '../../varianten/welten/welt-karte';
@@ -41,12 +44,16 @@ type Dialog =
   | { art: 'bossprotokoll' }
   | { art: 'welt' }
   | { art: 'basar' }
+  | { art: 'menue' }
+  | { art: 'regeln' }
   | { art: 'segen'; spielerId: number; segenId: string; gedreht: boolean };
 
 @Component({
   selector: 'app-spiel',
   imports: [
     RouterLink,
+    NgTemplateOutlet,
+    SymbolBild,
     SpielerFeld,
     WirkenDialog,
     EffektListe,
@@ -121,70 +128,90 @@ type Dialog =
           @if (s.sturm; as st) {
             <app-sturm-band [stand]="st" [runde]="s.runde ?? 1" />
           }
-          @if (zugInfo(); as z) {
-            <div class="zugleiste" aria-live="polite">
-              @if (z.besiegt) {
-                <span class="zug-text"><strong>Sieg!</strong> {{ z.bossName }} ist besiegt.</span>
-              } @else {
+          <div class="steuerleiste">
+            <button
+              type="button"
+              class="rund-knopf"
+              aria-label="Spielmenü"
+              (click)="dialog.set({ art: 'menue' })"
+            >
+              <app-symbol name="menue" />
+            </button>
+            @if (zugInfo(); as z) {
+              <div class="zugleiste" aria-live="polite">
+                @if (z.besiegt) {
+                  <span class="zug-text"><strong>Sieg!</strong> {{ z.bossName }} ist besiegt.</span>
+                } @else {
+                  <span class="zug-text"
+                    >Runde <strong>{{ z.runde }}</strong></span
+                  >
+                  <button
+                    type="button"
+                    class="knopf knopf--haupt zug-knopf"
+                    (click)="dialog.set({ art: 'bosszug' })"
+                  >
+                    Boss-Zug
+                  </button>
+                }
+              </div>
+            } @else if (runde(); as r) {
+              <div class="zugleiste" aria-live="polite">
                 <span class="zug-text"
-                  >Runde <strong>{{ z.runde }}</strong></span
+                  >Runde <strong>{{ r }}</strong></span
                 >
                 <button
                   type="button"
                   class="knopf knopf--haupt zug-knopf"
-                  (click)="dialog.set({ art: 'bosszug' })"
+                  (click)="store.rundeBeenden()"
                 >
-                  Boss-Zug
+                  Runde beenden
                 </button>
-              }
+              </div>
+            } @else {
+              <div class="werkzeuge innen">
+                <ng-container [ngTemplateOutlet]="werkzeuge" />
+              </div>
+            }
+            <button
+              type="button"
+              class="rund-knopf"
+              aria-label="Rückgängig"
+              [disabled]="!store.kannRueckgaengig()"
+              (click)="store.rueckgaengig()"
+            >
+              <app-symbol name="rueckgaengig" />
+            </button>
+          </div>
+          @if ((zugInfo() || runde()) && hatWerkzeuge()) {
+            <div class="werkzeuge">
+              <ng-container [ngTemplateOutlet]="werkzeuge" />
             </div>
-          } @else if (runde(); as r) {
-            <div class="zugleiste" aria-live="polite">
-              <span class="zug-text"
-                >Runde <strong>{{ r }}</strong></span
-              >
-              <button
-                type="button"
-                class="knopf knopf--haupt zug-knopf"
-                (click)="store.rundeBeenden()"
-              >
-                Runde beenden
+          }
+
+          <ng-template #werkzeuge>
+            @if (pause() === 'draft' && draftOffen()) {
+              <button type="button" class="werkzeug hervor" (click)="pause.set(null)">
+                <app-symbol name="segen" /> Segen wählen
               </button>
-            </div>
-          }
-          <a class="steuer" routerLink="/"
-            ><span aria-hidden="true">☰</span> <span class="kurz">Menü</span></a
-          >
-          <button
-            type="button"
-            class="steuer"
-            [disabled]="!store.kannRueckgaengig()"
-            (click)="store.rueckgaengig()"
-          >
-            <span aria-hidden="true">↶</span> <span class="kurz">Rückgängig</span>
-          </button>
-          @if (pause() === 'draft' && draftOffen()) {
-            <button type="button" class="steuer hervor" (click)="pause.set(null)">
-              <span aria-hidden="true">☀</span> Segen wählen
-            </button>
-          }
-          @if (pause() === 'abwurf' && s.sturm?.abwurf) {
-            <button type="button" class="steuer hervor" (click)="pause.set(null)">
-              <span aria-hidden="true">⇩</span> Abwurf
-            </button>
-          }
-          @if (s.basar; as b) {
-            <button type="button" class="steuer" (click)="dialog.set({ art: 'basar' })">
-              <span aria-hidden="true">⚖</span> Basar
-              <span class="anzahl">{{ b.angebote.length }}</span>
-            </button>
-          }
-          @if (effektWuerfel()) {
-            <button type="button" class="steuer" (click)="dialog.set({ art: 'liste' })">
-              <span aria-hidden="true">✦</span> Effekte
-              <span class="anzahl">{{ s.effekte.length }}</span>
-            </button>
-          }
+            }
+            @if (pause() === 'abwurf' && s.sturm?.abwurf) {
+              <button type="button" class="werkzeug hervor" (click)="pause.set(null)">
+                <app-symbol name="untergang" /> Abwurf
+              </button>
+            }
+            @if (s.basar; as b) {
+              <button type="button" class="werkzeug" (click)="dialog.set({ art: 'basar' })">
+                <app-symbol name="basar" /> Basar
+                <span class="anzahl">{{ b.angebote.length }}</span>
+              </button>
+            }
+            @if (effektWuerfel()) {
+              <button type="button" class="werkzeug" (click)="dialog.set({ art: 'liste' })">
+                <app-symbol name="effekte" /> Effekte
+                <span class="anzahl">{{ s.effekte.length }}</span>
+              </button>
+            }
+          </ng-template>
         </nav>
       </div>
 
@@ -233,6 +260,70 @@ type Dialog =
         }
         @case ('basar') {
           <app-basar-dialog (schliessen)="dialog.set(null)" />
+        }
+        @case ('menue') {
+          <app-ueberlagerung titel="Spielmenü" (schliessen)="dialog.set(null)">
+            <div class="menue">
+              <p class="menue-kopf">
+                {{ variantenName()
+                }}{{
+                  zugInfo()?.runde || runde() ? ' · Runde ' + (zugInfo()?.runde || runde()) : ''
+                }}
+              </p>
+              <ul class="menue-liste">
+                <li>
+                  <button type="button" class="menue-punkt" (click)="dialog.set(null)">
+                    <app-symbol name="spielen" /> Weiterspielen
+                  </button>
+                </li>
+                <li>
+                  <button type="button" class="menue-punkt" (click)="dialog.set({ art: 'regeln' })">
+                    <app-symbol name="varianten" /> Regeln dieser Partie
+                  </button>
+                </li>
+                <li>
+                  <label class="menue-punkt">
+                    <app-symbol name="drehen" />
+                    <span class="menue-text">Tischmodus</span>
+                    <input
+                      type="checkbox"
+                      role="switch"
+                      [checked]="einstellungen.tischmodus()"
+                      (change)="einstellungen.tischmodus.set($any($event.target).checked)"
+                    />
+                  </label>
+                </li>
+                <li>
+                  <a class="menue-punkt" routerLink="/">
+                    <app-symbol name="start" /> Zum Hauptmenü
+                    <span class="menue-hinweis">Partie bleibt gespeichert</span>
+                  </a>
+                </li>
+              </ul>
+              <app-bestaetigen-knopf
+                class="gefahr"
+                label="Partie beenden"
+                frage="Wirklich beenden?"
+                (bestaetigt)="partieBeenden()"
+              />
+            </div>
+          </app-ueberlagerung>
+        }
+        @case ('regeln') {
+          <app-ueberlagerung titel="Regeln" (schliessen)="dialog.set(null)">
+            <div class="regeln">
+              @for (v of kombination()?.varianten ?? []; track v.id) {
+                <details [open]="(kombination()?.varianten?.length ?? 0) === 1">
+                  <summary>{{ v.name }}</summary>
+                  <ol>
+                    @for (regel of v.regeln; track $index) {
+                      <li>{{ regel }}</li>
+                    }
+                  </ol>
+                </details>
+              }
+            </div>
+          </app-ueberlagerung>
         }
         @case ('segen') {
           @if (gezeigterSegen(); as g) {
@@ -383,66 +474,186 @@ type Dialog =
     .drehen .mitte {
       grid-area: mitte;
     }
+    .mitte {
+      display: grid;
+      gap: 0.4rem;
+      min-width: 0;
+    }
+    .steuerleiste {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .rund-knopf {
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      width: 2.9rem;
+      height: 2.9rem;
+      border-radius: 50%;
+      border: 1px solid var(--feld-rand);
+      background: var(--filz-tief);
+      color: var(--text);
+      font-size: 1.05rem;
+      transition: transform 90ms;
+    }
+    .rund-knopf:active:not(:disabled) {
+      transform: scale(0.92);
+    }
+    .rund-knopf:disabled {
+      opacity: 0.35;
+    }
     .zugleiste {
-      flex: 1 1 14rem;
+      flex: 1;
+      min-width: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 0.5rem;
-      padding: 0.25rem 0.3rem 0.25rem 0.8rem;
+      padding: 0.25rem 0.25rem 0.25rem 0.9rem;
       border-radius: 99px;
       background: var(--filz-tief);
     }
     .zug-text {
       font-size: 0.9rem;
+      white-space: nowrap;
     }
     .zug-knopf {
-      min-height: 2.5rem;
-      padding: 0.3rem 0.9rem;
+      min-height: 2.4rem;
+      padding: 0.3rem 1rem;
       border-radius: 99px;
       white-space: nowrap;
     }
-
-    .mitte {
+    .werkzeuge {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
       gap: 0.35rem;
     }
-    .steuer {
+    .werkzeuge.innen {
+      flex: 1;
+      min-width: 0;
+    }
+    .werkzeug {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      min-height: 2.75rem;
-      padding: 0.3rem 0.8rem;
+      min-height: 2.6rem;
+      padding: 0.3rem 0.85rem;
       border-radius: 99px;
       border: 1px solid var(--feld-rand);
       background: var(--filz-tief);
       color: var(--text);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
+      transition: transform 90ms;
+    }
+    .werkzeug:active {
+      transform: scale(0.95);
+    }
+    .werkzeug.hervor {
+      border-color: var(--messing);
+      color: var(--messing);
+    }
+
+    .menue {
+      display: grid;
+      gap: 0.8rem;
+    }
+    .menue-kopf {
+      margin: 0;
+      text-align: center;
+      font-family: var(--schrift-anzeige);
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+    .menue-liste {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border-radius: 1rem;
+      background: var(--feld);
+      overflow: hidden;
+    }
+    .menue-liste li + li {
+      border-top: 1px solid color-mix(in srgb, var(--feld-rand) 60%, transparent);
+    }
+    .menue-punkt {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      min-height: 3.4rem;
+      padding: 0.5rem 1rem;
+      border: 0;
+      background: transparent;
+      color: var(--text);
       text-decoration: none;
+      text-align: start;
+      font-weight: 600;
+      cursor: pointer;
     }
-    .steuer:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
+    .menue-punkt app-symbol {
+      color: var(--messing);
     }
-    /* Schmale Handys: Menü und Rückgängig nur als Symbol, damit die Leiste einzeilig bleibt */
-    @media (max-width: 479px) {
-      .steuer {
-        justify-content: center;
-        min-width: 2.75rem;
-        padding-inline: 0.5rem;
-        font-size: 1.1rem;
-      }
-      .kurz {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip-path: inset(50%);
-        white-space: nowrap;
-      }
+    .menue-text {
+      flex: 1;
+    }
+    .menue-hinweis {
+      margin-left: auto;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-leise);
+    }
+    .menue input[type='checkbox'] {
+      flex-shrink: 0;
+      width: 3.1rem;
+      height: 1.85rem;
+      margin: 0;
+      appearance: none;
+      border-radius: 99px;
+      background: var(--filz-tief);
+      border: 1px solid var(--feld-rand);
+      position: relative;
+      cursor: pointer;
+    }
+    .menue input[type='checkbox']::after {
+      content: '';
+      position: absolute;
+      top: 0.18rem;
+      left: 0.2rem;
+      width: 1.35rem;
+      height: 1.35rem;
+      border-radius: 50%;
+      background: var(--text-leise);
+      transition: translate 150ms;
+    }
+    .menue input[type='checkbox']:checked {
+      background: var(--messing);
+    }
+    .menue input[type='checkbox']:checked::after {
+      background: var(--messing-text);
+      translate: 1.25rem 0;
+    }
+    .regeln {
+      display: grid;
+      gap: 0.5rem;
+    }
+    .regeln details {
+      padding: 0.8rem 1rem;
+      border-radius: 0.9rem;
+      background: var(--feld);
+    }
+    .regeln summary {
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .regeln ol {
+      margin: 0.6rem 0 0;
+      padding-left: 1.2rem;
+      display: grid;
+      gap: 0.45rem;
+      font-size: 0.92rem;
     }
     .anzahl {
       min-width: 1.4rem;
@@ -464,10 +675,6 @@ type Dialog =
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--messing);
-    }
-    .steuer.hervor {
-      border-color: var(--messing);
       color: var(--messing);
     }
     .segen-titel {
@@ -503,7 +710,23 @@ export class Spiel implements OnDestroy {
     return !this.bossQuer() && this.ansicht.istGedreht(index, anzahl);
   }
 
-  private readonly kombination = computed(() => kombinieren(this.store.stand()?.varianten ?? []));
+  protected readonly einstellungen = inject(Einstellungen);
+  private readonly router = inject(Router);
+
+  protected readonly kombination = computed(() => kombinieren(this.store.stand()?.varianten ?? []));
+  protected readonly variantenName = computed(() =>
+    variantenName(this.store.stand()?.varianten ?? []),
+  );
+  /** Basar, Effekte oder ein weggeklickter Draft/Abwurf brauchen eigene Knöpfe. */
+  protected readonly hatWerkzeuge = computed(() => {
+    const s = this.store.stand();
+    return (
+      !!s?.basar ||
+      this.effektWuerfel() ||
+      (this.pause() === 'draft' && this.draftOffen()) ||
+      (this.pause() === 'abwurf' && !!s?.sturm?.abwurf)
+    );
+  });
   protected readonly effektWuerfel = computed(
     () => this.kombination()?.werkzeuge.includes('effekt-wuerfel') ?? false,
   );
@@ -620,6 +843,12 @@ export class Spiel implements OnDestroy {
 
   constructor() {
     this.wach.an();
+  }
+
+  protected partieBeenden(): void {
+    this.dialog.set(null);
+    this.store.beenden();
+    void this.router.navigateByUrl('/', { replaceUrl: true });
   }
 
   protected zerstoeren(nr: number): void {

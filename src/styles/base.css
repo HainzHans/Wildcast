@@ -11,6 +11,8 @@ body {
 
 body {
   margin: 0;
+  /* Kein Gummiband und kein Ziehen-zum-Neuladen – fühlt sich an wie eine App */
+  overscroll-behavior: none;
   background: var(--filz);
   color: var(--text);
   font-family: var(--schrift-text);
@@ -36,6 +38,22 @@ button {
   touch-action: manipulation;
 }
 
+/* Knöpfe und Links markiert man nicht wie Text, und langes Drücken öffnet kein Browsermenü */
+button,
+a,
+label {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Ab 16px zoomt iOS beim Tippen in ein Feld nicht hinein */
+input,
+select,
+textarea {
+  font-size: max(1rem, 16px);
+}
+
 :focus-visible {
   outline: 3px solid var(--messing);
   outline-offset: 2px;
@@ -49,6 +67,16 @@ button {
   border-radius: var(--radius-klein);
   background: var(--feld);
   font-weight: 600;
+}
+
+.knopf {
+  transition:
+    transform 90ms ease,
+    background 150ms;
+}
+
+.knopf:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .knopf--haupt {
@@ -69,6 +97,25 @@ button {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* Sanfter Seitenwechsel wie in einer App */
+::view-transition-old(root) {
+  animation: 140ms ease-in both seite-raus;
+}
+::view-transition-new(root) {
+  animation: 200ms ease-out both seite-rein;
+}
+@keyframes seite-raus {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes seite-rein {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

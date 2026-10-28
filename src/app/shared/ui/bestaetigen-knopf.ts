@@ -25,6 +25,15 @@ import {
     </button>
   `,
   styles: `
+    /* Für Gefährliches wie „Partie beenden“: breit und in Warnfarbe */
+    :host(.gefahr) {
+      display: grid;
+    }
+    :host(.gefahr) .knopf {
+      min-height: 3.2rem;
+      border-radius: 1rem;
+      color: var(--negativ);
+    }
     .scharf {
       background: var(--negativ);
       border-color: transparent;

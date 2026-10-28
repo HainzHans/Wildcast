@@ -18,6 +18,7 @@
   --positiv: light-dark(#2f7d4a, #6cc287);
   --negativ: light-dark(#b8322b, #f0675d);
   --chaos: light-dark(#9a2f8f, #e07ad5);
+  --himmel: light-dark(#2f6db0, #7fb2ee);
 
   --schrift-anzeige: 'Fraunces Variable', Georgia, serif;
   --schrift-text: system-ui, -apple-system, 'Segoe UI', sans-serif;
