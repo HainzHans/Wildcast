@@ -23,7 +23,20 @@ import {
   STANDARD_WELTEN,
   weltenStarten,
 } from '../../varianten/welten/welt-stand';
-import { Welt, weltMitId } from '../../varianten/welten/welten';
+import { weltMitId } from '../../varianten/welten/welten';
+import { basarKaufen, basarRunde, basarStarten, STANDARD_BASAR } from '../../varianten/basar/basar';
+import {
+  segenStarten,
+  segenUmschalten,
+  segenWaehlen,
+  STANDARD_SEGEN,
+} from '../../varianten/segen/segen';
+import {
+  abwurfWaehlen,
+  STANDARD_STURM,
+  sturmRunde,
+  sturmStarten,
+} from '../../varianten/untergang/sturm';
 import { lesen, schreiben } from '../speicher';
 import { ZUFALL } from '../zufall';
 import { Effekt, SpielOptionen, Spielstand, VarianteId } from './modell';
@@ -98,7 +111,17 @@ export class SpielStore {
       spieler: erste ? lebenBeimErscheinen(erste, spieler) : spieler,
       effekte: [],
       optionen,
+      runde: 1,
       welt,
+      sturm: varianten.includes('untergang')
+        ? sturmStarten(optionen.sturm ?? STANDARD_STURM)
+        : undefined,
+      segen: varianten.includes('segen')
+        ? segenStarten(optionen.segen ?? STANDARD_SEGEN, spieler, this.zufall)
+        : undefined,
+      basar: varianten.includes('basar')
+        ? basarStarten(optionen.basar ?? STANDARD_BASAR, this.zufall)
+        : undefined,
       boss: varianten.includes('boss')
         ? bossStarten(bossMitId(optionen.bossId), this.zufall, optionen.bossPlaner)
         : undefined,
@@ -140,33 +163,71 @@ export class SpielStore {
     }));
   }
 
-  // ── Weltenwandel ──────────────────────────────────────────────
+  // ── Runden ────────────────────────────────────────────────────
 
-  /** Jeder war einmal dran. Gibt die neue Welt zurück, falls eine erscheint. */
-  rundeBeenden(): Welt | null {
-    if (!this._stand()?.welt) return null;
-    let neu: Welt | null = null;
-    this.aendern((s) => {
-      const r = this.weltWeiter(s);
-      neu = r.neu;
-      return r.stand;
-    });
-    return neu;
+  /** Jeder war einmal dran: neue Welt, Sturm und Basar rücken weiter. */
+  rundeBeenden(): void {
+    this.aendern((s) => this.rundeWeiter(s));
+  }
+
+  /** Was beim Rundenwechsel in allen Varianten passiert. Im Bosskampf beendet der Boss-Zug die Runde. */
+  private rundeWeiter(alt: Spielstand): Spielstand {
+    const runde = (alt.runde ?? alt.welt?.runde ?? 1) + 1;
+    let s: Spielstand = { ...alt, runde };
+    if (s.welt) {
+      const { stand: welt, neu } = rundeBeenden(s.welt, s.spieler.length, this.zufall);
+      if (neu) this._weltAufdecken.set(true);
+      s = { ...s, welt, spieler: neu ? lebenBeimErscheinen(neu, s.spieler) : s.spieler };
+    }
+    if (s.sturm) {
+      const r = sturmRunde(s.sturm, s.spieler, runde, this.zufall);
+      s = { ...s, sturm: r.stand, spieler: r.spieler };
+    }
+    if (s.basar) s = { ...s, basar: basarRunde(s.basar, runde, this.zufall) };
+    return s;
   }
 
   weltGesehen(): void {
     this._weltAufdecken.set(false);
   }
 
-  /** Zählt die Runde der Welten weiter und trägt beim Wechsel die Leben der neuen Welt ein. */
-  private weltWeiter(s: Spielstand): { stand: Spielstand; neu: Welt | null } {
-    if (!s.welt) return { stand: s, neu: null };
-    const { stand: welt, neu } = rundeBeenden(s.welt, s.spieler.length, this.zufall);
-    if (neu) this._weltAufdecken.set(true);
-    return {
-      stand: { ...s, welt, spieler: neu ? lebenBeimErscheinen(neu, s.spieler) : s.spieler },
-      neu,
-    };
+  // ── Untergang ─────────────────────────────────────────────────
+
+  /** Der Nächste in der Reihenfolge nimmt sich ein Angebot aus dem Versorgungsabwurf. */
+  abwurfWaehlen(angebotId: string): void {
+    this.aendern((s) => {
+      if (!s.sturm) return s;
+      const r = abwurfWaehlen(s.sturm, s.spieler, angebotId);
+      return { ...s, sturm: r.stand, spieler: r.spieler };
+    });
+  }
+
+  // ── Segen-Draft ───────────────────────────────────────────────
+
+  segenWaehlen(segenId: string): void {
+    this.aendern((s) => {
+      if (!s.segen) return s;
+      const r = segenWaehlen(s.segen, s.spieler, segenId);
+      return { ...s, segen: r.stand, spieler: r.spieler };
+    });
+  }
+
+  /** Einmaligen Segen als eingesetzt markieren (oder zurücknehmen). */
+  segenUmschalten(spielerId: number, segenId: string): void {
+    this.aendern((s) =>
+      s.segen ? { ...s, segen: segenUmschalten(s.segen, spielerId, segenId) } : s,
+    );
+  }
+
+  // ── Basar ─────────────────────────────────────────────────────
+
+  basarKaufen(angebotId: string, spielerId: number): void {
+    this.aendern((s) => {
+      if (!s.basar) return s;
+      const runde = s.runde ?? 1;
+      const r = basarKaufen(s.basar, s.spieler, angebotId, spielerId, runde, this.zufall);
+      return { ...s, basar: r.stand, spieler: r.spieler };
+    });
   }
 
   // ── Bosskampf ─────────────────────────────────────────────────
@@ -222,20 +283,17 @@ export class SpielStore {
       bossLage(s.boss, s.spieler, antworten),
       this.zufall,
     );
-    this.aendern(
-      (alt) =>
-        this.weltWeiter({
-          ...alt,
-          spieler: alt.spieler.map((p) => ({
-            ...p,
-            leben:
-              p.leben +
-              zug.lebenAenderungen
-                .filter((l) => l.spielerId === p.id)
-                .reduce((n, l) => n + l.um, 0),
-          })),
-          boss: alt.boss && bossZugEintragen(alt.boss, zug, alt.spieler, antworten),
-        }).stand,
+    this.aendern((alt) =>
+      this.rundeWeiter({
+        ...alt,
+        spieler: alt.spieler.map((p) => ({
+          ...p,
+          leben:
+            p.leben +
+            zug.lebenAenderungen.filter((l) => l.spielerId === p.id).reduce((n, l) => n + l.um, 0),
+        })),
+        boss: alt.boss && bossZugEintragen(alt.boss, zug, alt.spieler, antworten),
+      }),
     );
     return zug;
   }

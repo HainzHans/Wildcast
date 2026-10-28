@@ -22,6 +22,16 @@ import { BOSSE, bossMitId } from '../../varianten/boss/bosse';
 import { Planerstufe } from '../../varianten/boss/boss-modell';
 import { PLANERSTUFEN } from '../../varianten/boss/boss-planer';
 import { kombinieren } from '../../varianten/varianten';
+import { BASAR_GROESSEN, BasarEinstellungen, STANDARD_BASAR } from '../../varianten/basar/basar';
+import { SEGEN_ANZAHL, SegenEinstellungen, STANDARD_SEGEN } from '../../varianten/segen/segen';
+import {
+  STANDARD_STURM,
+  STURM_STAERKEN,
+  STURM_START,
+  SturmEinstellungen,
+  SturmStaerke,
+  sturmVerlauf,
+} from '../../varianten/untergang/sturm';
 import {
   INTERVALLE,
   STANDARD_WELTEN,
@@ -213,6 +223,113 @@ const LEBEN_MAX = 999;
                       ' Runden lang, dann erscheint die nächste.'
                 }}
               </p>
+            </fieldset>
+          }
+
+          @if (mitSturm()) {
+            <fieldset>
+              <legend>Sturm ab Runde</legend>
+              <div class="auswahl umbruch" role="radiogroup" aria-label="Sturm ab Runde">
+                @for (x of sturmStart; track x.id) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="knopf"
+                    [class.knopf--haupt]="sturm().abRunde === x.id"
+                    [attr.aria-checked]="sturm().abRunde === x.id"
+                    (click)="sturm.set({ abRunde: x.id, staerke: sturm().staerke })"
+                  >
+                    {{ x.name }}
+                  </button>
+                }
+              </div>
+              <p class="planer-text">Die ersten Runden bleiben ruhig.</p>
+            </fieldset>
+
+            <fieldset>
+              <legend>Stärke des Sturms</legend>
+              <div class="auswahl umbruch" role="radiogroup" aria-label="Stärke des Sturms">
+                @for (x of sturmStaerken; track x.id) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="knopf"
+                    [class.knopf--haupt]="sturm().staerke === x.id"
+                    [attr.aria-checked]="sturm().staerke === x.id"
+                    (click)="sturm.set({ abRunde: sturm().abRunde, staerke: x.id })"
+                  >
+                    {{ x.name }}
+                  </button>
+                }
+              </div>
+              <p class="planer-text">{{ sturmText() }}</p>
+            </fieldset>
+          }
+
+          @if (mitSegen()) {
+            <fieldset>
+              <legend>Segen pro Spieler</legend>
+              <div class="auswahl umbruch" role="radiogroup" aria-label="Segen pro Spieler">
+                @for (x of segenAnzahl; track x.id) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="knopf"
+                    [class.knopf--haupt]="segen().anzahl === x.id"
+                    [attr.aria-checked]="segen().anzahl === x.id"
+                    (click)="segen.set({ anzahl: x.id, pakte: segen().pakte })"
+                  >
+                    {{ x.name }}
+                  </button>
+                }
+              </div>
+              <p class="planer-text">Jedes Päckchen hat einen Segen mehr – der letzte verfällt.</p>
+            </fieldset>
+
+            <fieldset>
+              <legend>Pakte</legend>
+              <div class="auswahl umbruch" role="radiogroup" aria-label="Pakte">
+                @for (x of paktWahl; track x.name) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="knopf"
+                    [class.knopf--haupt]="segen().pakte === x.id"
+                    [attr.aria-checked]="segen().pakte === x.id"
+                    (click)="segen.set({ anzahl: segen().anzahl, pakte: x.id })"
+                  >
+                    {{ x.name }}
+                  </button>
+                }
+              </div>
+              <p class="planer-text">
+                {{
+                  segen().pakte
+                    ? 'Auch Pakte: stärker, aber mit Haken.'
+                    : 'Nur Segen ohne Nachteil.'
+                }}
+              </p>
+            </fieldset>
+          }
+
+          @if (mitBasar()) {
+            <fieldset>
+              <legend>Angebote im Basar</legend>
+              <div class="auswahl umbruch" role="radiogroup" aria-label="Angebote im Basar">
+                @for (x of basarGroessen; track x.id) {
+                  <button
+                    type="button"
+                    role="radio"
+                    class="knopf"
+                    [class.knopf--haupt]="basar().groesse === x.id"
+                    [attr.aria-checked]="basar().groesse === x.id"
+                    (click)="basar.set({ groesse: x.id })"
+                  >
+                    {{ x.name }}
+                  </button>
+                }
+              </div>
+              <p class="planer-text">So viele Angebote liegen gleichzeitig aus.</p>
             </fieldset>
           }
 
@@ -456,6 +573,26 @@ export class Einrichten {
     const anzahl = weltenFuer(auswahl, this.anzahl()).length;
     return `${WELT_ARTEN[auswahl].text} ${anzahl} Welten.`;
   });
+  protected readonly mitSturm = computed(() => this.eintrag()?.ids.includes('untergang') ?? false);
+  protected readonly sturm = signal<SturmEinstellungen>(STANDARD_STURM);
+  protected readonly sturmStart = STURM_START.map((n) => ({ id: n, name: String(n) }));
+  protected readonly sturmStaerken = (Object.keys(STURM_STAERKEN) as SturmStaerke[]).map((id) => ({
+    id,
+    name: STURM_STAERKEN[id].name,
+  }));
+  protected readonly sturmText = computed(
+    () => `Leben pro Runde: ${sturmVerlauf(this.sturm(), 7).join(', ')} …`,
+  );
+  protected readonly mitSegen = computed(() => this.eintrag()?.ids.includes('segen') ?? false);
+  protected readonly segen = signal<SegenEinstellungen>(STANDARD_SEGEN);
+  protected readonly segenAnzahl = SEGEN_ANZAHL.map((n) => ({ id: n, name: String(n) }));
+  protected readonly paktWahl = [
+    { id: true, name: 'Mit Pakten' },
+    { id: false, name: 'Ohne Pakte' },
+  ];
+  protected readonly mitBasar = computed(() => this.eintrag()?.ids.includes('basar') ?? false);
+  protected readonly basar = signal<BasarEinstellungen>(STANDARD_BASAR);
+  protected readonly basarGroessen = BASAR_GROESSEN.map((n) => ({ id: n, name: String(n) }));
   protected readonly bosse = BOSSE;
   protected readonly planerStufen = (Object.keys(PLANERSTUFEN) as Planerstufe[]).map((id) => ({
     id,
@@ -522,6 +659,9 @@ export class Einrichten {
       ...(this.mitWuerfel() ? { manaWuerfel: this.wuerfel() } : {}),
       ...(this.boss() ? { bossId: this.bossId(), bossPlaner: this.planer() } : {}),
       ...(this.mitWelten() ? { welten: this.welten() } : {}),
+      ...(this.mitSturm() ? { sturm: this.sturm() } : {}),
+      ...(this.mitSegen() ? { segen: this.segen() } : {}),
+      ...(this.mitBasar() ? { basar: this.basar() } : {}),
     };
     if (optionen.manaWuerfel) merkeWuerfelEinstellungen(optionen.manaWuerfel);
     this.store.starten(v.ids, namen, this.startLeben(), optionen);

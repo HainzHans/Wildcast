@@ -52,8 +52,21 @@ const SAMMELZEIT = 1500;
         </button>
       }
 
-      @if (bleibende().length) {
-        <ul class="bleibend" aria-label="Verzauberungen und Embleme">
+      @if (bleibende().length || segen().length) {
+        <ul class="bleibend" aria-label="Segen, Verzauberungen und Embleme">
+          @for (s of segen(); track s.id) {
+            <li>
+              <button
+                type="button"
+                class="marke segen"
+                [class.pakt]="s.pakt"
+                [class.benutzt]="s.benutzt"
+                (click)="segenZeigen.emit(s.id)"
+              >
+                <span aria-hidden="true">{{ s.benutzt ? '✓' : '☀' }}</span> {{ s.name }}
+              </button>
+            </li>
+          }
           @for (e of bleibende(); track e.nr) {
             <li>
               <button
@@ -184,6 +197,16 @@ const SAMMELZEIT = 1500;
     .marke[data-art='chaos'] {
       border-color: var(--chaos);
     }
+    .marke.segen {
+      border-color: var(--messing);
+    }
+    .marke.segen.pakt {
+      border-style: dashed;
+    }
+    .marke.benutzt {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -193,10 +216,13 @@ export class SpielerFeld implements OnDestroy {
   readonly effektWuerfel = input(false);
   /** Aktive Verzauberungen und Embleme, die diesen Spieler betreffen. */
   readonly bleibende = input<Effekt[]>([]);
+  /** Segen aus dem Draft; einmalige sind abgehakt, sobald sie eingesetzt wurden. */
+  readonly segen = input<{ id: string; name: string; pakt?: boolean; benutzt: boolean }[]>([]);
 
   readonly leben = output<number>();
   readonly wirken = output<void>();
   readonly zeigen = output<number>();
+  readonly segenZeigen = output<string>();
 
   protected readonly schritte = [-1, 1];
   protected readonly kritisch = KRITISCH;

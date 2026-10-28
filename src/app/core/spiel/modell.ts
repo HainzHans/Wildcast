@@ -1,13 +1,16 @@
 import type { Planerstufe } from '../../varianten/boss/boss-modell';
 import type { BossStand } from '../../varianten/boss/boss-stand';
 import type { WuerfelEinstellungen } from '../../varianten/mana-wuerfel/wuerfel-einstellungen';
+import type { BasarEinstellungen, BasarStand } from '../../varianten/basar/basar';
+import type { SegenEinstellungen, SegenStand } from '../../varianten/segen/segen';
+import type { SturmEinstellungen, SturmStand } from '../../varianten/untergang/sturm';
 import type { WeltEinstellungen, WeltStand } from '../../varianten/welten/welt-stand';
 
 /** Kennung einer Spielvariante. Neue Varianten kommen hier dazu. */
-export type VarianteId = 'mana-wuerfel' | 'boss' | 'welten';
+export type VarianteId = 'mana-wuerfel' | 'boss' | 'welten' | 'untergang' | 'segen' | 'basar';
 
 /** Werkzeuge, die eine Variante auf dem Spieltisch einblendet. */
-export type Werkzeug = 'leben' | 'effekt-wuerfel' | 'boss' | 'welt';
+export type Werkzeug = 'leben' | 'effekt-wuerfel' | 'boss' | 'welt' | 'sturm' | 'segen' | 'basar';
 
 export interface Variante {
   id: VarianteId;
@@ -60,8 +63,16 @@ export interface Spielstand {
   optionen?: SpielOptionen;
   /** Nur im Bosskampf. */
   boss?: BossStand;
+  /** Eine Runde ist vorbei, wenn jeder einmal dran war. Ältere Stände kannten sie nicht. */
+  runde?: number;
   /** Nur im Weltenwandel. */
   welt?: WeltStand;
+  /** Nur im Untergang. */
+  sturm?: SturmStand;
+  /** Nur mit Segen-Draft. */
+  segen?: SegenStand;
+  /** Nur mit Basar. */
+  basar?: BasarStand;
 }
 
 export interface SpielOptionen {
@@ -69,4 +80,7 @@ export interface SpielOptionen {
   bossId?: string;
   bossPlaner?: Planerstufe;
   welten?: WeltEinstellungen;
+  sturm?: SturmEinstellungen;
+  segen?: SegenEinstellungen;
+  basar?: BasarEinstellungen;
 }

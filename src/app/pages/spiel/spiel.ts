@@ -26,6 +26,11 @@ import { rundenBisWechsel } from '../../varianten/welten/welt-stand';
 import { WeltBand } from '../../varianten/welten/welt-band';
 import { WeltKarte } from '../../varianten/welten/welt-karte';
 import { weltMitId } from '../../varianten/welten/welten';
+import { BasarDialog } from '../../varianten/basar/basar-dialog';
+import { segenMitId } from '../../varianten/segen/segen';
+import { SegenDraft } from '../../varianten/segen/segen-draft';
+import { AbwurfWahl } from '../../varianten/untergang/abwurf-wahl';
+import { SturmBand } from '../../varianten/untergang/sturm-band';
 import { SpielerFeld } from './spieler-feld';
 
 type Dialog =
@@ -34,7 +39,9 @@ type Dialog =
   | { art: 'liste' }
   | { art: 'bosszug' }
   | { art: 'bossprotokoll' }
-  | { art: 'welt' };
+  | { art: 'welt' }
+  | { art: 'basar' }
+  | { art: 'segen'; spielerId: number; segenId: string; gedreht: boolean };
 
 @Component({
   selector: 'app-spiel',
@@ -51,6 +58,10 @@ type Dialog =
     BossProtokollListe,
     WeltBand,
     WeltKarte,
+    SturmBand,
+    AbwurfWahl,
+    SegenDraft,
+    BasarDialog,
   ],
   template: `
     @if (store.stand(); as s) {
@@ -68,6 +79,15 @@ type Dialog =
             [gedreht]="gedreht(i, s.spieler.length)"
             [effektWuerfel]="effektWuerfel()"
             [bleibende]="bleibendeJeSpieler().get(p.id) ?? []"
+            [segen]="segenJeSpieler().get(p.id) ?? []"
+            (segenZeigen)="
+              dialog.set({
+                art: 'segen',
+                spielerId: p.id,
+                segenId: $event,
+                gedreht: gedreht(i, s.spieler.length),
+              })
+            "
             (leben)="store.aendereLeben(p.id, $event)"
             (wirken)="
               dialog.set({
@@ -98,6 +118,9 @@ type Dialog =
               (oeffnen)="dialog.set({ art: 'welt' })"
             />
           }
+          @if (s.sturm; as st) {
+            <app-sturm-band [stand]="st" [runde]="s.runde ?? 1" />
+          }
           @if (zugInfo(); as z) {
             <div class="zugleiste" aria-live="polite">
               @if (z.besiegt) {
@@ -115,10 +138,10 @@ type Dialog =
                 </button>
               }
             </div>
-          } @else if (weltInfo(); as w) {
+          } @else if (runde(); as r) {
             <div class="zugleiste" aria-live="polite">
               <span class="zug-text"
-                >Runde <strong>{{ w.runde }}</strong></span
+                >Runde <strong>{{ r }}</strong></span
               >
               <button
                 type="button"
@@ -140,6 +163,22 @@ type Dialog =
           >
             <span aria-hidden="true">↶</span> <span class="kurz">Rückgängig</span>
           </button>
+          @if (pause() === 'draft' && draftOffen()) {
+            <button type="button" class="steuer hervor" (click)="pause.set(null)">
+              <span aria-hidden="true">☀</span> Segen wählen
+            </button>
+          }
+          @if (pause() === 'abwurf' && s.sturm?.abwurf) {
+            <button type="button" class="steuer hervor" (click)="pause.set(null)">
+              <span aria-hidden="true">⇩</span> Abwurf
+            </button>
+          }
+          @if (s.basar; as b) {
+            <button type="button" class="steuer" (click)="dialog.set({ art: 'basar' })">
+              <span aria-hidden="true">⚖</span> Basar
+              <span class="anzahl">{{ b.angebote.length }}</span>
+            </button>
+          }
           @if (effektWuerfel()) {
             <button type="button" class="steuer" (click)="dialog.set({ art: 'liste' })">
               <span aria-hidden="true">✦</span> Effekte
@@ -192,6 +231,35 @@ type Dialog =
         @case ('bossprotokoll') {
           <app-boss-protokoll (schliessen)="dialog.set(null)" />
         }
+        @case ('basar') {
+          <app-basar-dialog (schliessen)="dialog.set(null)" />
+        }
+        @case ('segen') {
+          @if (gezeigterSegen(); as g) {
+            <app-ueberlagerung
+              [titel]="g.segen.name"
+              [gedreht]="g.gedreht"
+              (schliessen)="dialog.set(null)"
+            >
+              <div class="gezeigt">
+                <p class="ankuendigung">{{ g.segen.pakt ? 'Pakt' : 'Segen' }} von {{ g.von }}</p>
+                <p class="segen-titel">{{ g.segen.name }}</p>
+                <p class="segen-text">{{ g.segen.text }}</p>
+                @if (g.segen.einmalig) {
+                  <p class="hinweis">Einmal pro Partie.</p>
+                  <button
+                    type="button"
+                    class="knopf"
+                    [class.knopf--haupt]="!g.benutzt"
+                    (click)="store.segenUmschalten(g.spielerId, g.segen.id)"
+                  >
+                    {{ g.benutzt ? 'Doch nicht eingesetzt' : 'Eingesetzt' }}
+                  </button>
+                }
+              </div>
+            </app-ueberlagerung>
+          }
+        }
         @case ('welt') {
           @if (weltInfo(); as w) {
             <app-ueberlagerung titel="Aktuelle Welt" (schliessen)="dialog.set(null)">
@@ -206,7 +274,21 @@ type Dialog =
         }
       }
 
-      @if (store.weltAufdecken() && !dialog()) {
+      @if (draftOffen() && !pause() && !dialog()) {
+        <app-ueberlagerung
+          titel="Segen-Draft"
+          [gedreht]="draftGedreht()"
+          (schliessen)="pause.set('draft')"
+        >
+          <app-segen-draft [stand]="s.segen!" [spieler]="s.spieler" />
+        </app-ueberlagerung>
+      } @else if (s.sturm?.abwurf && pause() !== 'abwurf' && !dialog() && !store.weltAufdecken()) {
+        <app-ueberlagerung titel="Versorgungsabwurf" (schliessen)="pause.set('abwurf')">
+          <app-abwurf-wahl [stand]="s.sturm!" [spieler]="s.spieler" />
+        </app-ueberlagerung>
+      }
+
+      @if (store.weltAufdecken() && !dialog() && !draftOffen()) {
         @if (weltInfo(); as w) {
           <app-ueberlagerung titel="Eine neue Welt" (schliessen)="store.weltGesehen()">
             <div class="gezeigt">
@@ -384,6 +466,21 @@ type Dialog =
       text-transform: uppercase;
       color: var(--messing);
     }
+    .steuer.hervor {
+      border-color: var(--messing);
+      color: var(--messing);
+    }
+    .segen-titel {
+      margin: 0;
+      font-family: var(--schrift-anzeige);
+      font-size: 1.7rem;
+      font-weight: 800;
+    }
+    .segen-text {
+      margin: 0;
+      font-size: 1.1rem;
+      line-height: 1.4;
+    }
     .hinweis {
       margin: 0;
       color: var(--text-leise);
@@ -447,6 +544,64 @@ export class Spiel implements OnDestroy {
     const b = this.store.stand()?.boss;
     if (!b) return null;
     return { runde: b.runde, bossName: bossMitId(b.bossId).name, besiegt: b.leben <= 0 };
+  });
+
+  /** Weggeklickter Draft oder Abwurf: bleibt zu, bis ihn jemand über die Leiste wieder öffnet. */
+  protected readonly pause = signal<'draft' | 'abwurf' | null>(null);
+
+  /** Runde für die Zugleiste, sobald eine Variante in Runden zählt (der Boss hat seine eigene). */
+  protected readonly runde = computed(() => {
+    const s = this.store.stand();
+    if (!s || s.boss || !(s.welt || s.sturm || s.basar)) return null;
+    return s.runde ?? s.welt?.runde ?? 1;
+  });
+
+  protected readonly draftOffen = computed(() => {
+    const segen = this.store.stand()?.segen;
+    return !!segen && !segen.fertig;
+  });
+  protected readonly draftGedreht = computed(() => {
+    const s = this.store.stand();
+    return !!s?.segen && this.gedreht(s.segen.waehler, s.spieler.length);
+  });
+
+  protected readonly segenJeSpieler = computed(() => {
+    const segen = this.store.stand()?.segen;
+    const karte = new Map<
+      number,
+      { id: string; name: string; pakt?: boolean; benutzt: boolean }[]
+    >();
+    if (!segen?.fertig) return karte;
+    for (const [id, liste] of Object.entries(segen.gewaehlt)) {
+      karte.set(
+        Number(id),
+        liste
+          .map((sid) => segenMitId(sid))
+          .filter((x) => !!x)
+          .map((x) => ({
+            id: x.id,
+            name: x.name,
+            pakt: x.pakt,
+            benutzt: segen.benutzt.includes(`${id}:${x.id}`),
+          })),
+      );
+    }
+    return karte;
+  });
+
+  protected readonly gezeigterSegen = computed(() => {
+    const d = this.dialog();
+    const s = this.store.stand();
+    if (d?.art !== 'segen' || !s?.segen) return null;
+    const segen = segenMitId(d.segenId);
+    if (!segen) return null;
+    return {
+      segen,
+      spielerId: d.spielerId,
+      gedreht: d.gedreht,
+      von: s.spieler.find((p) => p.id === d.spielerId)?.name ?? '',
+      benutzt: s.segen.benutzt.includes(`${d.spielerId}:${d.segenId}`),
+    };
   });
 
   /** Weltenwandel: aktuelle Welt, Runde und wann die nächste kommt. */
