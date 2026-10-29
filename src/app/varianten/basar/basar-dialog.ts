@@ -8,13 +8,14 @@ import {
 } from '@angular/core';
 
 import { SpielStore } from '../../core/spiel/spiel-store';
+import { SterneBewertung } from '../../shared/ui/sterne-bewertung';
 import { Ueberlagerung } from '../../shared/ui/ueberlagerung';
 import { angebotMitId } from './basar';
 
 /** Der Markt: Angebot antippen, Käufer wählen, fertig. Bezahlt wird am Tisch. */
 @Component({
   selector: 'app-basar-dialog',
-  imports: [Ueberlagerung],
+  imports: [Ueberlagerung, SterneBewertung],
   template: `
     <app-ueberlagerung titel="Basar" (schliessen)="schliessen.emit()">
       <div class="basar">
@@ -45,6 +46,7 @@ import { angebotMitId } from './basar';
                     </button>
                   }
                 </div>
+                <app-sterne-bewertung art="angebot" [ref]="a.id" [name]="a.name" />
               }
             </li>
           }

@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 
 import { SpielStore } from '../../core/spiel/spiel-store';
+import { SterneBewertung } from '../../shared/ui/sterne-bewertung';
 import { Ueberlagerung } from '../../shared/ui/ueberlagerung';
 import { Antworten, BossZug, Frage, Stimmung } from './boss-modell';
 import { bossMitId } from './bosse';
@@ -30,7 +31,7 @@ const DENKZEIT = 1100;
  */
 @Component({
   selector: 'app-boss-zug-dialog',
-  imports: [Ueberlagerung],
+  imports: [Ueberlagerung, SterneBewertung],
   template: `
     <app-ueberlagerung [titel]="bossName() + ' ist am Zug'" (schliessen)="fertig.emit()">
       @switch (schritt()) {
@@ -166,6 +167,12 @@ const DENKZEIT = 1100;
                 }
               </ul>
 
+              <app-sterne-bewertung
+                art="boss"
+                [ref]="bossId()"
+                [name]="bossName()"
+                [frage]="'Wie findet ihr ' + bossName() + '?'"
+              />
               <button type="button" class="knopf knopf--haupt gross" (click)="fertig.emit()">
                 Weiter – Runde {{ runde() }} beginnt
               </button>
@@ -334,15 +341,15 @@ export class BossZugDialog implements OnDestroy {
   readonly fertig = output<void>();
 
   private readonly boss = computed(() => this.store.stand()?.boss ?? null);
-  protected readonly bossName = computed(() => bossMitId(this.boss()?.bossId).name);
-  protected readonly spezialId = computed(() => bossMitId(this.boss()?.bossId).spezial.id);
+  private readonly def = computed(() => bossMitId(this.boss()?.bossId));
+  protected readonly bossName = computed(() => this.def().name);
+  protected readonly bossId = computed(() => this.def().id);
+  protected readonly spezialId = computed(() => this.def().spezial.id);
   protected readonly runde = computed(() => this.boss()?.runde ?? 1);
-  protected readonly merkmalName = computed(
-    () => bossMitId(this.boss()?.bossId).merkmal?.name ?? '',
-  );
+  protected readonly merkmalName = computed(() => this.def().merkmal?.name ?? '');
   /** Offene Pakte des Dämonenfürsten – verschwinden, sobald jemand entschieden hat. */
   protected readonly pakte = computed(() => {
-    const regel = bossMitId(this.boss()?.bossId).merkmal;
+    const regel = this.def().merkmal;
     if (regel?.art !== 'pakte' || !this.zug()) return [];
     return (this.boss()?.merkmal?.offen ?? []).flatMap((o) => {
       const p = regel.pakte.find((x) => x.id === o.pakt);
@@ -353,7 +360,7 @@ export class BossZugDialog implements OnDestroy {
   });
   protected readonly neuesRelikt = computed(() => {
     const id = this.zug()?.neuesRelikt?.id;
-    return bossMitId(this.boss()?.bossId).relikte.find((r) => r.id === id) ?? null;
+    return this.def().relikte.find((r) => r.id === id) ?? null;
   });
 
   /** Einmal beim Öffnen festgelegt, damit sich die Fragen nicht mitten im Gespräch ändern. */

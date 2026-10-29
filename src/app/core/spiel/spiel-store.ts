@@ -41,6 +41,7 @@ import {
   sturmStarten,
 } from '../../varianten/untergang/sturm';
 import { lesen, schreiben } from '../speicher';
+import { Bewertbar, bewertungsSchluessel } from '../bewertung';
 import { ZUFALL } from '../zufall';
 import { Effekt, SpielOptionen, Spielstand, VarianteId } from './modell';
 
@@ -343,6 +344,17 @@ export class SpielStore {
     neu: (b: NonNullable<Spielstand['boss']>) => NonNullable<Spielstand['boss']>,
   ): void {
     this.aendern((s) => (s.boss ? { ...s, boss: neu(s.boss) } : s));
+  }
+
+  /** Sterne für einen Effekt, Segen, Boss …; ohne Sterne wird die Bewertung entfernt. */
+  bewerten(b: Bewertbar, sterne: number | undefined): void {
+    this.aendern((s) => {
+      const alle = { ...s.bewertungen };
+      const key = bewertungsSchluessel(b.art, b.ref);
+      if (sterne) alle[key] = { art: b.art, ref: b.ref, name: b.name, sterne };
+      else delete alle[key];
+      return { ...s, bewertungen: alle };
+    });
   }
 
   private aendern(neu: (s: Spielstand) => Spielstand): void {

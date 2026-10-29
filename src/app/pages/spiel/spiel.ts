@@ -9,13 +9,14 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 
-import { bewertbares } from '../../core/bewertung';
+import { partieBewertbar } from '../../core/bewertung';
 import { Effekt } from '../../core/spiel/modell';
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { TischAnsicht } from '../../core/tisch-ansicht';
 import { WachHalten } from '../../core/wach-halten';
 import { Einstellungen } from '../../core/einstellungen';
 import { BestaetigenKnopf } from '../../shared/ui/bestaetigen-knopf';
+import { SterneBewertung } from '../../shared/ui/sterne-bewertung';
 import { SymbolBild } from '../../shared/ui/symbol';
 import { Ueberlagerung } from '../../shared/ui/ueberlagerung';
 import { BossFeld } from '../../varianten/boss/boss-feld';
@@ -79,6 +80,7 @@ type Dialog =
     CommanderDialog,
     BewertungDialog,
     WuerfelDialog,
+    SterneBewertung,
   ],
   template: `
     @if (store.stand(); as s) {
@@ -251,6 +253,7 @@ type Dialog =
             >
               <div class="gezeigt">
                 <app-effekt-karte [effekt]="g.effekt" [von]="g.von" />
+                <app-sterne-bewertung art="effekt" [ref]="g.effekt.vorlage" [name]="g.effekt.name" />
                 @if (g.effekt.form === 'verzauberung' && !g.effekt.zerstoert) {
                   <app-bestaetigen-knopf
                     label="Zerstört"
@@ -374,6 +377,7 @@ type Dialog =
                 <p class="ankuendigung">{{ g.segen.pakt ? 'Pakt' : 'Segen' }} von {{ g.von }}</p>
                 <p class="segen-titel">{{ g.segen.name }}</p>
                 <p class="segen-text">{{ g.segen.text }}</p>
+                <app-sterne-bewertung art="segen" [ref]="g.segen.id" [name]="g.segen.name" />
                 @if (g.segen.einmalig) {
                   <p class="hinweis">Einmal pro Partie.</p>
                   <button
@@ -394,6 +398,7 @@ type Dialog =
             <app-ueberlagerung titel="Aktuelle Welt" (schliessen)="dialog.set(null)">
               <div class="gezeigt">
                 <app-welt-karte [welt]="w.welt" [hinweis]="w.hinweis" />
+                <app-sterne-bewertung art="welt" [ref]="w.welt.id" [name]="w.welt.name" />
                 @if (w.frueher.length) {
                   <p class="hinweis">Bisher: {{ w.frueher.join(' → ') }}</p>
                 }
@@ -429,6 +434,7 @@ type Dialog =
                 }}
               </p>
               <app-welt-karte [welt]="w.welt" [hinweis]="w.hinweis" />
+              <app-sterne-bewertung art="welt" [ref]="w.welt.id" [name]="w.welt.name" />
               <button type="button" class="knopf knopf--haupt" (click)="store.weltGesehen()">
                 Weiter
               </button>
@@ -892,10 +898,10 @@ export class Spiel implements OnDestroy {
     return Math.max(0, ...Object.values(schaden ?? {}));
   }
 
-  /** Mit Varianten fragt die App erst nach einer Bewertung, das normale Spiel endet sofort. */
+  /** Mit Varianten fragt die App erst nach einer Bewertung der Variante, das normale Spiel endet sofort. */
   protected beendenAngefragt(): void {
     const s = this.store.stand();
-    if (s && bewertbares(s).length) this.dialog.set({ art: 'bewertung' });
+    if (s && partieBewertbar(s)) this.dialog.set({ art: 'bewertung' });
     else this.partieBeenden();
   }
 

@@ -1,12 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import { PLANERSTUFEN } from '../varianten/boss/boss-planer';
-import { bossMitId } from '../varianten/boss/bosse';
-import { angebotMitId } from '../varianten/basar/basar';
-import { segenMitId } from '../varianten/segen/segen';
-import { abwurfMitId } from '../varianten/untergang/sturm';
 import { variantenName } from '../varianten/varianten';
-import { weltMitId } from '../varianten/welten/welten';
 import { lesen, schreiben } from './speicher';
 import { Spielstand } from './spiel/modell';
 import { supabase } from './supabase';
@@ -16,7 +10,7 @@ export const NOTIZ_MAX = 500;
 
 export type BewertungsArt = 'partie' | 'boss' | 'welt' | 'effekt' | 'segen' | 'angebot' | 'abwurf';
 
-/** Etwas aus der Partie, das sich am Ende bewerten lässt. */
+/** Etwas aus der Partie, das sich bewerten lässt. */
 export interface Bewertbar {
   art: BewertungsArt;
   /** Kennung des Bosses, der Welt, der Effekt-Vorlage … */
@@ -41,69 +35,22 @@ interface Eintrag {
   gesendet: boolean;
 }
 
-export const GRUPPEN: { art: BewertungsArt; titel: string }[] = [
-  { art: 'partie', titel: 'Die Partie' },
-  { art: 'boss', titel: 'Boss' },
-  { art: 'welt', titel: 'Welten' },
-  { art: 'effekt', titel: 'Effekte' },
-  { art: 'segen', titel: 'Segen' },
-  { art: 'angebot', titel: 'Basar' },
-  { art: 'abwurf', titel: 'Versorgungsabwürfe' },
-];
+export const bewertungsSchluessel = (art: BewertungsArt, ref: string) => `${art}:${ref}`;
 
-function einmal<T extends { ref: string }>(liste: T[]): T[] {
-  return liste.filter((x, i) => liste.findIndex((y) => y.ref === x.ref) === i);
-}
-
-/** Alles, was in dieser Partie vorkam und bewertet werden kann. Das normale Spiel hat nichts. */
-export function bewertbares(s: Spielstand): Bewertbar[] {
-  if (s.varianten.every((v) => v === 'normal')) return [];
-  const liste: Bewertbar[] = [
-    {
-      art: 'partie',
-      ref: [...s.varianten].sort().join('+'),
-      name: variantenName(s.varianten),
-      text: 'Wie hat euch die Partie insgesamt gefallen?',
-    },
-  ];
-  if (s.boss) {
-    const b = bossMitId(s.boss.bossId);
-    liste.push({
-      art: 'boss',
-      ref: b.id,
-      name: b.name,
-      text: `Level ${b.level} · ${PLANERSTUFEN[s.boss.planer ?? 'instinkt'].name}${
-        b.merkmal ? ` · ${b.merkmal.name}` : ''
-      }`,
-    });
-  }
-  for (const v of einmal((s.welt?.verlauf ?? []).map((v) => ({ ...v, ref: v.id })))) {
-    const w = weltMitId(v.id);
-    if (w) liste.push({ art: 'welt', ref: w.id, name: w.name, text: w.regel });
-  }
-  liste.push(
-    ...einmal(
-      s.effekte.map((e) => ({ art: 'effekt' as const, ref: e.vorlage, name: e.name, text: e.text })),
-    ),
-  );
-  const segen = Object.values(s.segen?.gewaehlt ?? {}).flat();
-  for (const id of new Set(segen)) {
-    const x = segenMitId(id);
-    if (x) liste.push({ art: 'segen', ref: x.id, name: x.name, text: x.text });
-  }
-  for (const id of new Set((s.basar?.gekauft ?? []).map((g) => g.id))) {
-    const a = angebotMitId(id);
-    if (a) liste.push({ art: 'angebot', ref: a.id, name: a.name, text: a.text });
-  }
-  for (const id of new Set(s.sturm?.gewaehlt ?? [])) {
-    const a = abwurfMitId(id);
-    if (a) liste.push({ art: 'abwurf', ref: a.id, name: a.name, text: a.text });
-  }
-  return liste;
+/** Am Ende wird nur noch die Spielvariante selbst bewertet. Das normale Spiel fragt nicht. */
+export function partieBewertbar(s: Spielstand): Bewertbar | null {
+  if (s.varianten.every((v) => v === 'normal')) return null;
+  return {
+    art: 'partie',
+    ref: [...s.varianten].sort().join('+'),
+    name: variantenName(s.varianten),
+    text: 'Wie hat euch die Partie insgesamt gefallen?',
+  };
 }
 
 /**
- * Bewertungen vom Spielende. Sie liegen zuerst auf dem Gerät und gehen nach Supabase, sobald
+ * Bewertungen einer Partie: die Sterne, die unterwegs für Effekte, Segen … vergeben wurden, plus
+ * die Bewertung der Spielvariante am Ende. Sie liegen zuerst auf dem Gerät und gehen nach Supabase, sobald
  * Netz da ist – nicht Gesendetes wird beim nächsten Start der App nachgeschickt.
  */
 @Injectable({ providedIn: 'root' })
@@ -112,8 +59,8 @@ export class Bewertungen {
     void this.nachsenden();
   }
 
-  speichern(s: Spielstand, bewertungen: Bewertung[]): void {
-    const benutzt = bewertungen
+  speichern(s: Spielstand, partie?: Bewertung): void {
+    const benutzt = [...Object.values(s.bewertungen ?? {}), ...(partie ? [partie] : [])]
       .map((b) => ({ ...b, notiz: b.notiz?.trim().slice(0, NOTIZ_MAX) || undefined }))
       .filter((b) => b.sterne || b.notiz);
     if (!benutzt.length) return;

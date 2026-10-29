@@ -12,6 +12,7 @@ import {
 import { ENERGIE, stufe } from '../../content/begriffe';
 import { Effekt, Spieler } from '../../core/spiel/modell';
 import { SpielStore } from '../../core/spiel/spiel-store';
+import { SterneBewertung } from '../../shared/ui/sterne-bewertung';
 import { Ueberlagerung } from '../../shared/ui/ueberlagerung';
 import { EffektKarte } from './effekt-karte';
 import { ANTWORT } from './wuerfel';
@@ -25,7 +26,7 @@ const WUERFELZEIT = 700;
 
 @Component({
   selector: 'app-wirken-dialog',
-  imports: [Ueberlagerung, EffektKarte],
+  imports: [Ueberlagerung, EffektKarte, SterneBewertung],
   template: `
     <app-ueberlagerung
       [titel]="'Effekt wirken – ' + spieler().name"
@@ -84,6 +85,7 @@ const WUERFELZEIT = 700;
           @if (ergebnis(); as e) {
             <div class="ergebnis">
               <app-effekt-karte [effekt]="e" [von]="spieler().name" />
+              <app-sterne-bewertung art="effekt" [ref]="e.vorlage" [name]="e.name" />
               @if (e.form === 'verzauberung' || e.form === 'emblem') {
                 <p class="hinweis">
                   {{ e.form === 'emblem' ? 'Das Emblem bleibt' : 'Die Verzauberung liegt' }}

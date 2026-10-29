@@ -68,4 +68,11 @@ describe('SpielStore', () => {
     expect(jo.commander).toEqual({ 2: 2, 3: 0 });
     expect(jo.leben).toBe(38);
   });
+
+  it('merkt sich Sterne während der Partie und nimmt sie ohne Sterne wieder weg', () => {
+    store.bewerten({ art: 'effekt', ref: 'v1', name: 'Glück' }, 4);
+    expect(store.stand()?.bewertungen?.['effekt:v1']?.sterne).toBe(4);
+    store.bewerten({ art: 'effekt', ref: 'v1', name: 'Glück' }, undefined);
+    expect(store.stand()?.bewertungen).toEqual({});
+  });
 });

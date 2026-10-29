@@ -2,11 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 
 import { Spieler } from '../../core/spiel/modell';
 import { SpielStore } from '../../core/spiel/spiel-store';
+import { SterneBewertung } from '../../shared/ui/sterne-bewertung';
 import { abwurfMitId, SturmStand } from './sturm';
 
 /** Versorgungsabwurf: Wer die wenigsten Leben hat, tippt zuerst ein Angebot an. */
 @Component({
   selector: 'app-abwurf-wahl',
+  imports: [SterneBewertung],
   template: `
     @if (wahl(); as w) {
       <div class="wahl">
@@ -24,6 +26,7 @@ import { abwurfMitId, SturmStand } from './sturm';
                 <span class="name">{{ a.name }}</span>
                 <span class="text">{{ a.text }}</span>
               </button>
+              <app-sterne-bewertung art="abwurf" [ref]="a.id" [name]="a.name" />
             </li>
           }
         </ul>

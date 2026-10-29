@@ -1,3 +1,4 @@
+import type { Bewertung } from '../bewertung';
 import type { Planerstufe } from '../../varianten/boss/boss-modell';
 import type { BossStand } from '../../varianten/boss/boss-stand';
 import type { WuerfelEinstellungen } from '../../varianten/mana-wuerfel/wuerfel-einstellungen';
@@ -84,6 +85,8 @@ export interface Spielstand {
   segen?: SegenStand;
   /** Nur mit Basar. */
   basar?: BasarStand;
+  /** Sterne, die während der Partie vergeben wurden, je „art:ref“. */
+  bewertungen?: Record<string, Bewertung>;
 }
 
 export interface SpielOptionen {

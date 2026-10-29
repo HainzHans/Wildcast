@@ -1,16 +1,27 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
 
 import { SpielStore } from '../../core/spiel/spiel-store';
+import { SterneBewertung } from '../../shared/ui/sterne-bewertung';
 import { Ueberlagerung } from '../../shared/ui/ueberlagerung';
 import { STIMMUNG_NAME } from './boss-zug-dialog';
+import { bossMitId } from './bosse';
 
 /** Alle bisherigen Boss-Züge, der neueste oben. */
 @Component({
   selector: 'app-boss-protokoll',
-  imports: [Ueberlagerung],
+  imports: [Ueberlagerung, SterneBewertung],
   template: `
     <app-ueberlagerung titel="Boss-Protokoll" (schliessen)="schliessen.emit()">
       <h2>Boss-Protokoll</h2>
+      @if (boss(); as b) {
+        <app-sterne-bewertung
+          class="bewertung"
+          art="boss"
+          [ref]="b.id"
+          [name]="b.name"
+          [frage]="'Wie findet ihr ' + b.name + '?'"
+        />
+      }
       <ol class="liste">
         @for (e of eintraege(); track e.runde) {
           <li class="eintrag">
@@ -50,6 +61,9 @@ import { STIMMUNG_NAME } from './boss-zug-dialog';
       font-size: 1.6rem;
       font-weight: 800;
       margin-bottom: 0.8rem;
+    }
+    .bewertung {
+      margin-bottom: 0.6rem;
     }
     .liste {
       list-style: none;
@@ -97,6 +111,10 @@ import { STIMMUNG_NAME } from './boss-zug-dialog';
 })
 export class BossProtokollListe {
   private readonly store = inject(SpielStore);
+  protected readonly boss = computed(() => {
+    const b = this.store.stand()?.boss;
+    return b ? bossMitId(b.bossId) : null;
+  });
   readonly schliessen = output<void>();
 
   protected readonly stimmung = STIMMUNG_NAME;

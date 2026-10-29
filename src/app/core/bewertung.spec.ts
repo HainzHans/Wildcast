@@ -1,4 +1,4 @@
-import { bewertbares } from './bewertung';
+import { partieBewertbar } from './bewertung';
 import { Spielstand } from './spiel/modell';
 
 const basis: Spielstand = {
@@ -12,29 +12,13 @@ const basis: Spielstand = {
 };
 
 describe('Bewertung am Spielende', () => {
-  it('hat beim normalen Spiel nichts zu bewerten', () => {
-    expect(bewertbares(basis)).toEqual([]);
+  it('fragt beim normalen Spiel nicht nach', () => {
+    expect(partieBewertbar(basis)).toBeNull();
   });
 
-  it('listet Partie und jeden gewürfelten Effekt nur einmal', () => {
-    const effekt = {
-      nr: 1,
-      vorlage: 'v1',
-      mana: 3,
-      art: 'positiv' as const,
-      form: 'normal' as const,
-      name: 'Glück',
-      text: 'Ziehe eine Karte.',
-      spruch: '',
-      spielerId: 1,
-      zeit: '',
-    };
-    const liste = bewertbares({
-      ...basis,
-      varianten: ['mana-wuerfel'],
-      effekte: [effekt, { ...effekt, nr: 2 }],
-    });
-    expect(liste.map((b) => b.art)).toEqual(['partie', 'effekt']);
-    expect(liste[0].name).toBe('Mana-Würfel');
+  it('bewertet am Ende nur die Spielvariante', () => {
+    const p = partieBewertbar({ ...basis, varianten: ['segen', 'mana-wuerfel'] });
+    expect(p?.art).toBe('partie');
+    expect(p?.ref).toBe('mana-wuerfel+segen');
   });
 });
