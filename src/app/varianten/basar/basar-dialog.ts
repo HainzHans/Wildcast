@@ -18,7 +18,7 @@ import { angebotMitId } from './basar';
   template: `
     <app-ueberlagerung titel="Basar" (schliessen)="schliessen.emit()">
       <div class="basar">
-        <p class="hinweis">Einmal in deinem Zug, in deiner Hauptphase bei leerem Stapel.</p>
+        <p class="hinweis">Einmal pro Zug, wann du auch eine Hexerei wirken könntest.</p>
         <ul class="angebote">
           @for (a of angebote(); track a.id) {
             <li>

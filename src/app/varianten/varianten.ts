@@ -125,8 +125,8 @@ export const VARIANTEN: Variante[] = [
     startLeben: 40,
     regeln: [
       'Im Basar liegen Angebote mit einem Preis in beliebigem Mana.',
-      'Einmal in jedem deiner Züge darfst du in deiner Hauptphase bei leerem Stapel ein Angebot kaufen. Es ist kein Zauberspruch und kann nicht neutralisiert werden.',
-      'Ein gekauftes Angebot wirkt sofort und wird durch ein neues ersetzt.',
+      'Einmal in jedem deiner Züge darfst du ein Angebot kaufen – wann immer du auch eine Hexerei wirken könntest: in deiner Hauptphase, während nichts auf Verrechnung wartet. Nicht als Antwort, nicht im Kampf und nicht im Zug eines anderen.',
+      'Ein Kauf ist kein Zauberspruch und kann nicht neutralisiert werden. Ein gekauftes Angebot wirkt sofort und wird durch ein neues ersetzt.',
       'Eine Runde ist vorbei, wenn jeder Spieler einmal dran war. Dann tippt ihr auf „Runde beenden“: Das älteste Angebot verschwindet und ein neues kommt dazu.',
       'Je länger die Partie dauert, desto teurer und stärker werden die Angebote.',
       'Leben aus Angeboten trägt die App selbst ein.',
