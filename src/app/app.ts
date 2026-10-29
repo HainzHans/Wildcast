@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 
+import { Bewertungen } from './core/bewertung';
 import { Einstellungen } from './core/einstellungen';
 import { TabLeiste } from './shared/ui/tab-leiste';
 
@@ -39,6 +40,8 @@ export class App {
   // Früh laden, damit das gewählte Farbschema schon beim Start greift.
   private readonly einstellungen = inject(Einstellungen);
   private readonly router = inject(Router);
+  // Schickt Bewertungen nach, die offline am Tisch abgegeben wurden.
+  private readonly bewertungen = inject(Bewertungen);
 
   protected readonly mitTabs = toSignal(
     this.router.events.pipe(

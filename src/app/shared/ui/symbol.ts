@@ -78,6 +78,17 @@ const SYMBOLE = {
   },
   start: { pfade: ['M3 11l9-8 9 8', 'M5 10v10h14V10'] },
   beenden: { pfade: ['M4 7h16', 'M9 7V4h6v3', 'M6 7l1 13h10l1-13'] },
+  commander: {
+    pfade: ['M14.5 17.5L3 6V3h3l11.5 11.5', 'M13 19l6-6', 'M16 16l4 4', 'M19 21l2-2'],
+  },
+  stern: {
+    pfade: ['M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.4l-5.5 2.9 1-6.2L3 9.7l6.2-.9z'],
+  },
+  'stern-voll': {
+    pfade: ['M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.4l-5.5 2.9 1-6.2L3 9.7l6.2-.9z'],
+    gefuellt: true,
+  },
+  notiz: { pfade: ['M4 20h4L19 9l-4-4L4 16z', 'M13.5 6.5l4 4'] },
   info: { pfade: ['M12 11v6', 'M12 7.5v.5'], kreise: [[12, 12, 9]] },
 } satisfies Record<string, Zeichnung>;
 

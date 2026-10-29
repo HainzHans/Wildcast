@@ -66,4 +66,16 @@ describe('SpielStore', () => {
     store.starten(['mana-wuerfel'], ['Jo', 'Flo'], 40, { manaWuerfel: nurChaos });
     for (let i = 0; i < 20; i++) expect(store.wirken(1, 5)?.art).toBe('chaos');
   });
+
+  it('trägt Commander-Schaden je Gegner ein und zieht ihn von den Leben ab', () => {
+    store.starten(['normal'], ['Jo', 'Flo', 'Max'], 40);
+    store.commanderSchaden(1, 3, 7);
+    store.commanderSchaden(1, 2, 2);
+    store.commanderSchaden(1, 3, -10);
+    const jo = store.stand()!.spieler[0];
+    expect(jo.commander).toEqual({ 2: 2, 3: 0 });
+    expect(jo.leben).toBe(38);
+    store.rueckgaengig();
+    expect(store.stand()!.spieler[0].commander?.[3]).toBe(7);
+  });
 });

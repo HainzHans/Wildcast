@@ -37,8 +37,17 @@ import { kombinieren, VARIANTEN, variantenName } from '../../varianten/varianten
         </a>
       }
 
+      <a class="normal" routerLink="/neu/normal">
+        <span class="rund"><app-symbol name="spieler" /></span>
+        <span class="laufend-text">
+          <span class="normal-name">Normales Spiel</span>
+          <span class="laufend-spieler">Nur Leben und Commander-Schaden</span>
+        </span>
+        <span class="pfeil" aria-hidden="true"><app-symbol name="weiter" /></span>
+      </a>
+
       <section aria-labelledby="neu">
-        <h2 id="neu" class="abschnitt">Neue Partie</h2>
+        <h2 id="neu" class="abschnitt">Mit Varianten</h2>
         <p class="hinweis">Tippe eine oder mehrere Varianten an – sie lassen sich kombinieren.</p>
 
         <ul class="raster">
@@ -185,6 +194,30 @@ import { kombinieren, VARIANTEN, variantenName } from '../../varianten/varianten
       flex-shrink: 0;
     }
 
+    .normal {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.85rem 1rem;
+      border-radius: 1.1rem;
+      background: var(--feld);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: var(--schatten);
+      transition: transform 90ms ease;
+    }
+    .normal:active {
+      transform: scale(0.98);
+    }
+    .normal-name {
+      font-family: var(--schrift-anzeige);
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+    .pfeil {
+      color: var(--text-leise);
+    }
+
     .raster {
       list-style: none;
       padding: 0;
@@ -306,7 +339,7 @@ export class SpielenSeite {
   private readonly store = inject(SpielStore);
   private readonly router = inject(Router);
 
-  protected readonly varianten = VARIANTEN.filter((v) => v.verfuegbar);
+  protected readonly varianten = VARIANTEN.filter((v) => v.verfuegbar && !v.einzeln);
   protected readonly aussehen = VARIANTEN_AUSSEHEN;
   protected readonly auswahl = signal<VarianteId[]>([]);
   protected readonly kombination = computed(() => kombinieren(this.auswahl()));

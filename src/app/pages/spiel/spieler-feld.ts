@@ -9,18 +9,40 @@ import {
 
 import { Effekt, Spieler } from '../../core/spiel/modell';
 import { HalteKnopf } from '../../shared/ui/halte-knopf';
+import { SymbolBild } from '../../shared/ui/symbol';
 
 /** Ab hier wird die Lebensanzeige rot. */
 const KRITISCH = 10;
+/** Commander-Schaden: ab hier wird es eng, ab 21 vom selben Commander ist man raus. */
+export const COMMANDER_WARNUNG = 15;
+export const COMMANDER_TOEDLICH = 21;
 /** So lange sammelt die Blase schnelle Tipps zu einer Summe (−1 −1 −1 → −3). */
 const SAMMELZEIT = 1500;
 
 @Component({
   selector: 'app-spieler-feld',
-  imports: [HalteKnopf],
+  imports: [HalteKnopf, SymbolBild],
   template: `
     <section class="feld" [class.gedreht]="gedreht()" [attr.aria-label]="spieler().name">
-      <h2 class="name">{{ spieler().name }}</h2>
+      <div class="kopfzeile">
+        <h2 class="name">{{ spieler().name }}</h2>
+        @let c = commanderSchaden();
+        @if (c !== null) {
+          <button
+            type="button"
+            class="commander"
+            [class.warnung]="c >= warnung"
+            [class.toedlich]="c >= toedlich"
+            [attr.aria-label]="'Commander-Schaden für ' + spieler().name"
+            (click)="commanderOeffnen.emit()"
+          >
+            <app-symbol name="commander" />
+            @if (c) {
+              <span>{{ c }}</span>
+            }
+          </button>
+        }
+      </div>
 
       <div class="leben" [class.kritisch]="spieler().leben <= kritisch">
         @for (s of schritte; track s) {
@@ -106,7 +128,40 @@ const SAMMELZEIT = 1500;
     .gedreht {
       transform: rotate(180deg);
     }
+    .kopfzeile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      max-width: 100%;
+      min-width: 0;
+    }
+    .commander {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      min-width: 2.5rem;
+      min-height: 2.5rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 99px;
+      border: 1px solid var(--feld-rand);
+      background: var(--filz);
+      color: var(--text-leise);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .commander.warnung {
+      border-color: var(--messing);
+      color: var(--messing);
+    }
+    .commander.toedlich {
+      border-color: var(--negativ);
+      background: var(--negativ);
+      color: #fff;
+    }
     .name {
+      min-width: 0;
       font-size: clamp(1rem, 7cqmin, 1.5rem);
       font-weight: 700;
       max-width: 100%;
@@ -218,14 +273,19 @@ export class SpielerFeld implements OnDestroy {
   readonly bleibende = input<Effekt[]>([]);
   /** Segen aus dem Draft; einmalige sind abgehakt, sobald sie eingesetzt wurden. */
   readonly segen = input<{ id: string; name: string; pakt?: boolean; benutzt: boolean }[]>([]);
+  /** Höchster Commander-Schaden von einem Gegner; ohne Wert ist der Knopf ausgeblendet. */
+  readonly commanderSchaden = input<number | null>(null);
 
   readonly leben = output<number>();
   readonly wirken = output<void>();
   readonly zeigen = output<number>();
   readonly segenZeigen = output<string>();
+  readonly commanderOeffnen = output<void>();
 
   protected readonly schritte = [-1, 1];
   protected readonly kritisch = KRITISCH;
+  protected readonly warnung = COMMANDER_WARNUNG;
+  protected readonly toedlich = COMMANDER_TOEDLICH;
   protected readonly aenderung = signal(0);
   private zeitgeber?: ReturnType<typeof setTimeout>;
 

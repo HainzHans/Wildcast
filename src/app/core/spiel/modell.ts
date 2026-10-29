@@ -7,7 +7,14 @@ import type { SturmEinstellungen, SturmStand } from '../../varianten/untergang/s
 import type { WeltEinstellungen, WeltStand } from '../../varianten/welten/welt-stand';
 
 /** Kennung einer Spielvariante. Neue Varianten kommen hier dazu. */
-export type VarianteId = 'mana-wuerfel' | 'boss' | 'welten' | 'untergang' | 'segen' | 'basar';
+export type VarianteId =
+  | 'normal'
+  | 'mana-wuerfel'
+  | 'boss'
+  | 'welten'
+  | 'untergang'
+  | 'segen'
+  | 'basar';
 
 /** Werkzeuge, die eine Variante auf dem Spieltisch einblendet. */
 export type Werkzeug = 'leben' | 'effekt-wuerfel' | 'boss' | 'welt' | 'sturm' | 'segen' | 'basar';
@@ -22,12 +29,16 @@ export interface Variante {
   werkzeuge: Werkzeug[];
   /** Noch nicht spielbare Varianten erscheinen als „Kommt bald“. */
   verfuegbar: boolean;
+  /** Lässt sich nicht mit anderen Varianten kombinieren (das normale Spiel). */
+  einzeln?: boolean;
 }
 
 export interface Spieler {
   id: number;
   name: string;
   leben: number;
+  /** Erlittener Commander-Schaden je Spieler-Id des Gegners. Ab 21 von einem ist man raus. */
+  commander?: Record<number, number>;
 }
 
 /** Würfel 1: wen der Effekt trifft. */

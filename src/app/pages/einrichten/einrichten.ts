@@ -51,6 +51,7 @@ type Schritt = 'spieler' | VarianteId | 'start';
 
 const SCHRITT_TITEL: Record<Schritt, string> = {
   spieler: 'Spieler',
+  normal: 'Normales Spiel',
   'mana-wuerfel': 'Mana-Würfel',
   boss: 'Boss wählen',
   welten: 'Welten',
@@ -792,7 +793,7 @@ export class Einrichten {
   /** Varianten ohne eigene Einstellungen bekommen keinen Schritt. */
   protected readonly schritte = computed<Schritt[]>(() => [
     'spieler',
-    ...(this.eintrag()?.ids ?? []),
+    ...(this.eintrag()?.ids ?? []).filter((id) => id !== 'normal'),
     'start',
   ]);
   protected readonly schrittNr = signal(0);
@@ -926,6 +927,8 @@ export class Einrichten {
 
   private beschreibung(id: VarianteId): { name: string; text: string } {
     switch (id) {
+      case 'normal':
+        return { name: 'Normales Spiel', text: 'Leben und Commander-Schaden' };
       case 'mana-wuerfel':
         return {
           name: 'Mana-Würfel',

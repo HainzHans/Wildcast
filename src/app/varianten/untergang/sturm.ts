@@ -181,6 +181,8 @@ export interface SturmStand {
   geschuetzt: number[];
   /** Offener Versorgungsabwurf: wer in welcher Reihenfolge wählt. */
   abwurf: { angebote: string[]; reihenfolge: number[] } | null;
+  /** Bisher gewählte Abwürfe, für die Bewertung am Ende. Ältere Stände kannten sie nicht. */
+  gewaehlt?: string[];
 }
 
 export function abwurfMitId(id: string): Abwurf | undefined {
@@ -270,6 +272,7 @@ export function abwurfWaehlen(
     stand: {
       ...stand,
       geschuetzt: abwurf.schutz ? [...stand.geschuetzt, waehlt] : stand.geschuetzt,
+      gewaehlt: [...(stand.gewaehlt ?? []), angebotId],
       abwurf: rest.length && angebote.length ? { angebote, reihenfolge: rest } : null,
     },
     spieler: abwurf.leben

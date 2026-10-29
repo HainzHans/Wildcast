@@ -23,4 +23,9 @@ describe('Varianten kombinieren', () => {
   it('nennt laufende Partien nach allen Varianten', () => {
     expect(variantenName(['mana-wuerfel', 'boss'])).toBe('Mana-Würfel + Bosskampf');
   });
+
+  it('spielt das normale Spiel nur allein', () => {
+    expect(kombinieren(['normal'])?.spieler).toEqual({ min: 2, max: 4, standard: 4 });
+    expect(kombinieren(['normal', 'boss'])).toBeNull();
+  });
 });

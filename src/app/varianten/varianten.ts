@@ -6,6 +6,22 @@ import { Variante, VarianteId, Werkzeug } from '../core/spiel/modell';
  */
 export const VARIANTEN: Variante[] = [
   {
+    id: 'normal',
+    name: 'Normales Spiel',
+    untertitel: 'Commander ohne Hausregeln: nur Namen, Leben und Commander-Schaden.',
+    spieler: { min: 2, max: 4, standard: 4 },
+    startLeben: 40,
+    regeln: [
+      'Ganz normales Commander: Jeder startet mit 40 Leben, die App zählt nur mit.',
+      'Commander-Schaden trägst du über das Schwert-Symbol neben deinem Namen ein. Bei mehr als zwei Spielern wählst du, von wessen Commander der Schaden kommt.',
+      'Commander-Schaden zieht die App auch von deinen Leben ab.',
+      'Wer 21 oder mehr Kampfschaden vom selben Commander erlitten hat, verliert die Partie.',
+    ],
+    werkzeuge: ['leben'],
+    verfuegbar: true,
+    einzeln: true,
+  },
+  {
     id: 'mana-wuerfel',
     name: 'Mana-Würfel',
     untertitel: 'Bezahle Mana, würfle einen Effekt – und hoffe auf das Beste.',
@@ -144,6 +160,7 @@ export function kombinieren(ids: readonly string[]): Kombination | null {
   const varianten = [...new Set(ids)].map(varianteMitId);
   if (!varianten.length || varianten.some((v) => !v?.verfuegbar)) return null;
   const liste = varianten as Variante[];
+  if (liste.length > 1 && liste.some((v) => v.einzeln)) return null;
 
   const min = Math.max(...liste.map((v) => v.spieler.min));
   const max = Math.min(...liste.map((v) => v.spieler.max));

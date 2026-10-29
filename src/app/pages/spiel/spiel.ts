@@ -9,6 +9,7 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 
+import { bewertbares } from '../../core/bewertung';
 import { Effekt } from '../../core/spiel/modell';
 import { SpielStore } from '../../core/spiel/spiel-store';
 import { TischAnsicht } from '../../core/tisch-ansicht';
@@ -34,6 +35,8 @@ import { segenMitId } from '../../varianten/segen/segen';
 import { SegenDraft } from '../../varianten/segen/segen-draft';
 import { AbwurfWahl } from '../../varianten/untergang/abwurf-wahl';
 import { SturmBand } from '../../varianten/untergang/sturm-band';
+import { BewertungDialog } from './bewertung-dialog';
+import { CommanderDialog } from './commander-dialog';
 import { SpielerFeld } from './spieler-feld';
 
 type Dialog =
@@ -46,6 +49,8 @@ type Dialog =
   | { art: 'basar' }
   | { art: 'menue' }
   | { art: 'regeln' }
+  | { art: 'commander'; spielerId: number; gedreht: boolean }
+  | { art: 'bewertung' }
   | { art: 'segen'; spielerId: number; segenId: string; gedreht: boolean };
 
 @Component({
@@ -69,6 +74,8 @@ type Dialog =
     AbwurfWahl,
     SegenDraft,
     BasarDialog,
+    CommanderDialog,
+    BewertungDialog,
   ],
   template: `
     @if (store.stand(); as s) {
@@ -87,6 +94,14 @@ type Dialog =
             [effektWuerfel]="effektWuerfel()"
             [bleibende]="bleibendeJeSpieler().get(p.id) ?? []"
             [segen]="segenJeSpieler().get(p.id) ?? []"
+            [commanderSchaden]="s.boss ? null : hoechsterCommander(p.commander)"
+            (commanderOeffnen)="
+              dialog.set({
+                art: 'commander',
+                spielerId: p.id,
+                gedreht: gedreht(i, s.spieler.length),
+              })
+            "
             (segenZeigen)="
               dialog.set({
                 art: 'segen',
@@ -258,6 +273,22 @@ type Dialog =
         @case ('bossprotokoll') {
           <app-boss-protokoll (schliessen)="dialog.set(null)" />
         }
+        @case ('commander') {
+          @if (commanderZiel(); as c) {
+            <app-ueberlagerung
+              titel="Commander-Schaden"
+              [gedreht]="c.gedreht"
+              (schliessen)="dialog.set(null)"
+            >
+              <app-commander-dialog [spielerId]="c.spielerId" />
+            </app-ueberlagerung>
+          }
+        }
+        @case ('bewertung') {
+          <app-ueberlagerung titel="Wie war's?" (schliessen)="dialog.set({ art: 'menue' })">
+            <app-bewertung-dialog [stand]="s" (fertig)="partieBeenden()" />
+          </app-ueberlagerung>
+        }
         @case ('basar') {
           <app-basar-dialog (schliessen)="dialog.set(null)" />
         }
@@ -304,7 +335,7 @@ type Dialog =
                 class="gefahr"
                 label="Partie beenden"
                 frage="Wirklich beenden?"
-                (bestaetigt)="partieBeenden()"
+                (bestaetigt)="beendenAngefragt()"
               />
             </div>
           </app-ueberlagerung>
@@ -843,6 +874,22 @@ export class Spiel implements OnDestroy {
 
   constructor() {
     this.wach.an();
+  }
+
+  protected readonly commanderZiel = computed(() => {
+    const d = this.dialog();
+    return d?.art === 'commander' ? d : null;
+  });
+
+  protected hoechsterCommander(schaden: Record<number, number> | undefined): number {
+    return Math.max(0, ...Object.values(schaden ?? {}));
+  }
+
+  /** Mit Varianten fragt die App erst nach einer Bewertung, das normale Spiel endet sofort. */
+  protected beendenAngefragt(): void {
+    const s = this.store.stand();
+    if (s && bewertbares(s).length) this.dialog.set({ art: 'bewertung' });
+    else this.partieBeenden();
   }
 
   protected partieBeenden(): void {

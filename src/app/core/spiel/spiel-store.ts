@@ -144,6 +144,26 @@ export class SpielStore {
     }));
   }
 
+  /**
+   * Commander-Schaden von `quelleId` an `zielId`. Er ist Kampfschaden und kostet daher auch
+   * Leben; Korrekturen nach unten geben sie zurück. Unter 0 geht es nicht.
+   */
+  commanderSchaden(zielId: number, quelleId: number, um: number): void {
+    this.aendern((s) => ({
+      ...s,
+      spieler: s.spieler.map((p) => {
+        if (p.id !== zielId) return p;
+        const alt = p.commander?.[quelleId] ?? 0;
+        const neu = Math.max(0, alt + um);
+        return {
+          ...p,
+          leben: p.leben - (neu - alt),
+          commander: { ...p.commander, [quelleId]: neu },
+        };
+      }),
+    }));
+  }
+
   /** Würfelt einen Effekt für den zahlenden Spieler und legt ihn ins Protokoll. */
   wirken(spielerId: number, mana: number): Effekt | null {
     const s = this._stand();
