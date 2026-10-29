@@ -1,10 +1,11 @@
 /**
- * Simuliert Bosskämpfe „2 gegen Boss“ mit der echten Boss-Logik der App (Fragen, Stimmungen,
+ * Simuliert Bosskämpfe „2, 3 oder 4 gegen Boss“ mit der echten Boss-Logik der App (Fragen, Stimmungen,
  * Aktionen, Diener, Phasen-Schild) und vereinfachten Spielerzügen nach Commander-Regeln.
  *
  *   node scripts/simulation/start.mjs            → Tabelle über alle Bosse und Deck-Paarungen
  *   node scripts/simulation/start.mjs beispiel   → eine Partie Zug für Zug
  *   SIM_PLANER=taktiker node scripts/simulation/start.mjs   → mit vorausdenkendem Boss
+ *   SIM_SPIELER=4 node scripts/simulation/start.mjs         → vier Spieler gegen den Boss
  */
 import { zufallMitStartwert, Zufall } from '../../src/app/core/zufall';
 import { bossZug, fragenFuerZug, phase } from '../../src/app/varianten/boss/boss-logik';
@@ -23,7 +24,7 @@ import {
   reliktZerstoeren,
   schildAufheben,
 } from '../../src/app/varianten/boss/boss-stand';
-import { BOSSE } from '../../src/app/varianten/boss/bosse';
+import { BOSSE, bossMitId } from '../../src/app/varianten/boss/bosse';
 import { DeckProfil, JACE, PRECONS, STRIXHAVEN } from './decks';
 
 const MAX_RUNDEN = 25;
@@ -193,8 +194,9 @@ function antworten(
           : 'nein';
         break;
       case 'handkarten': {
-        const [x, y] = alle;
-        a.handkarten = !y || x.hand === y.hand ? 'gleich' : String(x.hand > y.hand ? x.id : y.id);
+        const max = Math.max(...alle.map((s) => s.hand));
+        const meiste = alle.filter((s) => s.hand === max);
+        a.handkarten = meiste.length > 1 ? 'gleich' : String(meiste[0].id);
         break;
       }
       case 'beute':
@@ -215,8 +217,32 @@ function antworten(
   return a;
 }
 
-/** Setzt die Wirkung einer Boss-Aktion um, die nur im Text steht (Kreaturen zerstören, tappen …). */
+const HINWEIS_LEBEN = / Außerdem verlier.*$/;
+const HINWEIS_KREATUR =
+  / Das gilt außerdem für (?:die stärkste Kreatur|den stärksten Kommandeur) von (einem|zwei|drei) weiteren? Spielern?.*$/;
+
+/**
+ * Mit mehr Spielern trifft eine Aktion gegen „die stärkste Kreatur“ auch die stärkste Kreatur
+ * weiterer Spieler. Den Lebensverlust weiterer Spieler trägt die App schon selbst ein.
+ */
 export function textWirkung(text: string, spieler: Spieler[], log: Log): void {
+  const weitere = HINWEIS_KREATUR.exec(text)?.[1];
+  const basis = text.replace(HINWEIS_KREATUR, '').replace(HINWEIS_LEBEN, '');
+  const betroffen = new Set<Spieler>();
+  const erster = staerkste(spieler);
+  if (erster) betroffen.add(erster.s);
+  einfacheWirkung(basis, spieler, log);
+  const anzahl = { einem: 1, zwei: 2, drei: 3 }[weitere ?? ''] ?? 0;
+  for (let i = 0; i < anzahl; i++) {
+    const naechster = staerkste(lebend(spieler).filter((s) => !betroffen.has(s)));
+    if (!naechster) break;
+    betroffen.add(naechster.s);
+    einfacheWirkung(basis, [naechster.s], log);
+  }
+}
+
+/** Setzt die Wirkung einer Boss-Aktion um, die nur im Text steht (Kreaturen zerstören, tappen …). */
+function einfacheWirkung(text: string, spieler: Spieler[], log: Log): void {
   const t = text.toLowerCase();
   const alle = lebend(spieler);
   const lebenAusText = () => Number(/verliert[^.]*?(\d+) leben/.exec(t)?.[1] ?? 0);
@@ -820,7 +846,7 @@ function bossRunde(
 
 export function spiele(
   def: BossDefinition,
-  decks: [DeckProfil, DeckProfil],
+  decks: DeckProfil[],
   seed: number,
   log: Log = () => {},
 ): Ergebnis {
@@ -871,7 +897,7 @@ export function spiele(
         burstRunden,
         verfallen: verfallenGesamt,
         lebenUebrig: lebend(spieler).reduce((x, s) => x + s.leben, 0),
-        toteSpieler: 2 - lebend(spieler).length,
+        toteSpieler: decks.length - lebend(spieler).length,
       };
     }
     if (!lebend(spieler).length) {
@@ -884,7 +910,7 @@ export function spiele(
         burstRunden,
         verfallen: verfallenGesamt,
         lebenUebrig: 0,
-        toteSpieler: 2,
+        toteSpieler: decks.length,
       };
     }
     stand = bossRunde(def, stand, spieler, schadenRunde, zufall, log);
@@ -898,7 +924,7 @@ export function spiele(
         burstRunden,
         verfallen: verfallenGesamt,
         lebenUebrig: 0,
-        toteSpieler: 2,
+        toteSpieler: decks.length,
       };
     }
   }
@@ -910,33 +936,36 @@ export function spiele(
     burstRunden,
     verfallen: verfallenGesamt,
     lebenUebrig: 0,
-    toteSpieler: 2 - lebend(spieler).length,
+    toteSpieler: decks.length - lebend(spieler).length,
   };
 }
 
-/** Alle Paarungen aus zwei verschiedenen Decks. */
-function paarungenAus(decks: DeckProfil[]): [DeckProfil, DeckProfil][] {
-  return decks.flatMap((x, i) => decks.slice(i + 1).map((y) => [x, y] as [DeckProfil, DeckProfil]));
+/** Alle Tische aus so vielen verschiedenen Decks. */
+function paarungenAus(decks: DeckProfil[], n: number): DeckProfil[][] {
+  if (n === 0) return [[]];
+  return decks.flatMap((x, i) => paarungenAus(decks.slice(i + 1), n - 1).map((r) => [x, ...r]));
 }
 
 function auswertung(spiele_: number): void {
   const decks = process.env['SIM_DECKS'] === 'strixhaven' ? [...STRIXHAVEN, JACE] : PRECONS;
-  const paarungen = paarungenAus(decks);
+  const anzahl = Number(process.env['SIM_SPIELER'] ?? 2);
+  const paarungen = paarungenAus(decks, anzahl);
   console.log(
     `Simulation: ${spiele_} Partien je Boss und Paarung, ${paarungen.length} Paarungen ` +
-      `(2 gegen Boss, 40 Leben, Boss-Verstand ${process.env['SIM_PLANER'] ?? 'instinkt'}).\n`,
+      `(${anzahl} gegen Boss, 40 Leben, Boss-Verstand ${process.env['SIM_PLANER'] ?? 'instinkt'}).\n`,
   );
   const kopf = [
     'Lvl',
     'Boss'.padEnd(26),
     'Sieg',
     ...decks.map((d) => d.kurz.padEnd(7)),
-    'Schwächste'.padEnd(16),
+    'Schwächste'.padEnd(16 + (anzahl - 2) * 7),
     'Ø Rd',
     'Ph. 3',
   ];
   console.log(kopf.join(' | '));
-  for (const boss of BOSSE) {
+  for (const basis of BOSSE) {
+    const boss = bossMitId(basis.id, anzahl);
     const proDeck = new Map<string, { s: number; n: number }>();
     const proPaar: { name: string; quote: number }[] = [];
     let runden = 0;
@@ -959,7 +988,7 @@ function auswertung(spiele_: number): void {
         const x = proDeck.get(d.kurz) ?? { s: 0, n: 0 };
         proDeck.set(d.kurz, { s: x.s + s, n: x.n + spiele_ });
       }
-      proPaar.push({ name: `${p[0].kurz}+${p[1].kurz}`, quote: s / spiele_ });
+      proPaar.push({ name: p.map((d) => d.kurz).join('+'), quote: s / spiele_ });
     }
     const schwach = [...proPaar].sort((a, b) => a.quote - b.quote)[0];
     console.log(
@@ -971,7 +1000,7 @@ function auswertung(spiele_: number): void {
           const x = proDeck.get(d.kurz)!;
           return `${Math.round((x.s / x.n) * 100)}%`.padEnd(7);
         }),
-        `${schwach.name} ${Math.round(schwach.quote * 100)}%`.padEnd(16),
+        `${schwach.name} ${Math.round(schwach.quote * 100)}%`.padEnd(16 + (anzahl - 2) * 7),
         (siege ? (runden / siege).toFixed(1) : '–').padStart(4),
         `${Math.round((phase3 / n) * 100)}%`.padStart(5),
       ].join(' | '),
@@ -988,7 +1017,9 @@ if (!process.env['SIM_EINSTIEG']) {
   if (modus === 'beispiel') {
     const level = Number(process.argv[3] ?? 4);
     const deck = PRECONS.find((d) => d.kurz === (process.argv[4] ?? 'Terra')) ?? PRECONS[1];
-    spiele(BOSSE[level - 1], [deck, JACE], Number(process.argv[5] ?? 42), (z) => console.log(z));
+    const n = Number(process.env['SIM_SPIELER'] ?? 2);
+    const tisch = [deck, JACE, ...PRECONS.filter((d) => d !== deck && d !== JACE)].slice(0, n);
+    spiele(bossMitId(BOSSE[level - 1].id, n), tisch, Number(process.argv[5] ?? 42), (z) => console.log(z));
   } else {
     auswertung(Number(modus ?? 200) || 200);
   }

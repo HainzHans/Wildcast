@@ -113,7 +113,7 @@ export class BossProtokollListe {
   private readonly store = inject(SpielStore);
   protected readonly boss = computed(() => {
     const b = this.store.stand()?.boss;
-    return b ? bossMitId(b.bossId) : null;
+    return b ? bossMitId(b.bossId, b.spielerzahl) : null;
   });
   readonly schliessen = output<void>();
 

@@ -77,6 +77,8 @@ export interface BossStand {
   planer?: Planerstufe;
   /** Zustand seines Merkmals (Leiste, Körper, Eier …). Fehlt in älteren Spielständen. */
   merkmal?: MerkmalStand;
+  /** Gegen wie viele Spieler er antritt. Fehlt in älteren Spielständen (dann zwei). */
+  spielerzahl?: number;
 }
 
 function dienerAnlegen(stand: BossStand, vorlagen: DienerVorlage[]): BossStand {
@@ -113,6 +115,7 @@ export function bossStarten(
     verlorenesRelikt: null,
     planer,
     merkmal: merkmalStarten(boss),
+    spielerzahl: boss.mehrspieler?.spieler ?? 2,
   };
   const startRelikt = boss.relikte.find((r) => r.id === boss.startRelikt);
   if (startRelikt) {
@@ -134,7 +137,7 @@ export function bossStarten(
 export function bossTreffen(
   stand: BossStand,
   schaden: number,
-  boss: BossDefinition = bossMitId(stand.bossId),
+  boss: BossDefinition = bossMitId(stand.bossId, stand.spielerzahl),
   teilId?: string,
 ): { stand: BossStand; verfallen: number; wirkung: number } {
   const angepasst = schadenNachMerkmal(boss, stand.merkmal, schaden);
@@ -224,7 +227,7 @@ export function paktEntscheiden(
   stand: BossStand,
   spielerId: number,
   annehmen: boolean,
-  boss: BossDefinition = bossMitId(stand.bossId),
+  boss: BossDefinition = bossMitId(stand.bossId, stand.spielerzahl),
 ): { stand: BossStand; leben: number } {
   const regel = boss.merkmal;
   const m = stand.merkmal;
@@ -268,7 +271,7 @@ export function reliktTreffen(
   stand: BossStand,
   id: string,
   schaden: number,
-  boss: BossDefinition = bossMitId(stand.bossId),
+  boss: BossDefinition = bossMitId(stand.bossId, stand.spielerzahl),
 ): BossStand {
   const r = boss.relikte.find((x) => x.id === id);
   const liegend = stand.relikte.find((l) => l.id === id);

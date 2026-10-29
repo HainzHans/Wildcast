@@ -1,3 +1,5 @@
+import type { Mehrspieler } from './boss-mehrspieler';
+
 /**
  * Datenmodell des Boss-Modus. Ein Boss ist reine Beschreibung (Leben, Diener, Aktionen, Sprüche);
  * die Logik in `boss-logik.ts` entscheidet daraus jeden Boss-Zug. So können später weitere Bosse
@@ -234,6 +236,8 @@ export interface BossDefinition {
   startRelikt?: string;
   /** Was diesen Boss einzigartig macht. */
   merkmal?: Merkmal;
+  /** Gesetzt, wenn er gegen mehr als zwei Spieler antritt (siehe `fuerSpielerzahl`). */
+  mehrspieler?: Mehrspieler;
 }
 
 /**

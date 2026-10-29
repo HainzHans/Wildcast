@@ -67,7 +67,7 @@ export const DAEMONENFUERST: BossDefinition = {
       name: 'Seelenkäfig',
       typ: 'artefakt',
       verteidigung: 13,
-      text: 'Der Fürst erhält in jedem seiner Züge 5 Leben aus den gefangenen Seelen.',
+      text: 'In jedem seiner Züge erhält der Fürst 5 Leben aus den gefangenen Seelen.',
       proZug: { heilung: 5 },
       zerstoert: 'Die Seelen sind frei … ich hole mir neue. Eure.',
     },
@@ -162,7 +162,7 @@ export const DAEMONENFUERST: BossDefinition = {
       schlagworte: ['kontrolle'],
       gewicht: 1,
       text: 'Jeder Spieler opfert ein Artefakt oder eine Verzauberung und wirft eine Karte ab. Wer nichts zu opfern hat, verliert stattdessen 4 Leben.',
-      bevorzugt: { bleibende: ['einige', 'viele'], handkarten: ['1', '2', 'gleich'] },
+      bevorzugt: { bleibende: ['einige', 'viele'], handkarten: ['1', '2', '3', '4', 'gleich'] },
     },
     {
       id: 'hoellentor',
@@ -211,7 +211,7 @@ export const DAEMONENFUERST: BossDefinition = {
 
   sprueche: {
     wuetend: [
-      '{verlust} Leben. Dafür nehme ich eure Seelen. Alle beide.',
+      '{verlust} Leben. Dafür nehme ich eure Seelen. Alle.',
       'Ihr habt den Fürsten verletzt. Ewigkeit ist lang, und ihr verbringt sie bei mir.',
       'Schmerz? Ich habe ihn erfunden.',
       'Jeder Tropfen meines Blutes kostet euch ein Jahrhundert.',

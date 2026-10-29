@@ -1,4 +1,5 @@
 import { Zufall } from '../../core/zufall';
+import { einzelZiel, Mehrspieler } from './boss-mehrspieler';
 import { merkmalZug, pflichtFrage } from './boss-merkmale';
 import { planerFaktoren } from './boss-planer';
 import { frageMitId } from './bosse/fragen';
@@ -74,12 +75,23 @@ export const DIENER_GRENZE = 6;
 
 /**
  * Ein Diener pro Runde, solange weniger als {@link DIENER_GRENZE} da sind. Ab Runde 2 kommt bei
- * höchstens einem Diener einer extra dazu. Mehr würde zwei Spieler auf Dauer überrennen.
+ * höchstens einem Diener einer extra dazu. Mehr würde zwei Spieler auf Dauer überrennen – gegen
+ * drei oder vier Spieler kommen mehr dazu, und er darf mehr haben.
  */
-export function dienerNachschub(runde: number, diener: number): number {
-  if (diener >= DIENER_GRENZE) return 0;
+export function dienerNachschub(
+  runde: number,
+  diener: number,
+  mehr: Pick<Mehrspieler, 'dienerProRunde' | 'dienerGrenze'> = {
+    dienerProRunde: 0,
+    dienerGrenze: 0,
+  },
+): number {
+  if (diener >= DIENER_GRENZE + mehr.dienerGrenze) return 0;
   const nachschub = runde >= 2 && diener <= 1 ? 1 : 0;
-  return 1 + nachschub;
+  // Bruchteile verteilen sich über die Runden, z. B. 0,5 = jede zweite Runde einer mehr.
+  const extra =
+    Math.floor(runde * mehr.dienerProRunde) - Math.floor((runde - 1) * mehr.dienerProRunde);
+  return 1 + nachschub + extra;
 }
 
 /** So viele Artefakte und Verzauberungen hat der Boss höchstens gleichzeitig auf dem Feld. */
@@ -393,8 +405,18 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
   for (const a of aktionen) {
     const f = a.folgen ?? {};
     if (f.leben) {
-      for (const id of zielSpieler(lage, f.leben.ziel, zufall)) {
-        lebenAenderungen.push({ spielerId: id, um: f.leben.um });
+      const ids = zielSpieler(lage, f.leben.ziel, zufall);
+      for (const id of ids) lebenAenderungen.push({ spielerId: id, um: f.leben.um });
+      // Mit mehr Spielern trifft es auch die nächsten (siehe den Hinweis im Aktionstext).
+      const m = boss.mehrspieler;
+      if (m?.zusatzZiele && einzelZiel(a)) {
+        const wenigste = f.leben.ziel === 'wenigsteLeben';
+        const um = -Math.ceil(-f.leben.um * m.zusatzAnteil);
+        lage.spieler
+          .filter((s) => !ids.includes(s.id) && s.leben > 0)
+          .sort((x, y) => (wenigste ? x.leben - y.leben : y.leben - x.leben))
+          .slice(0, m.zusatzZiele)
+          .forEach((s) => lebenAenderungen.push({ spielerId: s.id, um }));
       }
     }
     heilung += f.heilung ?? 0;
@@ -488,10 +510,9 @@ export function bossZug(boss: BossDefinition, lage: Lage, zufall: Zufall): BossZ
     }
   }
 
+  const nachschub = dienerNachschub(lage.runde, lage.diener, boss.mehrspieler) + zusatzDiener;
   const neueDiener: DienerVorlage[] = [
-    ...Array.from({ length: dienerNachschub(lage.runde, lage.diener) + zusatzDiener }, () =>
-      zufaelligAus(boss.diener, zufall),
-    ),
+    ...Array.from({ length: nachschub }, () => zufaelligAus(boss.diener, zufall)),
     ...benannteDiener,
   ];
 

@@ -120,7 +120,11 @@ export class SpielStore {
         ? basarStarten(optionen.basar ?? STANDARD_BASAR, this.zufall)
         : undefined,
       boss: varianten.includes('boss')
-        ? bossStarten(bossMitId(optionen.bossId), this.zufall, optionen.bossPlaner)
+        ? bossStarten(
+            bossMitId(optionen.bossId, namen.length),
+            this.zufall,
+            optionen.bossPlaner,
+          )
         : undefined,
     });
   }
@@ -313,7 +317,11 @@ export class SpielStore {
   bossFragen(): Frage[] {
     const s = this._stand();
     if (!s?.boss) return [];
-    return fragenFuerZug(bossMitId(s.boss.bossId), bossLage(s.boss, s.spieler, {}), this.zufall);
+    return fragenFuerZug(
+      bossMitId(s.boss.bossId, s.boss.spielerzahl),
+      bossLage(s.boss, s.spieler, {}),
+      this.zufall,
+    );
   }
 
   /** Würfelt den Boss-Zug mit den Antworten aus und trägt ihn sofort ein. */
@@ -321,7 +329,7 @@ export class SpielStore {
     const s = this._stand();
     if (!s?.boss) return null;
     const zug = bossZug(
-      bossMitId(s.boss.bossId),
+      bossMitId(s.boss.bossId, s.boss.spielerzahl),
       bossLage(s.boss, s.spieler, antworten),
       this.zufall,
     );

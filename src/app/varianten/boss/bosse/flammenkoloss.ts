@@ -120,7 +120,7 @@ export const FLAMMENKOLOSS: BossDefinition = {
       schlagworte: ['kontrolle'],
       gewicht: 1,
       text: 'Die Hitze lässt Karten verkohlen: Jeder Spieler wirft eine Karte ab oder verliert 3 Leben.',
-      bevorzugt: { handkarten: ['1', '2', 'gleich'] },
+      bevorzugt: { handkarten: ['1', '2', '3', '4', 'gleich'] },
     },
     {
       id: 'aschewolke',

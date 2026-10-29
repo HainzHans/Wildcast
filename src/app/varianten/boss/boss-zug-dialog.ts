@@ -341,7 +341,9 @@ export class BossZugDialog implements OnDestroy {
   readonly fertig = output<void>();
 
   private readonly boss = computed(() => this.store.stand()?.boss ?? null);
-  private readonly def = computed(() => bossMitId(this.boss()?.bossId));
+  private readonly def = computed(() =>
+    bossMitId(this.boss()?.bossId, this.boss()?.spielerzahl),
+  );
   protected readonly bossName = computed(() => this.def().name);
   protected readonly bossId = computed(() => this.def().id);
   protected readonly spezialId = computed(() => this.def().spezial.id);

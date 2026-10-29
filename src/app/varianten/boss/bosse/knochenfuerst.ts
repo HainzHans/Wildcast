@@ -131,7 +131,7 @@ export const KNOCHENFUERST: BossDefinition = {
       schlagworte: ['kontrolle'],
       gewicht: 1,
       text: 'Kein Laut, kein Gedanke: Jeder Spieler wirft eine Karte ab.',
-      bevorzugt: { handkarten: ['1', '2', 'gleich'] },
+      bevorzugt: { handkarten: ['1', '2', '3', '4', 'gleich'] },
     },
     {
       id: 'totenruf',

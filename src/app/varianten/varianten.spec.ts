@@ -13,10 +13,10 @@ describe('Varianten kombinieren', () => {
     expect(kombinieren(['gibt-es-nicht'])).toBeNull();
   });
 
-  it('kombiniert Mana-Würfel und Bosskampf zu einer Partie für zwei Spieler', () => {
+  it('kombiniert Mana-Würfel und Bosskampf zu einer Partie für zwei bis vier Spieler', () => {
     const k = kombinieren(['mana-wuerfel', 'boss'])!;
     expect(k.name).toBe('Mana-Würfel + Bosskampf');
-    expect(k.spieler).toEqual({ min: 2, max: 2, standard: 2 });
+    expect(k.spieler).toEqual({ min: 2, max: 4, standard: 2 });
     expect(k.werkzeuge).toEqual(['leben', 'effekt-wuerfel', 'boss']);
   });
 

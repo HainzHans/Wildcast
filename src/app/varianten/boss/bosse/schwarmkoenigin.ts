@@ -49,7 +49,7 @@ export const SCHWARMKOENIGIN: BossDefinition = {
       name: 'Honigwabe',
       typ: 'artefakt',
       verteidigung: 10,
-      text: 'Die Königin erhält in jedem ihrer Züge 4 Leben.',
+      text: 'In jedem ihrer Züge erhält die Königin 4 Leben.',
       proZug: { heilung: 4 },
       zerstoert: 'Mein Gelée! Ihr habt mir das Gelée gestohlen!',
     },

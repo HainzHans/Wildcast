@@ -139,7 +139,7 @@ export const NEBELKOENIGIN: BossDefinition = {
       name: 'Mondlicht',
       schlagworte: ['heilung', 'beschwoerung'],
       gewicht: 1,
-      text: 'Im Mondlicht erholt sich die Königin um 4 Leben, und ein Nebelgeist erscheint.',
+      text: 'Im Mondlicht erholt sich die Königin: Sie erhält 4 Leben, und ein Nebelgeist erscheint.',
       folgen: { heilung: 4, diener: 1, dienerName: 'Nebelgeist' },
     },
     {

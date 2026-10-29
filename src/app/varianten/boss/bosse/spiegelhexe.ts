@@ -120,8 +120,8 @@ export const SPIEGELHEXE: BossDefinition = {
       name: 'Eitler Blick',
       schlagworte: ['kontrolle'],
       gewicht: 1,
-      text: 'Der Spieler mit den meisten Handkarten wirft eine Karte ab. Haben beide gleich viele, wirft jeder eine Karte ab.',
-      bevorzugt: { handkarten: ['1', '2', 'gleich'] },
+      text: 'Der Spieler mit den meisten Handkarten wirft eine Karte ab. Bei Gleichstand wirft jeder von ihnen eine Karte ab.',
+      bevorzugt: { handkarten: ['1', '2', '3', '4', 'gleich'] },
     },
     {
       id: 'blendung',

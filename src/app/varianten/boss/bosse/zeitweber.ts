@@ -138,7 +138,7 @@ export const ZEITWEBER: BossDefinition = {
       schlagworte: ['kontrolle'],
       gewicht: 1,
       text: 'Jeder Spieler mischt seine Hand in seine Bibliothek und zieht eine Karte weniger.',
-      bevorzugt: { handkarten: ['1', '2', 'gleich'] },
+      bevorzugt: { handkarten: ['1', '2', '3', '4', 'gleich'] },
     },
     {
       id: 'verlangsamen',

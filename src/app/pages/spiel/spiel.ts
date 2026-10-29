@@ -463,7 +463,7 @@ type Dialog =
       grid-column: 1 / -1;
       order: -2;
     }
-    /* Im Bosskampf teilen sich die zwei Spieler die volle Breite unter dem Boss */
+    /* Im Bosskampf teilen sich die Spieler zu zweit nebeneinander die Breite unter dem Boss */
     .tisch[data-boss]:not(.drehen, .quer) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -498,6 +498,21 @@ type Dialog =
         'mitte' auto
         'p1' minmax(7rem, 0.7fr) / 1fr;
     }
+    /* Zu dritt und zu viert sitzen oben und unten je zwei – der Boss bleibt in der Mitte. */
+    .drehen[data-spieler='3'][data-boss] {
+      grid-template:
+        'p2 p2' minmax(6.5rem, 0.6fr)
+        'boss boss' minmax(0, 2.4fr)
+        'mitte mitte' auto
+        'p1 p3' minmax(6.5rem, 0.6fr) / 1fr 1fr;
+    }
+    .drehen[data-spieler='4'][data-boss] {
+      grid-template:
+        'p2 p3' minmax(6.5rem, 0.6fr)
+        'boss boss' minmax(0, 2.4fr)
+        'mitte mitte' auto
+        'p1 p4' minmax(6.5rem, 0.6fr) / 1fr 1fr;
+    }
     /* Bosskampf mit dem Handy quer: links die Spieler untereinander, rechts groß der Boss */
     .quer {
       overflow: hidden;
@@ -505,6 +520,19 @@ type Dialog =
         'p1 boss' 1fr
         'p2 boss' 1fr
         'mitte boss' auto / minmax(12rem, 0.4fr) minmax(0, 1fr);
+    }
+    /* Mit mehr Spielern links zwei Spalten. */
+    .quer[data-spieler='3'] {
+      grid-template:
+        'p1 p2 boss' 1fr
+        'p3 p3 boss' 1fr
+        'mitte mitte boss' auto / minmax(9rem, 1fr) minmax(9rem, 1fr) minmax(0, 2.6fr);
+    }
+    .quer[data-spieler='4'] {
+      grid-template:
+        'p1 p2 boss' 1fr
+        'p3 p4 boss' 1fr
+        'mitte mitte boss' auto / minmax(9rem, 1fr) minmax(9rem, 1fr) minmax(0, 2.6fr);
     }
     .quer app-boss-feld {
       grid-area: boss;

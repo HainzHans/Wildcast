@@ -198,7 +198,12 @@ const SCHRITT_TITEL: Record<Schritt, string> = {
                 </div>
                 <article class="karte boss-info" aria-live="polite">
                   <p class="karte-titel">{{ b.name }}</p>
-                  <p class="werte">Level {{ b.level }} · {{ b.leben }} Leben</p>
+                  <p class="werte">
+                    Level {{ b.level }} · {{ b.leben }} Leben
+                    @if (b.mehrspieler; as m) {
+                      · für {{ m.spieler }} Spieler
+                    }
+                  </p>
                   <p>{{ b.beschreibung }}</p>
                   @if (b.merkmal; as m) {
                     <p class="merkmal">
@@ -875,7 +880,7 @@ export class Einrichten {
   protected readonly bosse = BOSSE;
   protected readonly bossId = signal(BOSSE[0].id);
   protected readonly boss = computed(() =>
-    this.eintrag()?.ids.includes('boss') ? bossMitId(this.bossId()) : null,
+    this.eintrag()?.ids.includes('boss') ? bossMitId(this.bossId(), this.anzahl()) : null,
   );
   /** Seine Artefakte und Verzauberungen; die Startkarte liegt schon zu Beginn. */
   protected readonly bossKarten = computed(() => {

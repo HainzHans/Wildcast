@@ -153,7 +153,7 @@ export const STURMDRACHE: BossDefinition = {
       name: 'Statisches Rauschen',
       schlagworte: ['kontrolle'],
       gewicht: 1,
-      text: 'Der Spieler mit den meisten Handkarten wirft zwei Karten ab. Haben beide gleich viele, wirft jeder eine Karte ab.',
+      text: 'Der Spieler mit den meisten Handkarten wirft zwei Karten ab. Bei Gleichstand wirft jeder von ihnen eine Karte ab.',
       bevorzugt: { handkarten: ['1', '2', '3', '4'] },
     },
     {
@@ -235,7 +235,7 @@ export const STURMDRACHE: BossDefinition = {
       schlagworte: ['kontrolle', 'angriff'],
       gewicht: 1,
       text: 'Das Grollen lässt die Hände zittern: Jeder Spieler wirft eine Karte ab oder verliert 3 Leben.',
-      bevorzugt: { handkarten: ['1', '2', 'gleich'] },
+      bevorzugt: { handkarten: ['1', '2', '3', '4', 'gleich'] },
     },
     {
       id: 'sturmruf',

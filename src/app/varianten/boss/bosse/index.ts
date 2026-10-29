@@ -1,3 +1,4 @@
+import { fuerSpielerzahl, spielerzahlGueltig } from '../boss-mehrspieler';
 import { BossDefinition } from '../boss-modell';
 import { DAEMONENFUERST } from './daemonenfuerst';
 import { FLAMMENKOLOSS } from './flammenkoloss';
@@ -24,7 +25,14 @@ export const BOSSE: BossDefinition[] = [
   WELTENFRESSER,
 ];
 
-/** Ohne passende ID der erste Boss. */
-export function bossMitId(id: string | undefined): BossDefinition {
-  return BOSSE.find((b) => b.id === id) ?? BOSSE[0];
+const angepasst = new Map<string, BossDefinition>();
+
+/** Ohne passende ID der erste Boss. Mit mehr als zwei Spielern wird er entsprechend stärker. */
+export function bossMitId(id: string | undefined, spielerzahl?: number): BossDefinition {
+  const boss = BOSSE.find((b) => b.id === id) ?? BOSSE[0];
+  const n = spielerzahlGueltig(spielerzahl);
+  if (n === 2) return boss;
+  const key = `${boss.id}:${n}`;
+  if (!angepasst.has(key)) angepasst.set(key, fuerSpielerzahl(boss, n));
+  return angepasst.get(key)!;
 }

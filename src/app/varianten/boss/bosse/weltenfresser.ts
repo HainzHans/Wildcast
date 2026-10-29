@@ -173,7 +173,7 @@ export const WELTENFRESSER: BossDefinition = {
       schlagworte: ['kontrolle'],
       gewicht: 1,
       text: 'Die Leere löscht Erinnerungen: Jeder Spieler schickt seinen Friedhof und eine Karte aus seiner Hand ins Exil.',
-      bevorzugt: { friedhof: ['einige', 'viele'], handkarten: ['1', '2', 'gleich'] },
+      bevorzugt: { friedhof: ['einige', 'viele'], handkarten: ['1', '2', '3', '4', 'gleich'] },
     },
     {
       id: 'kronenfall',

@@ -918,7 +918,9 @@ export class BossFeld implements OnDestroy {
   readonly stand = input.required<BossStand>();
   readonly protokoll = output<void>();
 
-  protected readonly def = computed(() => bossMitId(this.stand().bossId));
+  protected readonly def = computed(() =>
+    bossMitId(this.stand().bossId, this.stand().spielerzahl),
+  );
   protected readonly laune = computed(
     () => TEMPERAMENTE[this.stand().temperament ?? 'unberechenbar'],
   );
