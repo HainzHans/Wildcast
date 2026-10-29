@@ -23,16 +23,10 @@ describe('SpielStore', () => {
     ]);
   });
 
-  it('ändert Leben und macht es rückgängig', () => {
+  it('ändert Leben', () => {
     store.aendereLeben(2, -5);
     store.aendereLeben(2, -1);
     expect(store.stand()?.spieler[1].leben).toBe(34);
-
-    store.rueckgaengig();
-    expect(store.stand()?.spieler[1].leben).toBe(35);
-    store.rueckgaengig();
-    expect(store.stand()?.spieler[1].leben).toBe(40);
-    expect(store.kannRueckgaengig()).toBe(false);
   });
 
   it('nummeriert gewirkte Effekte fortlaufend und merkt sich den Zahlenden', () => {
@@ -44,12 +38,10 @@ describe('SpielStore', () => {
     expect(store.stand()?.effekte.length).toBe(2);
   });
 
-  it('markiert Verzauberungen als zerstört, rückgängig inklusive', () => {
+  it('markiert Verzauberungen als zerstört', () => {
     const effekt = store.wirken(1, 5)!;
     store.zerstoeren(effekt.nr);
     expect(store.stand()?.effekte[0].zerstoert).toBe(true);
-    store.rueckgaengig();
-    expect(store.stand()?.effekte[0].zerstoert).toBeFalsy();
   });
 
   it('speichert den Stand lokal', () => {
@@ -75,7 +67,5 @@ describe('SpielStore', () => {
     const jo = store.stand()!.spieler[0];
     expect(jo.commander).toEqual({ 2: 2, 3: 0 });
     expect(jo.leben).toBe(38);
-    store.rueckgaengig();
-    expect(store.stand()!.spieler[0].commander?.[3]).toBe(7);
   });
 });

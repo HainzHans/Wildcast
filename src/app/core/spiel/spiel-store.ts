@@ -1,4 +1,4 @@
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 
 import { bossZug, fragenFuerZug } from '../../varianten/boss/boss-logik';
 import { Antworten, BossZug, Frage } from '../../varianten/boss/boss-modell';
@@ -45,7 +45,6 @@ import { ZUFALL } from '../zufall';
 import { Effekt, SpielOptionen, Spielstand, VarianteId } from './modell';
 
 const SCHLUESSEL = 'wildcast.spiel.v1';
-const MAX_VERLAUF = 100;
 /** So viele zuletzt gewürfelte Vorlagen werden möglichst nicht wiederholt. */
 const KEINE_WIEDERHOLUNG = 8;
 
@@ -73,20 +72,15 @@ function ladeStand(): Spielstand | null {
     : mitVarianten;
 }
 
-/**
- * Hält die laufende Partie auf diesem einen Gerät. Jede Änderung legt den vorherigen Stand
- * im Verlauf ab, damit am geteilten Tisch ein Danebentippen rückgängig gemacht werden kann.
- */
+/** Hält die laufende Partie auf diesem einen Gerät. */
 @Injectable({ providedIn: 'root' })
 export class SpielStore {
   private readonly zufall = inject(ZUFALL);
   private readonly archiv = inject(EffektArchiv);
 
   private readonly _stand = signal<Spielstand | null>(ladeStand());
-  private readonly verlauf = signal<Spielstand[]>([]);
 
   readonly stand = this._stand.asReadonly();
-  readonly kannRueckgaengig = computed(() => this.verlauf().length > 0);
   /** Eine Welt ist gerade erschienen und soll groß aufgedeckt werden. */
   private readonly _weltAufdecken = signal(false);
   readonly weltAufdecken = this._weltAufdecken.asReadonly();
@@ -101,7 +95,6 @@ export class SpielStore {
     startLeben: number,
     optionen: SpielOptionen = {},
   ): void {
-    this.verlauf.set([]);
     const spieler = namen.map((name, i) => ({ id: i + 1, name, leben: startLeben }));
     const welt = varianten.includes('welten')
       ? weltenStarten(optionen.welten ?? STANDARD_WELTEN, spieler.length, this.zufall)
@@ -132,7 +125,6 @@ export class SpielStore {
   }
 
   beenden(): void {
-    this.verlauf.set([]);
     this._weltAufdecken.set(false);
     this._stand.set(null);
   }
@@ -323,7 +315,7 @@ export class SpielStore {
     return fragenFuerZug(bossMitId(s.boss.bossId), bossLage(s.boss, s.spieler, {}), this.zufall);
   }
 
-  /** Würfelt den Boss-Zug mit den Antworten aus und trägt ihn sofort ein (rückgängig möglich). */
+  /** Würfelt den Boss-Zug mit den Antworten aus und trägt ihn sofort ein. */
   bossZugAusfuehren(antworten: Antworten): BossZug | null {
     const s = this._stand();
     if (!s?.boss) return null;
@@ -353,18 +345,9 @@ export class SpielStore {
     this.aendern((s) => (s.boss ? { ...s, boss: neu(s.boss) } : s));
   }
 
-  rueckgaengig(): void {
-    const verlauf = this.verlauf();
-    if (!verlauf.length) return;
-    this._weltAufdecken.set(false);
-    this._stand.set(verlauf[verlauf.length - 1]);
-    this.verlauf.set(verlauf.slice(0, -1));
-  }
-
   private aendern(neu: (s: Spielstand) => Spielstand): void {
     const s = this._stand();
     if (!s) return;
-    this.verlauf.update((v) => [...v.slice(-(MAX_VERLAUF - 1)), s]);
     this._stand.set(neu(s));
   }
 }

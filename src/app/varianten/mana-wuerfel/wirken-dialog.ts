@@ -243,7 +243,7 @@ export class WirkenDialog implements OnDestroy {
   }
 
   protected wuerfeln(): void {
-    // Sofort ins Protokoll, damit „Rückgängig“ auch während der Animation greift.
+    // Sofort ins Protokoll, damit der Wurf auch beim Wegklicken während der Animation zählt.
     this.ergebnis.set(this.store.wirken(this.spieler().id, this.mana()));
     this.phase.set('rollt');
     this.zeitgeber = setTimeout(() => this.phase.set('ergebnis'), WUERFELZEIT);

@@ -26,7 +26,7 @@ const DENKZEIT = 1100;
 
 /**
  * Der Boss-Zug als Gespräch: Der Boss stellt seine Fragen, denkt kurz nach und verkündet dann,
- * was er tut. Das Ergebnis wird sofort eingetragen und lässt sich am Tisch rückgängig machen.
+ * was er tut. Das Ergebnis wird sofort eingetragen.
  */
 @Component({
   selector: 'app-boss-zug-dialog',

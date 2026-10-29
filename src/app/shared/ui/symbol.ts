@@ -21,7 +21,9 @@ const SYMBOLE = {
   zurueck: { pfade: ['M15 18l-6-6 6-6'] },
   weiter: { pfade: ['M9 18l6-6-6-6'] },
   menue: { pfade: ['M4 7h16', 'M4 12h16', 'M4 17h16'] },
-  rueckgaengig: { pfade: ['M9 14L4 9l5-5', 'M4 9h10a6 6 0 0 1 0 12h-3'] },
+  wuerfel: {
+    pfade: ['M12 2.5l8.5 4.9v9.2L12 21.5l-8.5-4.9V7.4z', 'M12 7.5l4.5 7.5h-9z', 'M3.5 7.4L7.5 15', 'M20.5 7.4L16.5 15', 'M12 21.5V15'],
+  },
   schliessen: { pfade: ['M6 6l12 12', 'M18 6L6 18'] },
   haken: { pfade: ['M5 12l5 5 9-10'] },
   drehen: { pfade: ['M20 12a8 8 0 1 1-2.3-5.7', 'M20 4v5h-5'] },

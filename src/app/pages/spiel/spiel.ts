@@ -38,6 +38,7 @@ import { SturmBand } from '../../varianten/untergang/sturm-band';
 import { BewertungDialog } from './bewertung-dialog';
 import { CommanderDialog } from './commander-dialog';
 import { SpielerFeld } from './spieler-feld';
+import { WuerfelDialog } from './wuerfel-dialog';
 
 type Dialog =
   | { art: 'wirken'; spielerId: number; gedreht: boolean }
@@ -51,6 +52,7 @@ type Dialog =
   | { art: 'regeln' }
   | { art: 'commander'; spielerId: number; gedreht: boolean }
   | { art: 'bewertung' }
+  | { art: 'wuerfel' }
   | { art: 'segen'; spielerId: number; segenId: string; gedreht: boolean };
 
 @Component({
@@ -76,6 +78,7 @@ type Dialog =
     BasarDialog,
     CommanderDialog,
     BewertungDialog,
+    WuerfelDialog,
   ],
   template: `
     @if (store.stand(); as s) {
@@ -190,11 +193,10 @@ type Dialog =
             <button
               type="button"
               class="rund-knopf"
-              aria-label="Rückgängig"
-              [disabled]="!store.kannRueckgaengig()"
-              (click)="store.rueckgaengig()"
+              aria-label="Würfeln oder Münze werfen"
+              (click)="dialog.set({ art: 'wuerfel' })"
             >
-              <app-symbol name="rueckgaengig" />
+              <app-symbol name="wuerfel" />
             </button>
           </div>
           @if ((zugInfo() || runde()) && hatWerkzeuge()) {
@@ -283,6 +285,11 @@ type Dialog =
               <app-commander-dialog [spielerId]="c.spielerId" />
             </app-ueberlagerung>
           }
+        }
+        @case ('wuerfel') {
+          <app-ueberlagerung titel="Würfeln" (schliessen)="dialog.set(null)">
+            <app-wuerfel-dialog />
+          </app-ueberlagerung>
         }
         @case ('bewertung') {
           <app-ueberlagerung titel="Wie war's?" (schliessen)="dialog.set({ art: 'menue' })">
